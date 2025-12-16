@@ -25,9 +25,21 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const user = await db.user.findUnique({
+        // Try to find by username first
+        let user = await db.user.findUnique({
           where: { username: credentials.username },
         });
+
+        // If not found, try to find by email prefix (for backward compatibility)
+        if (!user) {
+          user = await db.user.findFirst({
+            where: {
+              email: {
+                startsWith: credentials.username + "@",
+              },
+            },
+          });
+        }
 
         if (!user || !user.password) {
           throw new Error("Invalid credentials");
