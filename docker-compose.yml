@@ -1,0 +1,108 @@
+services:
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: pmp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-paxala}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paxala_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-paxala_media}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paxala} -d ${POSTGRES_DB:-paxala_media}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pmp_network
+
+  # ============================================
+  # Next.js Application
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pmp_app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:-paxala_secure_password}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    networks:
+      - pmp_network
+
+  # ============================================
+  # Nginx Reverse Proxy
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: pmp_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./docker/nginx/logs:/var/log/nginx
+      - ./public/uploads:/var/www/uploads:ro
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - pmp_network
+
+  # ============================================
+  # Database Migrations (one-time job)
+  # ============================================
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: pmp_migrate
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:-paxala_secure_password}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pmp_network
+    profiles:
+      - migrate
+
+networks:
+  pmp_network:
+    driver: bridge
+    name: pmp_network
+
+volumes:
+  postgres_data:
+    name: pmp_postgres_data
