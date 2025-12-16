@@ -14,9 +14,10 @@ async function main() {
   const clientPassword = await bcrypt.hash("client123", 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@paxalamedia.com" },
+    where: { username: "admin" },
     update: {},
     create: {
+      username: "admin",
       email: "admin@paxalamedia.com",
       name: "Ahmed Hajuj",
       password: adminPassword,
@@ -26,9 +27,10 @@ async function main() {
   });
 
   const staff1 = await prisma.user.upsert({
-    where: { email: "karim@paxalamedia.com" },
+    where: { username: "karim" },
     update: {},
     create: {
+      username: "karim",
       email: "karim@paxalamedia.com",
       name: "Karim Mohamed",
       password: staffPassword,
@@ -39,9 +41,10 @@ async function main() {
   });
 
   const staff2 = await prisma.user.upsert({
-    where: { email: "ahmed.khalil@paxalamedia.com" },
+    where: { username: "ahmed.khalil" },
     update: {},
     create: {
+      username: "ahmed.khalil",
       email: "ahmed.khalil@paxalamedia.com",
       name: "Ahmed Khalil",
       password: staffPassword,
@@ -52,9 +55,10 @@ async function main() {
   });
 
   const staff3 = await prisma.user.upsert({
-    where: { email: "mustafa@paxalamedia.com" },
+    where: { username: "mustafa" },
     update: {},
     create: {
+      username: "mustafa",
       email: "mustafa@paxalamedia.com",
       name: "Mustafa Khalil",
       password: staffPassword,
@@ -65,9 +69,10 @@ async function main() {
   });
 
   const client1 = await prisma.user.upsert({
-    where: { email: "roma@example.com" },
+    where: { username: "roma" },
     update: {},
     create: {
+      username: "roma",
       email: "roma@example.com",
       name: "Roma Restaurant",
       password: clientPassword,
@@ -76,9 +81,10 @@ async function main() {
   });
 
   const client2 = await prisma.user.upsert({
-    where: { email: "client@example.com" },
+    where: { username: "client" },
     update: {},
     create: {
+      username: "client",
       email: "client@example.com",
       name: "Demo Client",
       password: clientPassword,
@@ -686,13 +692,13 @@ Happy shooting!`,
   console.log("═══════════════════════════════════════════════════════");
   console.log("");
   console.log("📧 Default Login Credentials:");
-  console.log("   ┌─────────────────────────────────────────────────┐");
-  console.log("   │ Role    │ Email                     │ Password │");
-  console.log("   ├─────────────────────────────────────────────────┤");
-  console.log("   │ Admin   │ admin@paxalamedia.com     │ admin123 │");
-  console.log("   │ Staff   │ karim@paxalamedia.com     │ staff123 │");
-  console.log("   │ Client  │ client@example.com        │ client123│");
-  console.log("   └─────────────────────────────────────────────────┘");
+  console.log("   ┌─────────────────────────────────────┐");
+  console.log("   │ Role    │ Username    │ Password   │");
+  console.log("   ├─────────────────────────────────────┤");
+  console.log("   │ Admin   │ admin       │ admin123   │");
+  console.log("   │ Staff   │ karim       │ staff123   │");
+  console.log("   │ Client  │ client      │ client123  │");
+  console.log("   └─────────────────────────────────────┘");
   console.log("");
 }
 
