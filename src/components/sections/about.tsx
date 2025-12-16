@@ -46,7 +46,7 @@ export function AboutSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="absolute -bottom-6 -right-6 bg-red-600 rounded-2xl p-6 shadow-2xl shadow-red-600/20"
           >
-            <div className="text-4xl font-bold text-white mb-1">5+</div>
+            <div className="text-4xl font-bold text-white mb-1">10+</div>
             <div className="text-white/80 text-sm">Years of Excellence</div>
           </motion.div>
         </motion.div>
