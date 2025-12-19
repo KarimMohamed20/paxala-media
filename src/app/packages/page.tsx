@@ -25,32 +25,32 @@ import { packages } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const tierIcons: Record<string, React.ElementType> = {
-  bronze: Zap,
-  silver: Star,
-  gold: Crown,
+  base: Zap,
+  plus: Star,
+  infinite: Crown,
 };
 
 const tierColors: Record<string, { gradient: string; border: string; glow: string; badge: string; text: string }> = {
-  bronze: {
-    gradient: "from-amber-900/30 via-amber-800/10 to-transparent",
-    border: "border-amber-700/40",
-    glow: "bg-amber-600/30",
-    badge: "bg-gradient-to-r from-amber-600 to-amber-500",
+  base: {
+    gradient: "from-red-700/30 via-red-800/10 to-transparent",
+    border: "border-red-600/40",
+    glow: "bg-red-600/30",
+    badge: "bg-gradient-to-r from-red-600 to-red-500",
+    text: "text-red-400",
+  },
+  plus: {
+    gradient: "from-gray-500/30 via-gray-600/10 to-transparent",
+    border: "border-gray-500/40",
+    glow: "bg-gray-500/30",
+    badge: "bg-gradient-to-r from-gray-500 to-gray-400",
+    text: "text-gray-300",
+  },
+  infinite: {
+    gradient: "from-amber-500/30 via-amber-600/10 to-transparent",
+    border: "border-amber-500/40",
+    glow: "bg-amber-500/30",
+    badge: "bg-gradient-to-r from-amber-500 to-amber-400",
     text: "text-amber-400",
-  },
-  silver: {
-    gradient: "from-slate-400/30 via-slate-500/10 to-transparent",
-    border: "border-slate-400/40",
-    glow: "bg-slate-400/30",
-    badge: "bg-gradient-to-r from-slate-400 to-slate-300",
-    text: "text-slate-300",
-  },
-  gold: {
-    gradient: "from-yellow-500/30 via-yellow-600/10 to-transparent",
-    border: "border-yellow-500/40",
-    glow: "bg-yellow-500/30",
-    badge: "bg-gradient-to-r from-yellow-500 to-yellow-400",
-    text: "text-yellow-400",
   },
 };
 
@@ -62,7 +62,7 @@ function PackageDetailCard({
   index: number;
 }) {
   const TierIcon = tierIcons[pkg.tier] || Star;
-  const colors = tierColors[pkg.tier] || tierColors.silver;
+  const colors = tierColors[pkg.tier] || tierColors.plus;
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
@@ -114,7 +114,7 @@ function PackageDetailCard({
               </motion.div>
               <div>
                 <span className={cn("text-sm font-medium uppercase tracking-wider", colors.text)}>
-                  Package 0{index + 1}
+                  {pkg.tier}
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-white mt-1">{pkg.name}</h2>
                 <p className="text-lg text-white/60 mt-2">{pkg.subtitle}</p>
@@ -277,21 +277,21 @@ function ComparisonTable() {
             <th className="text-left py-4 px-4 text-white/60 font-medium">Features</th>
             <th className="py-4 px-4 text-center">
               <div className="flex flex-col items-center">
-                <Zap size={20} className="text-amber-500 mb-1" />
-                <span className="text-amber-400 font-semibold">Package 01</span>
+                <Zap size={20} className="text-red-500 mb-1" />
+                <span className="text-red-400 font-semibold">Brand 360°</span>
               </div>
             </th>
             <th className="py-4 px-4 text-center">
               <div className="flex flex-col items-center">
-                <Star size={20} className="text-slate-300 mb-1" />
-                <span className="text-slate-300 font-semibold">Package 02</span>
+                <Star size={20} className="text-gray-300 mb-1" />
+                <span className="text-gray-300 font-semibold">Brand 360°+ PLUS</span>
                 <span className="text-xs text-red-500 mt-1">Popular</span>
               </div>
             </th>
             <th className="py-4 px-4 text-center">
               <div className="flex flex-col items-center">
-                <Crown size={20} className="text-yellow-400 mb-1" />
-                <span className="text-yellow-400 font-semibold">Package 03</span>
+                <Crown size={20} className="text-amber-400 mb-1" />
+                <span className="text-amber-400 font-semibold">Brand 360° infinite</span>
               </div>
             </th>
           </tr>
@@ -413,7 +413,7 @@ export default function PackagesPage() {
                     )}
                   >
                     <TierIcon size={16} className={colors.text} />
-                    <span className="text-sm text-white/80">Package 0{index + 1}</span>
+                    <span className="text-sm text-white/80">{pkg.name}</span>
                   </motion.div>
                 </Link>
               );

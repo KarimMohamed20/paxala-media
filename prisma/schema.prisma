@@ -187,6 +187,7 @@ model Booking {
   email       String
   phone       String?
   serviceType String
+  packageId   String?       // Optional package selection (e.g., "package-01", "package-02", "package-03")
   date        DateTime
   timeSlot    String
   duration    Int           @default(60) // minutes

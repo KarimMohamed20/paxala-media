@@ -14,12 +14,13 @@ import {
   ChevronRight,
   Check,
   ArrowRight,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { services } from "@/lib/constants";
+import { services, packages } from "@/lib/constants";
 
 const timeSlots = [
   "09:00",
@@ -36,6 +37,7 @@ type BookingStep = "service" | "datetime" | "details" | "confirm";
 export function BookingForm() {
   const [step, setStep] = useState<BookingStep>("service");
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -77,6 +79,7 @@ export function BookingForm() {
           email: formData.email,
           phone: formData.phone || null,
           serviceType: selectedServiceData?.name || selectedService,
+          packageId: selectedPackage || null,
           date: selectedDate?.toISOString(),
           timeSlot: selectedTime,
           notes: formData.notes || null,
@@ -159,6 +162,14 @@ export function BookingForm() {
               <span className="text-white/60">Time</span>
               <span className="text-white font-medium">{selectedTime}</span>
             </div>
+            {selectedPackage && (
+              <div className="flex justify-between">
+                <span className="text-white/60">Package</span>
+                <span className="text-white font-medium">
+                  {packages.find((p) => p.id === selectedPackage)?.name}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -463,6 +474,37 @@ export function BookingForm() {
 
                 <div>
                   <label className="block text-sm text-white/70 mb-2">
+                    <Package size={14} className="inline mr-2" />
+                    Interested in a Package (Optional)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {packages.map((pkg) => (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPackage(
+                            selectedPackage === pkg.id ? null : pkg.id
+                          )
+                        }
+                        className={cn(
+                          "p-4 rounded-xl text-left transition-all border",
+                          selectedPackage === pkg.id
+                            ? "bg-red-600/20 border-red-600"
+                            : "bg-white/5 border-white/10 hover:border-white/20"
+                        )}
+                      >
+                        <h4 className="font-semibold text-white text-sm mb-1">
+                          {pkg.name}
+                        </h4>
+                        <p className="text-xs text-white/50">{pkg.subtitle}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-white/70 mb-2">
                     Additional Notes
                   </label>
                   <div className="relative">
@@ -537,6 +579,18 @@ export function BookingForm() {
                       )}
                     </div>
                   </div>
+
+                  {selectedPackage && (
+                    <div className="flex items-start gap-4 pb-4 border-b border-white/10">
+                      <Package size={20} className="text-red-500 mt-0.5" />
+                      <div>
+                        <p className="text-white/60 text-sm">Interested Package</p>
+                        <p className="text-white font-medium">
+                          {packages.find((p) => p.id === selectedPackage)?.name}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {formData.notes && (
                     <div className="flex items-start gap-4">

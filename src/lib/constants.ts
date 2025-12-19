@@ -217,8 +217,8 @@ export const projectCategories = [
 export const packages = [
   {
     id: "package-01",
-    tier: "bronze",
-    name: "Brand 360 - Package 01",
+    tier: "base",
+    name: "Brand 360°",
     subtitle: "Visual & Digital Marketing Retainer",
     price: "10,000",
     currency: "NIS",
@@ -270,8 +270,8 @@ export const packages = [
   },
   {
     id: "package-02",
-    tier: "silver",
-    name: "Brand 360 - Package 02",
+    tier: "plus",
+    name: "Brand 360°+ PLUS",
     subtitle: "Visual, Marketing & Web Development",
     price: "Custom",
     currency: "",
@@ -312,8 +312,8 @@ export const packages = [
   },
   {
     id: "package-03",
-    tier: "gold",
-    name: "Brand 360 - Package 03",
+    tier: "infinite",
+    name: "Brand 360° infinite",
     subtitle: "Full Digital Ecosystem (Web + Management + App)",
     price: "Custom",
     currency: "",

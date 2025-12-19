@@ -23,29 +23,29 @@ import { packages } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const tierIcons: Record<string, React.ElementType> = {
-  bronze: Zap,
-  silver: Star,
-  gold: Crown,
+  base: Zap,
+  plus: Star,
+  infinite: Crown,
 };
 
 const tierColors: Record<string, { bg: string; border: string; glow: string; badge: string }> = {
-  bronze: {
-    bg: "from-amber-900/20 to-amber-800/5",
-    border: "border-amber-700/30 hover:border-amber-600/50",
-    glow: "bg-amber-600/20",
-    badge: "bg-amber-600",
+  base: {
+    bg: "from-red-700/30 to-red-800/10",
+    border: "border-red-600/40 hover:border-red-500/60",
+    glow: "bg-red-600/25",
+    badge: "bg-red-600",
   },
-  silver: {
-    bg: "from-slate-400/20 to-slate-500/5",
-    border: "border-slate-400/30 hover:border-slate-300/50",
-    glow: "bg-slate-400/20",
-    badge: "bg-slate-400",
+  plus: {
+    bg: "from-gray-500/30 to-gray-600/10",
+    border: "border-gray-500/40 hover:border-gray-400/60",
+    glow: "bg-gray-500/25",
+    badge: "bg-gray-500",
   },
-  gold: {
-    bg: "from-yellow-500/20 to-yellow-600/5",
-    border: "border-yellow-500/30 hover:border-yellow-400/50",
-    glow: "bg-yellow-500/20",
-    badge: "bg-yellow-500",
+  infinite: {
+    bg: "from-amber-500/30 to-amber-600/10",
+    border: "border-amber-500/40 hover:border-amber-400/60",
+    glow: "bg-amber-500/25",
+    badge: "bg-amber-500",
   },
 };
 
@@ -63,7 +63,7 @@ function PackageCard({
   onLeave: () => void;
 }) {
   const TierIcon = tierIcons[pkg.tier] || Star;
-  const colors = tierColors[pkg.tier] || tierColors.silver;
+  const colors = tierColors[pkg.tier] || tierColors.plus;
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Motion values for 3D tilt
@@ -111,32 +111,16 @@ function PackageCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={onHover}
       onMouseLeave={handleMouseLeave}
-      className={cn("relative group h-full", pkg.popular && "z-10")}
+      className="relative group h-full"
     >
-      {/* Popular badge */}
-      {pkg.popular && (
-        <motion.div
-          className="absolute -top-4 left-1/2 -translate-x-1/2 z-20"
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-full shadow-lg shadow-red-600/30">
-            Most Popular
-          </span>
-        </motion.div>
-      )}
-
       <motion.div
         className={cn(
           "relative h-full p-6 md:p-8 rounded-2xl border transition-all duration-500",
           `bg-gradient-to-b ${colors.bg}`,
-          colors.border,
-          pkg.popular && "border-red-600/50 hover:border-red-500/70 scale-105 md:scale-110"
+          colors.border
         )}
         style={{ transformStyle: "preserve-3d" }}
-        whileHover={{ scale: pkg.popular ? 1.12 : 1.03 }}
+        whileHover={{ scale: 1.03 }}
         transition={{ duration: 0.3 }}
       >
         {/* Glowing effect on hover */}
@@ -221,11 +205,8 @@ function PackageCard({
         <div style={{ transform: "translateZ(25px)" }}>
           <Link href="/booking">
             <Button
-              variant={pkg.popular ? "default" : "outline"}
-              className={cn(
-                "w-full group/btn",
-                !pkg.popular && "border-white/20 hover:bg-white/10"
-              )}
+              variant="outline"
+              className="w-full group/btn border-white/20 hover:bg-white/10"
             >
               Get Started
               <motion.span
