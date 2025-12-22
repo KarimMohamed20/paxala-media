@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     const filesCount = await db.projectFile.count({
       where: {
-        project: projectsWhere,
+        project: userRole === "ADMIN" ? {} : { clientId: userId },
       },
     });
 
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     // Check for recent file uploads
     const recentFiles = await db.projectFile.findMany({
       where: {
-        project: projectsWhere,
+        project: userRole === "ADMIN" ? {} : { clientId: userId },
         createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
       },
       orderBy: { createdAt: "desc" },
