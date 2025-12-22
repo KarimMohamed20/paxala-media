@@ -52,10 +52,12 @@ export async function GET(request: NextRequest) {
       where: bookingsWhere,
     });
 
+    const filesCountWhere = userRole === "ADMIN" 
+      ? {} 
+      : { project: { clientId: userId } };
+    
     const filesCount = await db.projectFile.count({
-      where: {
-        project: userRole === "ADMIN" ? {} : { clientId: userId },
-      },
+      where: filesCountWhere,
     });
 
     // Format projects for response
@@ -97,11 +99,15 @@ export async function GET(request: NextRequest) {
     const notifications: { id: string; message: string; time: string; type: string }[] = [];
 
     // Check for recent file uploads
+    const recentFilesWhere = userRole === "ADMIN"
+      ? { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
+      : {
+          project: { clientId: userId },
+          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        };
+    
     const recentFiles = await db.projectFile.findMany({
-      where: {
-        project: userRole === "ADMIN" ? {} : { clientId: userId },
-        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-      },
+      where: recentFilesWhere,
       orderBy: { createdAt: "desc" },
       take: 3,
       include: {
