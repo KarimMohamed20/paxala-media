@@ -155,6 +155,7 @@ export default function ProjectDetailPage({
     title: "",
     description: "",
     price: "",
+    deadline: "",
     isVisible: true,
   });
   const [taskForm, setTaskForm] = useState({
@@ -309,6 +310,7 @@ export default function ProjectDetailPage({
         title: milestone.title,
         description: milestone.description || "",
         price: milestone.price?.toString() || "",
+        deadline: milestone.deadline ? milestone.deadline.split("T")[0] : "",
         isVisible: milestone.isVisible,
       });
     } else {
@@ -317,6 +319,7 @@ export default function ProjectDetailPage({
         title: "",
         description: "",
         price: "",
+        deadline: "",
         isVisible: true,
       });
     }
@@ -877,6 +880,12 @@ export default function ProjectDetailPage({
                             {milestone.description}
                           </p>
                         )}
+                        {milestone.deadline && (
+                          <div className="flex items-center gap-1 text-xs text-orange-400 mt-1">
+                            <Calendar size={12} />
+                            Deadline: {format(new Date(milestone.deadline), "MMM d, yyyy")}
+                          </div>
+                        )}
                       </div>
                     </button>
                     <div className="flex items-center gap-3">
@@ -1163,6 +1172,18 @@ export default function ProjectDetailPage({
                   setMilestoneForm({ ...milestoneForm, price: e.target.value })
                 }
                 placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-white/70 mb-2">
+                Deadline
+              </label>
+              <Input
+                type="date"
+                value={milestoneForm.deadline}
+                onChange={(e) =>
+                  setMilestoneForm({ ...milestoneForm, deadline: e.target.value })
+                }
               />
             </div>
             <div className="flex items-center gap-2">

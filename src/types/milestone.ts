@@ -38,6 +38,7 @@ export interface Milestone {
   paymentStatus: PaymentStatus;
   paymentDate: string | null;
   paymentAmount: number | null;
+  deadline: string | null;
   isVisible: boolean;
   projectId: string;
   tasks: Task[];

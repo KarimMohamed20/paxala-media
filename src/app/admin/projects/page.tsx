@@ -48,6 +48,7 @@ interface Project {
   clientName: string | null;
   clientId: string | null;
   featured: boolean;
+  deadline: string | null;
   createdAt: string;
 }
 
@@ -90,6 +91,7 @@ export default function ProjectsPage() {
     category: "VIDEO_PRODUCTION",
     clientId: "",
     status: "DRAFT",
+    deadline: "",
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +184,7 @@ export default function ProjectsPage() {
         category: "VIDEO_PRODUCTION",
         clientId: "",
         status: "DRAFT",
+        deadline: "",
       });
       fetchProjects();
     } catch (err) {
@@ -337,6 +340,11 @@ export default function ProjectsPage() {
                             <p className="text-white/40 text-xs">
                               /{project.slug}
                             </p>
+                            {project.deadline && (
+                              <p className="text-orange-400 text-xs mt-0.5">
+                                Deadline: {format(new Date(project.deadline), "MMM d, yyyy")}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -470,6 +478,18 @@ export default function ProjectsPage() {
                 }
                 placeholder="Project description"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-white/70 mb-2">
+                Deadline
+              </label>
+              <Input
+                type="date"
+                value={createForm.deadline}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, deadline: e.target.value })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
