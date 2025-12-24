@@ -71,3 +71,4 @@ docker compose -f docker-compose.yml --env-file .env.production logs -f app
 
 The error should be resolved and the dashboard API should work correctly.
 
+

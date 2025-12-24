@@ -30,6 +30,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Project {
   id: string;
@@ -470,57 +477,69 @@ export default function ProjectsPage() {
                 <label className="block text-sm text-white/70 mb-2">
                   Category
                 </label>
-                <select
+                <Select
                   value={createForm.category}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, category: e.target.value })
+                  onValueChange={(value) =>
+                    setCreateForm({ ...createForm, category: value })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-2">
                   Status
                 </label>
-                <select
+                <Select
                   value={createForm.status}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, status: e.target.value })
+                  onValueChange={(value) =>
+                    setCreateForm({ ...createForm, status: value })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                 >
-                  {Object.keys(statusColors).map((status) => (
-                    <option key={status} value={status}>
-                      {status.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(statusColors).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">
                 Client
               </label>
-              <select
-                value={createForm.clientId}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, clientId: e.target.value })
+              <Select
+                value={createForm.clientId || "none"}
+                onValueChange={(value) =>
+                  setCreateForm({ ...createForm, clientId: value === "none" ? "" : value })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
               >
-                <option value="">No client selected</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name || client.email}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="No client selected" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No client selected</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name || client.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button

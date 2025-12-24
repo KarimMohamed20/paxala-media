@@ -43,6 +43,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Milestone, Task, StaffMember } from "@/types/milestone";
 
 interface ProjectStaff {
@@ -1231,18 +1238,22 @@ export default function ProjectDetailPage({
                 <label className="block text-sm text-white/70 mb-2">
                   Priority
                 </label>
-                <select
+                <Select
                   value={taskForm.priority}
-                  onChange={(e) =>
-                    setTaskForm({ ...taskForm, priority: e.target.value })
+                  onValueChange={(value) =>
+                    setTaskForm({ ...taskForm, priority: value })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                 >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                  <option value="URGENT">Urgent</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LOW">Low</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HIGH">High</SelectItem>
+                    <SelectItem value="URGENT">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-2">
@@ -1261,20 +1272,24 @@ export default function ProjectDetailPage({
               <label className="block text-sm text-white/70 mb-2">
                 Assign To
               </label>
-              <select
-                value={taskForm.assigneeId}
-                onChange={(e) =>
-                  setTaskForm({ ...taskForm, assigneeId: e.target.value })
+              <Select
+                value={taskForm.assigneeId || "unassigned"}
+                onValueChange={(value) =>
+                  setTaskForm({ ...taskForm, assigneeId: value === "unassigned" ? "" : value })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
               >
-                <option value="">Unassigned</option>
-                {staff.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name || member.email} ({member.role})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {staff.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name || member.email} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -1320,20 +1335,24 @@ export default function ProjectDetailPage({
               <label className="block text-sm text-white/70 mb-2">
                 Payment Status
               </label>
-              <select
+              <Select
                 value={paymentForm.paymentStatus}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setPaymentForm({
                     ...paymentForm,
-                    paymentStatus: e.target.value,
+                    paymentStatus: value,
                   })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
               >
-                <option value="UNPAID">Unpaid</option>
-                <option value="PARTIAL">Partial</option>
-                <option value="PAID">Paid</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UNPAID">Unpaid</SelectItem>
+                  <SelectItem value="PARTIAL">Partial</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {paymentForm.paymentStatus === "PARTIAL" && (
               <div>
@@ -1494,39 +1513,47 @@ export default function ProjectDetailPage({
                 <label className="block text-sm text-white/70 mb-2">
                   Type
                 </label>
-                <select
+                <Select
                   value={fileForm.type}
-                  onChange={(e) =>
-                    setFileForm({ ...fileForm, type: e.target.value })
+                  onValueChange={(value) =>
+                    setFileForm({ ...fileForm, type: value })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                 >
-                  <option value="link">Link</option>
-                  <option value="folder">Folder</option>
-                  <option value="video">Video</option>
-                  <option value="image">Image</option>
-                  <option value="document">Document</option>
-                  <option value="archive">Archive</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="link">Link</SelectItem>
+                    <SelectItem value="folder">Folder</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="archive">Archive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-2">
                   Attach to Task (optional)
                 </label>
-                <select
-                  value={fileForm.taskId}
-                  onChange={(e) =>
-                    setFileForm({ ...fileForm, taskId: e.target.value })
+                <Select
+                  value={fileForm.taskId || "project-level"}
+                  onValueChange={(value) =>
+                    setFileForm({ ...fileForm, taskId: value === "project-level" ? "" : value })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                 >
-                  <option value="">Project level</option>
-                  {getAllTasks().map((task) => (
-                    <option key={task.id} value={task.id}>
-                      {task.milestoneName} → {task.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Project level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="project-level">Project level</SelectItem>
+                    {getAllTasks().map((task) => (
+                      <SelectItem key={task.id} value={task.id}>
+                        {task.milestoneName} → {task.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>

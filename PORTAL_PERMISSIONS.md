@@ -138,3 +138,4 @@ This document explains what **Admins** and **Clients** can see in the Client Por
 - **Jane (Client):** Can see and access the project (it's her project)
 - **Other Clients:** Cannot see the project (not published and not theirs)
 
+

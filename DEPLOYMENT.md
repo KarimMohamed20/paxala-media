@@ -185,3 +185,4 @@ Make sure `.env.production` contains:
 - The script expects `.env.production` file in the project root
 - Database data persists in Docker volumes, so data won't be lost on redeploy
 
+

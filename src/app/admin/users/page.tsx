@@ -29,6 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   id: string;
@@ -401,17 +408,21 @@ export default function UsersPage() {
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">Role</label>
-              <select
+              <Select
                 value={createForm.role}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, role: e.target.value })
+                onValueChange={(value) =>
+                  setCreateForm({ ...createForm, role: value })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
               >
-                <option value="CLIENT">Client</option>
-                <option value="STAFF">Staff</option>
-                <option value="ADMIN">Admin</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CLIENT">Client</SelectItem>
+                  <SelectItem value="STAFF">Staff</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
@@ -474,17 +485,21 @@ export default function UsersPage() {
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">Role</label>
-              <select
+              <Select
                 value={editForm.role}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, role: e.target.value })
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, role: value })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
               >
-                <option value="CLIENT">Client</option>
-                <option value="STAFF">Staff</option>
-                <option value="ADMIN">Admin</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CLIENT">Client</SelectItem>
+                  <SelectItem value="STAFF">Staff</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
