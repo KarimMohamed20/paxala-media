@@ -67,21 +67,28 @@ export function AboutSection() {
           </h2>
           <div className="space-y-3 md:space-y-4 text-white/70 leading-relaxed mb-6 md:mb-8">
             <p>
-              Paxala Media Production has grown into a creative home for visual
-              professionals dedicated to bringing brands to life through
-              impactful storytelling.
+              Paxala Media Production is a full-service creative agency with
+              in-house production, built to shape, scale, and elevate brands
+              through strategic visual storytelling.
             </p>
             <p>
-              What began as a small, passion-driven studio has evolved into a
-              full-service creative agency where filmmakers, designers, editors,
-              drone specialists, and developers collaborate seamlessly under one
-              roof.
+              What began as a passion-driven studio has evolved into a
+              multidisciplinary creative house that leads with strategy and
+              creative direction, while executing everything under one roof —
+              from branding and content to film, digital, and growth.
             </p>
             <p>
-              We specialize in graphic design, 3D modeling, video and photo
-              production, social media campaigns, and website development,
-              offering businesses a comprehensive suite of visual solutions
-              tailored for today&apos;s fast-paced, digital-first world.
+              Every project is led under a single creative direction and
+              executed through a fully integrated in-house system — ensuring
+              clarity, consistency, and control from strategy to final delivery.
+            </p>
+            <p>
+              We partner with ambitious brands, institutions, and companies that
+              understand visuals are not decoration — they are a business asset.
+            </p>
+            <p>
+              At PMP, we don&apos;t just produce content. We build visual
+              systems that tell stories, build trust, and drive results.
             </p>
           </div>
 
