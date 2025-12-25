@@ -371,20 +371,50 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                Paxala Media Production has grown into a creative home for
-                visual professionals dedicated to bringing brands to life
-                through impactful storytelling.
+                Paxala Media Production is a full-service creative agency with
+                in-house production, built to shape, scale, and elevate brands
+                through strategic visual storytelling.
+              </motion.p>
+              <motion.p
+                className="text-lg text-white/50 leading-relaxed mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                What began as a passion-driven studio has evolved into a
+                multidisciplinary creative house that leads with strategy and
+                creative direction, while executing everything under one roof —
+                from branding and content to film, digital, and growth.
+              </motion.p>
+              <motion.p
+                className="text-lg text-white/50 leading-relaxed mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                Every project is led under a single creative direction and
+                executed through a fully integrated in-house system — ensuring
+                clarity, consistency, and control from strategy to final
+                delivery.
+              </motion.p>
+              <motion.p
+                className="text-lg text-white/50 leading-relaxed mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                We partner with ambitious brands, institutions, and companies
+                that understand visuals are not decoration — they are a business
+                asset.
               </motion.p>
               <motion.p
                 className="text-lg text-white/50 leading-relaxed"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
               >
-                What began as a small, passion-driven studio has evolved into a
-                full-service creative agency where filmmakers, designers,
-                editors, drone specialists, and developers collaborate
-                seamlessly under one roof.
+                At PMP, we don&apos;t just produce content. We build visual
+                systems that tell stories, build trust, and drive results.
               </motion.p>
             </motion.div>
 
