@@ -14,13 +14,22 @@ import {
   ArrowLeft,
   Loader2,
   ClipboardCheck,
+  Image,
+  Home,
+  Briefcase,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin/homepage", icon: Home, label: "Homepage" },
+  { href: "/admin/services", icon: Briefcase, label: "Services" },
+  { href: "/admin/team", icon: Users, label: "Team" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/projects", icon: Folder, label: "Projects" },
+  { href: "/admin/portfolio", icon: Image, label: "Portfolio" },
+  { href: "/admin/blog", icon: FileText, label: "Blog" },
   { href: "/admin/approvals", icon: ClipboardCheck, label: "Approvals" },
   { href: "/admin/bookings", icon: Calendar, label: "Bookings" },
   { href: "/admin/inquiries", icon: MessageSquare, label: "Inquiries" },

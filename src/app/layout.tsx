@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | Paxala Media",
   },
   description:
-    "Full-service creative production studio specializing in video production, photography, graphic design, 3D modeling, web development, and more. Based in Sakhnin, Israel.",
+    "Full-service creative production studio specializing in video production, photography, graphic design, 3D modeling, web development, and more. Based in Sakhnin, Palestine.",
   keywords: [
     "video production",
     "photography",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "app development",
     "creative agency",
     "media production",
-    "Israel",
+    "Palestine",
     "Sakhnin",
   ],
   authors: [{ name: "Paxala Media Production" }],

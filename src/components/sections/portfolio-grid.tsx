@@ -92,16 +92,15 @@ export function PortfolioGrid({ projects }: PortfolioGridProps) {
       <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence mode="popLayout">
           {filteredProjects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="group cursor-pointer"
-              onClick={() => openLightbox(project)}
-            >
+            <Link href={`/portfolio/${project.slug}`} key={project.id}>
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group cursor-pointer"
+              >
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-900">
                 {/* Thumbnail */}
                 <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-neutral-900">
@@ -163,7 +162,8 @@ export function PortfolioGrid({ projects }: PortfolioGridProps) {
                 {/* Red accent line */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </AnimatePresence>
       </motion.div>

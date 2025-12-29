@@ -5,17 +5,28 @@ import Image from "next/image";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Instagram, Linkedin } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/section";
-import { team } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-type TeamTab = "production" | "itDev";
+type TeamTab = "production" | "itDev" | "creative";
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string | null;
+  skills: string[];
+  social?: {
+    instagram?: string;
+    linkedin?: string;
+  };
+}
 
 // Team member card with cinematic hover effects
 function TeamMemberCard({
   member,
   index,
 }: {
-  member: (typeof team.production)[0];
+  member: TeamMember;
   index: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -59,12 +70,20 @@ function TeamMemberCard({
               }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
-              <Image
-                src={member.image}
-                alt={member.name}
-                fill
-                className="object-cover"
-              />
+              {member.image ? (
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-8xl font-bold text-white/20">
+                    {member.name.charAt(0)}
+                  </span>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         </motion.div>
@@ -91,34 +110,44 @@ function TeamMemberCard({
         />
 
         {/* Social Links with stagger animation */}
-        <motion.div
-          className="absolute bottom-4 left-4 right-4 flex justify-center gap-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            y: isHovered ? 0 : 20,
-          }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <motion.a
-            href="#"
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
-            whileHover={{ scale: 1.2, backgroundColor: "rgb(239 68 68)" }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400 }}
+        {(member.social?.instagram || member.social?.linkedin) && (
+          <motion.div
+            className="absolute bottom-4 left-4 right-4 flex justify-center gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: isHovered ? 1 : 0,
+              y: isHovered ? 0 : 20,
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <Instagram size={18} className="text-white" />
-          </motion.a>
-          <motion.a
-            href="#"
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
-            whileHover={{ scale: 1.2, backgroundColor: "rgb(239 68 68)" }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Linkedin size={18} className="text-white" />
-          </motion.a>
-        </motion.div>
+            {member.social?.instagram && (
+              <motion.a
+                href={member.social.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+                whileHover={{ scale: 1.2, backgroundColor: "rgb(239 68 68)" }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Instagram size={18} className="text-white" />
+              </motion.a>
+            )}
+            {member.social?.linkedin && (
+              <motion.a
+                href={member.social.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+                whileHover={{ scale: 1.2, backgroundColor: "rgb(239 68 68)" }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Linkedin size={18} className="text-white" />
+              </motion.a>
+            )}
+          </motion.div>
+        )}
 
         {/* Animated red accent line */}
         <motion.div
@@ -207,17 +236,45 @@ function TeamMemberCard({
   );
 }
 
-export function TeamSection() {
+interface TeamContent {
+  teamSubtitle?: string;
+  teamTitle?: string;
+  teamDescription?: string;
+  teamTab1Label?: string;
+  teamTab2Label?: string;
+  teamTab3Label?: string;
+}
+
+interface TeamMembers {
+  production: TeamMember[];
+  itDev: TeamMember[];
+  creative: TeamMember[];
+}
+
+export function TeamSection({ content, teamMembers }: { content?: TeamContent | null; teamMembers?: TeamMembers }) {
   const [activeTab, setActiveTab] = useState<TeamTab>("production");
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
 
+  // Default values
+  const subtitle = content?.teamSubtitle || "Our Team";
+  const title = content?.teamTitle || "PMP Crew";
+  const description = content?.teamDescription || "Meet the talented professionals behind our creative productions.";
+  const tab1Label = content?.teamTab1Label || "Production Team";
+  const tab2Label = content?.teamTab2Label || "IT & Dev Team";
+  const tab3Label = content?.teamTab3Label || "Creative Team";
+
   const tabs = [
-    { id: "production" as TeamTab, label: "Production Team" },
-    { id: "itDev" as TeamTab, label: "IT & Dev Team" },
+    { id: "production" as TeamTab, label: tab1Label },
+    { id: "itDev" as TeamTab, label: tab2Label },
+    { id: "creative" as TeamTab, label: tab3Label },
   ];
 
-  const currentTeam = activeTab === "production" ? team.production : team.itDev;
+  const currentTeam = activeTab === "production"
+    ? (teamMembers?.production || [])
+    : activeTab === "itDev"
+    ? (teamMembers?.itDev || [])
+    : (teamMembers?.creative || []);
 
   return (
     <Section className="bg-black relative overflow-hidden">
@@ -251,9 +308,9 @@ export function TeamSection() {
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <SectionHeader
-            subtitle="Our Team"
-            title="PMP Crew"
-            description="Meet the talented professionals behind our creative productions."
+            subtitle={subtitle}
+            title={title}
+            description={description}
           />
         </motion.div>
 

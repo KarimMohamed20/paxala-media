@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
@@ -15,71 +15,25 @@ import {
 } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { team } from "@/lib/constants";
 
-const values = [
-  {
-    icon: Target,
-    title: "Excellence",
-    description:
-      "We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results.",
-  },
-  {
-    icon: Users,
-    title: "Collaboration",
-    description:
-      "We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable.",
-  },
-  {
-    icon: Heart,
-    title: "Passion",
-    description:
-      "Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities.",
-  },
-  {
-    icon: Award,
-    title: "Innovation",
-    description:
-      "We embrace new technologies and techniques to stay at the forefront of the creative industry.",
-  },
-];
-
-const milestones = [
-  { year: "2014", title: "Founded", description: "Paxala Media was born from a passion for visual storytelling" },
-  { year: "2016", title: "First Major Client", description: "Completed our first major commercial project" },
-  { year: "2018", title: "Team Expansion", description: "Grew our team of creative professionals" },
-  { year: "2020", title: "Studio Launch", description: "Opened our dedicated production studio" },
-  { year: "2022", title: "Digital Services", description: "Expanded into web and app development" },
-  { year: "2024", title: "1000+ Projects", description: "Celebrated completing over 1000 client projects" },
-];
-
-// Animated word reveal for hero heading
-function AnimatedHeading() {
-  return (
-    <motion.h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
-      <motion.span
-        className="inline-block overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <motion.span
-          className="inline-block"
-          initial={{ y: 100, rotateX: -80 }}
-          animate={{ y: 0, rotateX: 0 }}
-          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
-        >
-          <span className="text-red-500">A</span>
-          <span className="text-white">bout Us</span>
-        </motion.span>
-      </motion.span>
-    </motion.h1>
-  );
-}
+const iconMap: Record<string, React.ElementType> = {
+  Target,
+  Users,
+  Heart,
+  Award,
+};
 
 // Value card with hover effects
-function ValueCard({ value, index }: { value: (typeof values)[0]; index: number }) {
+interface ValueType {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+function ValueCard({ value, index }: { value: ValueType; index: number }) {
   const cardRef = useRef(null);
   const isInView = useInView(cardRef, { once: true, amount: 0.3 });
+  const Icon = iconMap[value.icon] || Target;
 
   return (
     <motion.div
@@ -107,7 +61,7 @@ function ValueCard({ value, index }: { value: (typeof values)[0]; index: number 
         whileHover={{ rotate: [0, -10, 10, 0] }}
         transition={{ duration: 0.5 }}
       >
-        <value.icon size={28} className="text-red-500" />
+        <Icon size={28} className="text-red-500" />
       </motion.div>
 
       <h3 className="text-xl font-semibold text-white mb-3 relative z-10">
@@ -129,12 +83,18 @@ function ValueCard({ value, index }: { value: (typeof values)[0]; index: number 
 }
 
 // Timeline milestone with draw-in animation
+interface MilestoneType {
+  year: string;
+  title: string;
+  description: string;
+}
+
 function TimelineMilestone({
   milestone,
   index,
   isLast,
 }: {
-  milestone: (typeof milestones)[0];
+  milestone: MilestoneType;
   index: number;
   isLast: boolean;
 }) {
@@ -204,11 +164,23 @@ function TimelineMilestone({
 }
 
 // Team member card with hover effects
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string | null;
+  skills: string[];
+  social?: {
+    instagram?: string;
+    linkedin?: string;
+  };
+}
+
 function TeamMemberCard({
   member,
   index,
 }: {
-  member: (typeof team.production)[0];
+  member: TeamMember;
   index: number;
 }) {
   const ref = useRef(null);
@@ -231,41 +203,59 @@ function TeamMemberCard({
         whileHover={{ scale: 1.03 }}
         transition={{ duration: 0.3 }}
       >
-        <Image
-          src={member.image}
-          alt={member.name}
-          fill
-          className="object-cover"
-        />
+        {member.image ? (
+          <Image
+            src={member.image}
+            alt={member.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-8xl font-bold text-white/20">
+              {member.name.charAt(0)}
+            </span>
+          </div>
+        )}
         <motion.div
           className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         />
-        <motion.div
-          className="absolute bottom-4 left-4 right-4 flex justify-center gap-3"
-          initial={{ opacity: 0, y: 20 }}
-          whileHover={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.a
-            href="#"
-            className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition-colors"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
+        {(member.social?.instagram || member.social?.linkedin) && (
+          <motion.div
+            className="absolute bottom-4 left-4 right-4 flex justify-center gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileHover={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Instagram size={18} className="text-white" />
-          </motion.a>
-          <motion.a
-            href="#"
-            className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition-colors"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Linkedin size={18} className="text-white" />
-          </motion.a>
-        </motion.div>
+            {member.social?.instagram && (
+              <motion.a
+                href={member.social.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition-colors"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Instagram size={18} className="text-white" />
+              </motion.a>
+            )}
+            {member.social?.linkedin && (
+              <motion.a
+                href={member.social.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition-colors"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Linkedin size={18} className="text-white" />
+              </motion.a>
+            )}
+          </motion.div>
+        )}
       </motion.div>
       <div className="text-center">
         <motion.h4
@@ -311,6 +301,16 @@ function TeamMemberCard({
 
 export default function AboutPage() {
   const heroRef = useRef(null);
+  const [content, setContent] = useState<any>(null);
+  const [teamMembers, setTeamMembers] = useState<{
+    production: any[];
+    itDev: any[];
+    creative: any[];
+  }>({
+    production: [],
+    itDev: [],
+    creative: [],
+  });
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
@@ -318,6 +318,96 @@ export default function AboutPage() {
 
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  useEffect(() => {
+    async function fetchContent() {
+      try {
+        const response = await fetch('/api/homepage');
+        if (response.ok) {
+          const data = await response.json();
+          setContent({
+            ...data,
+            aboutHighlights: typeof data.aboutHighlights === 'string'
+              ? JSON.parse(data.aboutHighlights)
+              : data.aboutHighlights,
+            aboutValues: typeof data.aboutValues === 'string'
+              ? JSON.parse(data.aboutValues)
+              : data.aboutValues,
+            aboutMilestones: typeof data.aboutMilestones === 'string'
+              ? JSON.parse(data.aboutMilestones)
+              : data.aboutMilestones,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching content:', error);
+      }
+    }
+    fetchContent();
+  }, []);
+
+  useEffect(() => {
+    async function fetchTeamMembers() {
+      try {
+        const response = await fetch('/api/team?activeOnly=true');
+        if (response.ok) {
+          const data = await response.json();
+          setTeamMembers({
+            production: data.filter((m: any) => m.team === 'PRODUCTION'),
+            itDev: data.filter((m: any) => m.team === 'IT_DEV'),
+            creative: data.filter((m: any) => m.team === 'CREATIVE'),
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching team members:', error);
+      }
+    }
+    fetchTeamMembers();
+  }, []);
+
+  // Use content from API or fallback to defaults
+  const aboutImage = content?.aboutImage || null;
+  const paragraph1 = content?.aboutParagraph1 || "Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.";
+  const paragraph2 = content?.aboutParagraph2 || "What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.";
+  const paragraph3 = content?.aboutParagraph3 || "Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.";
+  const paragraph4 = content?.aboutParagraph4 || "We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.";
+  const paragraph5 = content?.aboutParagraph5 || "At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.";
+
+  // About page specific content
+  const heroBadge = content?.aboutPageHeroBadge || "About Us";
+  const heroHeading = content?.aboutPageHeroHeading || "About Paxala Media";
+
+  // Values section
+  const valuesSubtitle = content?.aboutValuesSubtitle || "What Drives Us";
+  const valuesTitle = content?.aboutValuesTitle || "Our Values";
+  const valuesDescription = content?.aboutValuesDescription || "The principles that guide everything we do at Paxala Media.";
+  const values = content?.aboutValues || [
+    { icon: "Target", title: "Excellence", description: "We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results." },
+    { icon: "Users", title: "Collaboration", description: "We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable." },
+    { icon: "Heart", title: "Passion", description: "Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities." },
+    { icon: "Award", title: "Innovation", description: "We embrace new technologies and techniques to stay at the forefront of the creative industry." },
+  ];
+
+  // Milestones section
+  const milestonesSubtitle = content?.aboutMilestonesSubtitle || "Our Journey";
+  const milestonesTitle = content?.aboutMilestonesTitle || "Milestones";
+  const milestonesDescription = content?.aboutMilestonesDescription || "Key moments in our growth as a creative studio.";
+  const milestones = content?.aboutMilestones || [
+    { year: "2014", title: "Founded", description: "Paxala Media was born from a passion for visual storytelling" },
+    { year: "2016", title: "First Major Client", description: "Completed our first major commercial project" },
+    { year: "2018", title: "Team Expansion", description: "Grew our team of creative professionals" },
+    { year: "2020", title: "Studio Launch", description: "Opened our dedicated production studio" },
+    { year: "2022", title: "Digital Services", description: "Expanded into web and app development" },
+    { year: "2024", title: "1000+ Projects", description: "Celebrated completing over 1000 client projects" },
+  ];
+
+  // Team section
+  const teamSubtitle = content?.aboutTeamSubtitle || "Our Crew";
+  const teamTitle = content?.aboutTeamTitle || "Meet the Team";
+  const teamDescription = content?.aboutTeamDescription || "The talented professionals behind our creative productions.";
+
+  // CTA section
+  const ctaHeading = content?.aboutCtaHeading || "Ready to Start Your Project?";
+  const ctaSubtitle = content?.aboutCtaSubtitle || "Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.";
 
   return (
     <div className="pt-20">
@@ -362,18 +452,33 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                Our Story
+                {heroBadge}
               </motion.span>
-              <AnimatedHeading />
+              <motion.h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+                <motion.span
+                  className="inline-block text-red-500"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  {heroHeading.charAt(0)}
+                </motion.span>
+                <motion.span
+                  className="inline-block text-white"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  {heroHeading.slice(1)}
+                </motion.span>
+              </motion.h1>
               <motion.p
                 className="text-xl text-white/60 leading-relaxed mb-8"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                Paxala Media Production is a full-service creative agency with
-                in-house production, built to shape, scale, and elevate brands
-                through strategic visual storytelling.
+                {paragraph1}
               </motion.p>
               <motion.p
                 className="text-lg text-white/50 leading-relaxed mb-6"
@@ -381,10 +486,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
-                What began as a passion-driven studio has evolved into a
-                multidisciplinary creative house that leads with strategy and
-                creative direction, while executing everything under one roof —
-                from branding and content to film, digital, and growth.
+                {paragraph2}
               </motion.p>
               <motion.p
                 className="text-lg text-white/50 leading-relaxed mb-6"
@@ -392,10 +494,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                Every project is led under a single creative direction and
-                executed through a fully integrated in-house system — ensuring
-                clarity, consistency, and control from strategy to final
-                delivery.
+                {paragraph3}
               </motion.p>
               <motion.p
                 className="text-lg text-white/50 leading-relaxed mb-6"
@@ -403,9 +502,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.7 }}
               >
-                We partner with ambitious brands, institutions, and companies
-                that understand visuals are not decoration — they are a business
-                asset.
+                {paragraph4}
               </motion.p>
               <motion.p
                 className="text-lg text-white/50 leading-relaxed"
@@ -413,8 +510,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
               >
-                At PMP, we don&apos;t just produce content. We build visual
-                systems that tell stories, build trust, and drive results.
+                {paragraph5}
               </motion.p>
             </motion.div>
 
@@ -428,13 +524,25 @@ export default function AboutPage() {
                 className="aspect-square rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-950 border border-white/10 flex items-center justify-center overflow-hidden"
                 whileHover={{ scale: 1.02 }}
               >
-                <motion.span
-                  className="text-[200px] font-bold text-white/5"
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  PMP
-                </motion.span>
+                {aboutImage ? (
+                  <div className="absolute inset-x-4 inset-y-0">
+                    <Image
+                      src={aboutImage}
+                      alt="About Paxala Media"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                ) : (
+                  <motion.span
+                    className="text-[200px] font-bold text-white/5"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    PMP
+                  </motion.span>
+                )}
               </motion.div>
               <motion.div
                 className="absolute -bottom-6 -right-6 bg-red-600 rounded-xl p-6"
@@ -461,13 +569,13 @@ export default function AboutPage() {
       {/* Values */}
       <Section className="bg-black">
         <SectionHeader
-          subtitle="What Drives Us"
-          title="Our Values"
-          description="The principles that guide everything we do at Paxala Media."
+          subtitle={valuesSubtitle}
+          title={valuesTitle}
+          description={valuesDescription}
         />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {values.map((value, index) => (
+          {values.map((value: ValueType, index: number) => (
             <ValueCard key={value.title} value={value} index={index} />
           ))}
         </div>
@@ -476,9 +584,9 @@ export default function AboutPage() {
       {/* Timeline */}
       <Section className="bg-gradient-to-b from-black to-neutral-950">
         <SectionHeader
-          subtitle="Our Journey"
-          title="Milestones"
-          description="Key moments in our growth as a creative studio."
+          subtitle={milestonesSubtitle}
+          title={milestonesTitle}
+          description={milestonesDescription}
         />
 
         <div className="relative">
@@ -492,7 +600,7 @@ export default function AboutPage() {
           />
 
           <div className="space-y-12">
-            {milestones.map((milestone, index) => (
+            {milestones.map((milestone: MilestoneType, index: number) => (
               <TimelineMilestone
                 key={milestone.year}
                 milestone={milestone}
@@ -507,44 +615,67 @@ export default function AboutPage() {
       {/* Team */}
       <Section className="bg-neutral-950">
         <SectionHeader
-          subtitle="Our Crew"
-          title="Meet the Team"
-          description="The talented professionals behind our creative productions."
+          subtitle={teamSubtitle}
+          title={teamTitle}
+          description={teamDescription}
         />
 
         {/* Production Team */}
-        <div className="mb-16">
-          <motion.h3
-            className="text-2xl font-semibold text-white mb-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-red-500">P</span>roduction Team
-          </motion.h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {team.production.map((member, index) => (
-              <TeamMemberCard key={member.id} member={member} index={index} />
-            ))}
+        {teamMembers.production.length > 0 && (
+          <div className="mb-16">
+            <motion.h3
+              className="text-2xl font-semibold text-white mb-8 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-red-500">P</span>roduction Team
+            </motion.h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {teamMembers.production.map((member, index) => (
+                <TeamMemberCard key={member.id} member={member} index={index} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* IT & Dev Team */}
-        <div>
-          <motion.h3
-            className="text-2xl font-semibold text-white mb-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-red-500">I</span>T & Dev Team
-          </motion.h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-2xl mx-auto lg:max-w-none lg:px-32">
-            {team.itDev.map((member, index) => (
-              <TeamMemberCard key={member.id} member={member} index={index} />
-            ))}
+        {teamMembers.itDev.length > 0 && (
+          <div className="mb-16">
+            <motion.h3
+              className="text-2xl font-semibold text-white mb-8 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-red-500">I</span>T & Dev Team
+            </motion.h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {teamMembers.itDev.map((member, index) => (
+                <TeamMemberCard key={member.id} member={member} index={index} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Creative Team */}
+        {teamMembers.creative.length > 0 && (
+          <div>
+            <motion.h3
+              className="text-2xl font-semibold text-white mb-8 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-red-500">C</span>reative Team
+            </motion.h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {teamMembers.creative.map((member, index) => (
+                <TeamMemberCard key={member.id} member={member} index={index} />
+              ))}
+            </div>
+          </div>
+        )}
       </Section>
 
       {/* CTA */}
@@ -578,11 +709,10 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Work with Us?
+              {ctaHeading}
             </h2>
             <p className="text-xl text-white/80 mb-10">
-              Let&apos;s collaborate and create something extraordinary
-              together. Our team is excited to hear about your project.
+              {ctaSubtitle}
             </p>
             <motion.div
               className="flex flex-col sm:flex-row items-center justify-center gap-4"

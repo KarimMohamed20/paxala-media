@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Video,
@@ -13,10 +15,10 @@ import {
   Lightbulb,
   ArrowRight,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { services } from "@/lib/constants";
 
 const iconMap: Record<string, React.ElementType> = {
   Video,
@@ -29,15 +31,27 @@ const iconMap: Record<string, React.ElementType> = {
   Lightbulb,
 };
 
+interface Service {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string | null;
+  image: string | null;
+  features: string[];
+  isActive: boolean;
+  order: number;
+}
+
 // Service section with alternating animations
 function ServiceSection({
   service,
   index,
 }: {
-  service: (typeof services)[0];
+  service: Service;
   index: number;
 }) {
-  const Icon = iconMap[service.icon] || Box;
+  const Icon = service.icon && iconMap[service.icon] ? iconMap[service.icon] : Box;
   const isEven = index % 2 === 0;
 
   return (
@@ -118,17 +132,32 @@ function ServiceSection({
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Placeholder for service image/video */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon size={120} className="text-white/5" />
-          </div>
+          {service.image ? (
+            <>
+              <Image
+                src={service.image}
+                alt={service.name}
+                fill
+                className="object-cover"
+              />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-red-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </>
+          ) : (
+            <>
+              {/* Placeholder for service image/video */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon size={120} className="text-white/5" />
+              </div>
 
-          {/* Decorative elements */}
-          <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-red-600/20 blur-2xl" />
-          <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full bg-red-600/10 blur-3xl" />
+              {/* Decorative elements */}
+              <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-red-600/20 blur-2xl" />
+              <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full bg-red-600/10 blur-3xl" />
 
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-red-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-red-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </>
+          )}
         </motion.div>
       </div>
     </motion.div>
@@ -136,6 +165,30 @@ function ServiceSection({
 }
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const response = await fetch('/api/services');
+        if (response.ok) {
+          const data = await response.json();
+          // Filter active services and sort by order
+          const activeServices = data
+            .filter((s: Service) => s.isActive)
+            .sort((a: Service, b: Service) => a.order - b.order);
+          setServices(activeServices);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchServices();
+  }, []);
+
   return (
     <div className="pt-20">
       {/* Hero */}
@@ -182,11 +235,21 @@ export default function ServicesPage() {
 
       {/* Services List */}
       <Section className="bg-black">
-        <div className="space-y-32">
-          {services.map((service, index) => (
-            <ServiceSection key={service.id} service={service} index={index} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-red-500" />
+          </div>
+        ) : services.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-white/60 text-lg">No services available at the moment.</p>
+          </div>
+        ) : (
+          <div className="space-y-32">
+            {services.map((service, index) => (
+              <ServiceSection key={service.id} service={service} index={index} />
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* CTA Section */}

@@ -46,8 +46,10 @@ function AnimatedCounter({ value, delay = 0 }: { value: string; delay?: number }
 }
 
 // Text reveal animation component
-function TextRevealHeading() {
-  const words = ["Paxala", "Media", "Production"];
+function TextRevealHeading({ text }: { text: string }) {
+  const words = text.split(" ");
+  const firstWord = words[0] || "";
+  const remainingWords = words.slice(1);
 
   return (
     <motion.h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-6 md:mb-8">
@@ -66,12 +68,12 @@ function TextRevealHeading() {
             delay: 0.2
           }}
         >
-          <span className="text-red-500">P</span>
-          <span className="text-white">axala</span>
+          <span className="text-red-500">{firstWord.charAt(0)}</span>
+          <span className="text-white">{firstWord.slice(1)}</span>
         </motion.span>
       </motion.span>
       <motion.span className="block overflow-hidden">
-        {["Media", "Production"].map((word, i) => (
+        {remainingWords.map((word, i) => (
           <motion.span
             key={word}
             className="inline-block text-white/90 mr-4"
@@ -91,9 +93,31 @@ function TextRevealHeading() {
   );
 }
 
-export function HeroSection() {
+interface HeroContent {
+  heroBadge?: string;
+  heroHeading?: string;
+  heroSlogan?: string;
+  heroSubtitle1?: string;
+  heroSubtitle2?: string;
+  heroStats?: Array<{ value: string; label: string }>;
+}
+
+export function HeroSection({ content }: { content?: HeroContent | null }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const sectionRef = useRef(null);
+
+  // Default values if content is not provided
+  const badge = content?.heroBadge || "Creative Production Studio";
+  const heading = content?.heroHeading || "Paxala Media Production";
+  const slogan = content?.heroSlogan || "From Vision to Visual";
+  const subtitle1 = content?.heroSubtitle1 || "Bringing brands to life through impactful visual storytelling.";
+  const subtitle2 = content?.heroSubtitle2 || "Video production, photography, design, and development under one roof.";
+  const stats = content?.heroStats || [
+    { value: "1000+", label: "Projects Completed" },
+    { value: "200+", label: "Happy Clients" },
+    { value: "8+", label: "Services Offered" },
+    { value: "10+", label: "Years Experience" },
+  ];
 
   // Parallax scroll effect
   const { scrollYProgress } = useScroll({
@@ -207,12 +231,12 @@ export function HeroSection() {
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              Creative Production Studio
+              {badge}
             </span>
           </motion.div>
 
           {/* Main Heading with text reveal */}
-          <TextRevealHeading />
+          <TextRevealHeading text={heading} />
 
           {/* Slogan */}
           <motion.p
@@ -221,7 +245,7 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-xl md:text-2xl lg:text-3xl font-light text-white/80 tracking-wide mb-4"
           >
-            From Vision to Visual
+            {slogan}
           </motion.p>
 
           {/* Subtitle with staggered words */}
@@ -237,7 +261,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.7 }}
               className="inline-block"
             >
-              Bringing brands to life through impactful visual storytelling.
+              {subtitle1}
             </motion.span>{" "}
             <motion.span
               initial={{ opacity: 0, y: 20 }}
@@ -245,7 +269,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.85 }}
               className="inline-block"
             >
-              Video production, photography, design, and development under one roof.
+              {subtitle2}
             </motion.span>
           </motion.p>
 
@@ -295,12 +319,7 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 1.1, ease: [0.25, 0.1, 0.25, 1] }}
             className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mt-12 md:mt-20 pt-8 md:pt-12 border-t border-white/10"
           >
-            {[
-              { value: "1000+", label: "Projects Completed" },
-              { value: "200+", label: "Happy Clients" },
-              { value: "8+", label: "Services Offered" },
-              { value: "10+", label: "Years Experience" },
-            ].map((stat, index) => (
+            {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 className="text-center"

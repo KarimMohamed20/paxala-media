@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, isSameDay, isAfter, startOfToday } from "date-fns";
 import {
@@ -15,12 +15,21 @@ import {
   Check,
   ArrowRight,
   Package,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { services, packages } from "@/lib/constants";
+import { packages } from "@/lib/constants";
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  slug: string;
+  features: string[];
+}
 
 const timeSlots = [
   "09:00",
@@ -36,6 +45,8 @@ type BookingStep = "service" | "datetime" | "details" | "confirm";
 
 export function BookingForm() {
   const [step, setStep] = useState<BookingStep>("service");
+  const [services, setServices] = useState<Service[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -50,6 +61,23 @@ export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("/api/services?activeOnly=true");
+      if (!response.ok) throw new Error("Failed to fetch services");
+      const data = await response.json();
+      setServices(data);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
 
   const today = startOfToday();
   const daysInMonth = Array.from({ length: 35 }, (_, i) => {
@@ -128,6 +156,14 @@ export function BookingForm() {
         return true;
     }
   };
+
+  if (servicesLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="animate-spin text-white/40" size={48} />
+      </div>
+    );
+  }
 
   if (isComplete) {
     return (
@@ -246,7 +282,7 @@ export function BookingForm() {
                 Choose the type of consultation you&apos;d like to book.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {services.slice(0, 6).map((service) => (
+                {services.map((service) => (
                   <button
                     key={service.id}
                     onClick={() => setSelectedService(service.id)}

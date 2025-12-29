@@ -34,7 +34,7 @@ generate_self_signed() {
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout "$SSL_DIR/privkey.pem" \
         -out "$SSL_DIR/fullchain.pem" \
-        -subj "/C=IL/ST=Israel/L=Sakhnin/O=Paxala Media/CN=$DOMAIN"
+        -subj "/C=PS/ST=Palestine/L=Sakhnin/O=Paxala Media/CN=$DOMAIN"
 
     log_success "Self-signed certificate generated at $SSL_DIR"
     log_warning "This certificate is for development only. Use Let's Encrypt for production."

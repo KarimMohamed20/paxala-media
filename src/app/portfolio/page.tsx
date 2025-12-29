@@ -1,128 +1,34 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Section, SectionHeader } from "@/components/ui/section";
 import { PortfolioGrid } from "@/components/sections/portfolio-grid";
-
-// Sample projects data - in production, this would come from the database
-const sampleProjects = [
-  {
-    id: "1",
-    title: "Brand Campaign Video",
-    slug: "brand-campaign-video",
-    description:
-      "A comprehensive brand campaign video showcasing the client's new product line with stunning visuals and compelling storytelling.",
-    thumbnail: "",
-    images: [],
-    videoUrl: "",
-    category: "VIDEO_PRODUCTION",
-    tags: ["Commercial", "Brand", "Marketing"],
-    clientName: "Tech Startup",
-    featured: true,
-  },
-  {
-    id: "2",
-    title: "Product Photography",
-    slug: "product-photography",
-    description:
-      "High-end product photography for an e-commerce fashion brand, featuring detailed shots and lifestyle imagery.",
-    thumbnail: "",
-    images: [],
-    category: "PHOTOGRAPHY",
-    tags: ["E-commerce", "Fashion", "Product"],
-    clientName: "Fashion Brand",
-  },
-  {
-    id: "3",
-    title: "Corporate Website",
-    slug: "corporate-website",
-    description:
-      "Modern, responsive corporate website with custom CMS integration and advanced animations.",
-    thumbnail: "",
-    images: [],
-    category: "WEB_DEVELOPMENT",
-    tags: ["Corporate", "React", "CMS"],
-    clientName: "Financial Services",
-    featured: true,
-  },
-  {
-    id: "4",
-    title: "3D Product Visualization",
-    slug: "3d-product-visualization",
-    description:
-      "Photorealistic 3D renders of consumer electronics for marketing materials and web presence.",
-    thumbnail: "",
-    images: [],
-    category: "THREE_D_MODELING",
-    tags: ["3D", "Visualization", "Product"],
-    clientName: "Electronics Company",
-  },
-  {
-    id: "5",
-    title: "Social Media Campaign",
-    slug: "social-media-campaign",
-    description:
-      "Multi-platform social media campaign with custom graphics, animations, and video content.",
-    thumbnail: "",
-    images: [],
-    category: "SOCIAL_MEDIA",
-    tags: ["Social", "Campaign", "Digital"],
-    clientName: "Restaurant Chain",
-  },
-  {
-    id: "6",
-    title: "Mobile App UI/UX",
-    slug: "mobile-app-ui-ux",
-    description:
-      "Complete UI/UX design and development for a fitness tracking mobile application.",
-    thumbnail: "",
-    images: [],
-    category: "APP_DEVELOPMENT",
-    tags: ["Mobile", "UI/UX", "Fitness"],
-    clientName: "Health Startup",
-  },
-  {
-    id: "7",
-    title: "Brand Identity Design",
-    slug: "brand-identity-design",
-    description:
-      "Complete brand identity including logo, color palette, typography, and brand guidelines.",
-    thumbnail: "",
-    images: [],
-    category: "GRAPHIC_DESIGN",
-    tags: ["Branding", "Logo", "Identity"],
-    clientName: "Consulting Firm",
-  },
-  {
-    id: "8",
-    title: "Event Coverage",
-    slug: "event-coverage",
-    description:
-      "Full event photography and videography coverage for a major industry conference.",
-    thumbnail: "",
-    images: [],
-    videoUrl: "",
-    category: "VIDEO_PRODUCTION",
-    tags: ["Event", "Conference", "Documentary"],
-    clientName: "Tech Conference",
-  },
-  {
-    id: "9",
-    title: "Animated Explainer",
-    slug: "animated-explainer",
-    description:
-      "2D animated explainer video explaining complex financial services in an engaging way.",
-    thumbnail: "",
-    images: [],
-    videoUrl: "",
-    category: "ANIMATION",
-    tags: ["Animation", "Explainer", "2D"],
-    clientName: "Fintech Company",
-    featured: true,
-  },
-];
+import { Loader2 } from "lucide-react";
 
 export default function PortfolioPage() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      // Fetch published portfolio items for public display
+      const response = await fetch('/api/portfolio?published=true');
+      if (!response.ok) throw new Error('Failed to fetch portfolio');
+
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error fetching portfolio:', error);
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="pt-20">
       {/* Hero */}
@@ -169,7 +75,19 @@ export default function PortfolioPage() {
 
       {/* Portfolio Grid */}
       <Section className="bg-black">
-        <PortfolioGrid projects={sampleProjects} />
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/40" size={48} />
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-white/60 text-lg">
+              No portfolio projects available yet.
+            </p>
+          </div>
+        ) : (
+          <PortfolioGrid projects={projects} />
+        )}
       </Section>
     </div>
   );

@@ -213,10 +213,23 @@ function TestimonialCard({
   );
 }
 
-export function ClientsSection() {
+interface ClientsContent {
+  clientsSubtitle?: string;
+  clientsTitle?: string;
+  clientsDescription?: string;
+  clientsWhatTheySay?: string;
+}
+
+export function ClientsSection({ content }: { content?: ClientsContent | null }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  // Default values
+  const subtitle = content?.clientsSubtitle || "Trusted By";
+  const title = content?.clientsTitle || "Our Clients";
+  const description = content?.clientsDescription || "We've had the privilege of working with amazing brands and businesses.";
+  const whatTheySay = content?.clientsWhatTheySay || "What They Say";
 
   // Auto-rotate testimonials
   useState(() => {
@@ -248,9 +261,9 @@ export function ClientsSection() {
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <SectionHeader
-            subtitle="Trusted By"
-            title="Our Clients"
-            description="We've had the privilege of working with amazing brands and businesses."
+            subtitle={subtitle}
+            title={title}
+            description={description}
           />
         </motion.div>
 
@@ -295,7 +308,7 @@ export function ClientsSection() {
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ duration: 0.6, delay: 0.7 }}
           >
-            What They Say
+            {whatTheySay}
           </motion.h3>
 
           {/* Testimonial Grid */}

@@ -71,9 +71,20 @@ function AnimatedHeading({ text }: { text: string }) {
   );
 }
 
-export function CTASection() {
+interface CTAContent {
+  ctaBadge?: string;
+  ctaHeading?: string;
+  ctaSubtitle?: string;
+}
+
+export function CTASection({ content }: { content?: CTAContent | null }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
+
+  // Default values
+  const badge = content?.ctaBadge || "Let's Create Together";
+  const heading = content?.ctaHeading || "Ready to Bring Your Vision to Life?";
+  const subtitle = content?.ctaSubtitle || "Let's create something amazing together. Book a consultation or get in touch to discuss your next project.";
 
   // Mouse position for parallax effect
   const mouseX = useMotionValue(0);
@@ -232,11 +243,11 @@ export function CTASection() {
             >
               <Sparkles size={16} />
             </motion.div>
-            Let&apos;s Create Together
+            {badge}
           </motion.div>
 
           {/* Animated heading */}
-          <AnimatedHeading text="Ready to Bring Your Vision to Life?" />
+          <AnimatedHeading text={heading} />
 
           {/* Subtitle with fade up */}
           <motion.p
@@ -245,8 +256,7 @@ export function CTASection() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="text-lg md:text-xl text-white/80 mb-8 md:mb-10 max-w-2xl mx-auto"
           >
-            Let&apos;s create something amazing together. Book a consultation or
-            get in touch to discuss your next project.
+            {subtitle}
           </motion.p>
 
           {/* Buttons with stagger */}

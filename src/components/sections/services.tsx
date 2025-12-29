@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
 import {
@@ -13,10 +13,22 @@ import {
   Share2,
   Lightbulb,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/section";
-import { services } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+
+interface Service {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string | null;
+  image: string | null;
+  features: string[];
+  order: number;
+  isActive: boolean;
+}
 
 const iconMap: Record<string, React.ElementType> = {
   Video,
@@ -37,13 +49,13 @@ function ServiceCard({
   onHover,
   onLeave,
 }: {
-  service: (typeof services)[0];
+  service: Service;
   index: number;
   isHovered: boolean;
   onHover: () => void;
   onLeave: () => void;
 }) {
-  const Icon = iconMap[service.icon] || Box;
+  const Icon = (service.icon && iconMap[service.icon]) || Box;
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Motion values for 3D tilt
@@ -74,12 +86,12 @@ function ServiceCard({
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 60, scale: 0.9 }}
+      initial={{ opacity: 0, y: 80, scale: 0.85 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{
-        duration: 0.7,
-        delay: index * 0.15,
+        duration: 0.9,
+        delay: 0.4 + index * 0.15,
         ease: [0.25, 0.1, 0.25, 1],
       }}
       style={{
@@ -200,11 +212,30 @@ function ServiceCard({
 
 export function ServicesSection() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("/api/services?activeOnly=true");
+      if (!response.ok) throw new Error("Failed to fetch services");
+      const data = await response.json();
+      setServices(data);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Section className="bg-black relative overflow-hidden">
+    <Section className="bg-black relative overflow-hidden pt-24 md:pt-32">
       {/* Animated background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
@@ -226,11 +257,15 @@ export function ServicesSection() {
       </div>
 
       <div ref={sectionRef}>
-        {/* Enhanced Section Header */}
+        {/* Enhanced Section Header with cinematic fade-in */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 60 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{
+            duration: 1.2,
+            ease: [0.25, 0.1, 0.25, 1],
+            delay: 0.2
+          }}
         >
           <SectionHeader
             subtitle="What We Do"
@@ -240,33 +275,39 @@ export function ServicesSection() {
         </motion.div>
 
         {/* Services Grid with stagger */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.15,
-                delayChildren: 0.2,
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/40" size={48} />
+          </div>
+        ) : (
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.15,
+                  delayChildren: 0.2,
+                },
               },
-            },
-          }}
-        >
-          {services.map((service, index) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              index={index}
-              isHovered={hoveredIndex === index}
-              onHover={() => setHoveredIndex(index)}
-              onLeave={() => setHoveredIndex(null)}
-            />
-          ))}
-        </motion.div>
+            }}
+          >
+            {services.map((service, index) => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                index={index}
+                isHovered={hoveredIndex === index}
+                onHover={() => setHoveredIndex(index)}
+                onLeave={() => setHoveredIndex(null)}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {/* View All Link with enhanced animation */}
         <motion.div

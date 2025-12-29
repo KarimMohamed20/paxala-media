@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "HomePageContent" ADD COLUMN     "aboutCtaHeading" TEXT NOT NULL DEFAULT 'Ready to Start Your Project?',
+ADD COLUMN     "aboutCtaSubtitle" TEXT NOT NULL DEFAULT 'Let''s collaborate and create something extraordinary together. Our team is excited to hear about your project.',
+ADD COLUMN     "aboutMilestones" JSONB NOT NULL DEFAULT '[{"year":"2014","title":"Founded","description":"Paxala Media was born from a passion for visual storytelling"},{"year":"2016","title":"First Major Client","description":"Completed our first major commercial project"},{"year":"2018","title":"Team Expansion","description":"Grew our team of creative professionals"},{"year":"2020","title":"Studio Launch","description":"Opened our dedicated production studio"},{"year":"2022","title":"Digital Services","description":"Expanded into web and app development"},{"year":"2024","title":"1000+ Projects","description":"Celebrated completing over 1000 client projects"}]',
+ADD COLUMN     "aboutMilestonesDescription" TEXT NOT NULL DEFAULT 'Key moments in our growth as a creative studio.',
+ADD COLUMN     "aboutMilestonesSubtitle" TEXT NOT NULL DEFAULT 'Our Journey',
+ADD COLUMN     "aboutMilestonesTitle" TEXT NOT NULL DEFAULT 'Milestones',
+ADD COLUMN     "aboutPageHeroBadge" TEXT NOT NULL DEFAULT 'About Us',
+ADD COLUMN     "aboutPageHeroHeading" TEXT NOT NULL DEFAULT 'About Paxala Media',
+ADD COLUMN     "aboutTeamDescription" TEXT NOT NULL DEFAULT 'The talented professionals behind our creative productions.',
+ADD COLUMN     "aboutTeamSubtitle" TEXT NOT NULL DEFAULT 'Our Crew',
+ADD COLUMN     "aboutTeamTitle" TEXT NOT NULL DEFAULT 'Meet the Team',
+ADD COLUMN     "aboutValues" JSONB NOT NULL DEFAULT '[{"icon":"Target","title":"Excellence","description":"We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results."},{"icon":"Users","title":"Collaboration","description":"We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable."},{"icon":"Heart","title":"Passion","description":"Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities."},{"icon":"Award","title":"Innovation","description":"We embrace new technologies and techniques to stay at the forefront of the creative industry."}]',
+ADD COLUMN     "aboutValuesDescription" TEXT NOT NULL DEFAULT 'The principles that guide everything we do at Paxala Media.',
+ADD COLUMN     "aboutValuesSubtitle" TEXT NOT NULL DEFAULT 'What Drives Us',
+ADD COLUMN     "aboutValuesTitle" TEXT NOT NULL DEFAULT 'Our Values';

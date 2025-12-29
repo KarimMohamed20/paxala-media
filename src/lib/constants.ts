@@ -6,7 +6,7 @@ export const siteConfig = {
   url: "https://www.paxalamedia.com",
   email: "info@paxalamedia.com",
   phone: "+972 52-330-0119",
-  address: "Sakhnin, Israel",
+  address: "Sakhnin, Palestine",
   social: {
     instagram: "https://instagram.com/paxalamedia",
     facebook: "https://facebook.com/paxalamedia",
