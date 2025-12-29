@@ -50,6 +50,9 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    volumes:
+      # Mount uploads directory so files persist and are accessible by nginx
+      - ./public/uploads:/app/public/uploads
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
@@ -74,7 +77,8 @@ services:
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
       - ./docker/nginx/logs:/var/log/nginx
-      - ./public/uploads:/var/www/uploads:ro
+      # Mount uploads to match the path in nginx config
+      - ./public/uploads:/var/www/paxala-media/public/uploads:ro
     depends_on:
       - app
     healthcheck:
