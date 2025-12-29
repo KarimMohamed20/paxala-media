@@ -30,8 +30,20 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build the application
-RUN npm run build
+# Accept build args for environment variables needed at build time
+ARG NEXT_PUBLIC_SITE_URL
+ARG DATABASE_URL
+ARG NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+
+# Set them as environment variables for the build
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV DATABASE_URL=$DATABASE_URL
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+
+# Build the application with increased memory limit
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # ============================================
 # Stage 3: Production Runner

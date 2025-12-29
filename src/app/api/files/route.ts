@@ -4,6 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getFileUrl } from "@/lib/utils";
 
 // GET files for a project
 export async function GET(request: NextRequest) {
@@ -123,11 +124,15 @@ export async function POST(request: NextRequest) {
     else if (mimeType.includes("document") || mimeType.includes("text"))
       fileType = "document";
 
-    // Save file record to database
+    // Build full URL for the uploaded file
+    const relativePath = `/uploads/${projectId}/${filename}`;
+    const fullUrl = getFileUrl(relativePath);
+
+    // Save file record to database with full URL
     const fileRecord = await db.projectFile.create({
       data: {
         name: originalName,
-        url: `/uploads/${projectId}/${filename}`,
+        url: fullUrl,
         type: fileType,
         size: file.size,
         projectId,

@@ -3,8 +3,8 @@ export const siteConfig = {
   shortName: "PMP",
   description:
     "Full-service creative production studio specializing in video production, photography, graphic design, 3D modeling, web development, and more.",
-  url: "https://www.paxalamedia.com",
-  email: "info@paxalamedia.com",
+  url: "https://paxaland.com",
+  email: "info@paxaland.com",
   phone: "+972 52-330-0119",
   address: "Sakhnin, Palestine",
   social: {

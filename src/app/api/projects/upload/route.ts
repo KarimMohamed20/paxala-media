@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
+import { getFileUrl } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,12 +74,13 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
     await writeFile(filePath, buffer)
 
-    // Return the public URL
-    const fileUrl = `/uploads/portfolio/${fileName}`
+    // Return the full public URL
+    const relativePath = `/uploads/portfolio/${fileName}`
+    const fullUrl = getFileUrl(relativePath)
 
     return NextResponse.json({
       success: true,
-      url: fileUrl,
+      url: fullUrl,
       fileName,
       type: file.type,
       size: file.size,

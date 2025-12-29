@@ -98,7 +98,7 @@ check_env() {
 # Build images
 build() {
     log_info "Building Docker images..."
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache
+    DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --progress=plain
     log_success "Docker images built successfully."
 }
 
