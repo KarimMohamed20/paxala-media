@@ -14,18 +14,16 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // API configuration
-  serverRuntimeConfig: {
-    // Increase body size limit to 1GB (must match nginx)
-    bodyParser: {
-      sizeLimit: "1gb",
-    },
-  },
-
   // Experimental features
   experimental: {
     // Optimize package imports
     optimizePackageImports: ["lucide-react", "framer-motion"],
+
+    // Increase body size limit to 1GB (for file uploads)
+    // Note: This applies to Server Actions and Route Handlers
+    serverActions: {
+      bodySizeLimit: "1gb",
+    },
   },
 };
 
