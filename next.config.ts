@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // API configuration
+  serverRuntimeConfig: {
+    // Increase body size limit to 1GB (must match nginx)
+    bodyParser: {
+      sizeLimit: "1gb",
+    },
+  },
+
   // Experimental features
   experimental: {
     // Optimize package imports
