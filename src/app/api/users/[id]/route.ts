@@ -26,6 +26,7 @@ export async function GET(
       where: { id },
       select: {
         id: true,
+        username: true,
         name: true,
         email: true,
         image: true,
@@ -67,6 +68,7 @@ export async function GET(
             id: true,
             name: true,
             phone: true,
+            jobTitle: true,
             createdAt: true,
           },
           orderBy: { createdAt: "desc" },
