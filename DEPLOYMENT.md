@@ -178,11 +178,144 @@ Make sure `.env.production` contains:
 - `POSTGRES_PASSWORD` - Database password
 - `POSTGRES_DB` - Database name
 
+## 🔐 Database Safety & Migrations
+
+### Migration Safety Guarantees
+
+Your deployment is configured to **NEVER lose database data**:
+
+1. **Persistent Storage**: Database data is stored in Docker volume `postgres_data`
+2. **Safe Migration Strategy**: Uses `prisma migrate deploy` (production-safe)
+3. **No Destructive Operations**: Migrations only add/modify schema, never delete data
+4. **Idempotent**: Safe to run multiple times
+5. **Separate Container**: Migrations run in isolation
+
+### Current Migrations (All Applied)
+
+✅ All migrations are production-ready and safe:
+- Initial schema setup
+- Milestones and tasks system
+- Project staff relations
+- File and task relations
+- Username and email handling
+- Package ID for bookings
+- Project deadlines
+- Portfolio model
+- Homepage and about page content
+- Creative team
+- **Client contacts and industry fields** (Latest)
+- **Job title and social media fields** (Latest)
+
+### Running Migrations Safely
+
+```bash
+# RECOMMENDED: Backup before running migrations
+./scripts/deploy.sh backup
+
+# Run migrations (SAFE - preserves all data)
+./scripts/deploy.sh migrate
+
+# Or manually
+docker compose -f docker-compose.yml --env-file .env.production --profile migrate up migrate
+```
+
+### Migration Status Check
+
+```bash
+# Check which migrations have been applied
+docker compose -f docker-compose.yml --env-file .env.production exec app npx prisma migrate status
+```
+
+### What Migrations DO
+
+✅ **Migrations will:**
+- Create new tables if they don't exist
+- Add new columns to existing tables
+- Modify column types if specified
+- Add indexes for performance
+- Preserve ALL existing data
+
+❌ **Migrations will NOT:**
+- Delete existing tables
+- Remove existing columns
+- Delete any data
+- Cause downtime (migrations are fast)
+
+## 💾 Database Backup & Recovery
+
+### Before Any Update (CRITICAL)
+
+```bash
+# Create timestamped backup
+./scripts/deploy.sh backup
+
+# Backup is saved to: ./backups/paxala_media_YYYYMMDD_HHMMSS.sql.gz
+```
+
+### Restore from Backup
+
+```bash
+# List available backups
+ls -lh backups/
+
+# Restore from specific backup
+./scripts/deploy.sh restore backups/paxala_media_20241230_120000.sql.gz
+```
+
+### Automated Backup Schedule (RECOMMENDED)
+
+Set up daily automated backups:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add daily backup at 2 AM
+0 2 * * * cd /path/to/paxala-media && ./scripts/deploy.sh backup
+
+# Clean old backups (keep last 7 days)
+0 3 * * * find /path/to/paxala-media/backups -name "*.sql.gz" -mtime +7 -delete
+```
+
+## 🚀 Safe Deployment Workflow
+
+### Standard Update (With Latest Changes)
+
+```bash
+# 1. Backup database (CRITICAL)
+./scripts/deploy.sh backup
+
+# 2. Pull latest code
+git pull
+
+# 3. Update everything (builds, migrates, restarts)
+./scripts/deploy.sh update
+
+# 4. Verify deployment
+./scripts/deploy.sh health
+./scripts/deploy.sh logs app
+```
+
+### If Something Goes Wrong
+
+```bash
+# Stop services
+./scripts/deploy.sh stop
+
+# Restore from backup
+./scripts/deploy.sh restore backups/paxala_media_LATEST.sql.gz
+
+# Restart
+./scripts/deploy.sh start
+```
+
 ## Notes
 
 - The deployment script requires Docker and Docker Compose
 - Make sure the script is executable: `chmod +x scripts/deploy.sh`
 - The script expects `.env.production` file in the project root
-- Database data persists in Docker volumes, so data won't be lost on redeploy
+- **Database data persists in Docker volumes** - safe across deployments
+- **Migrations are additive only** - they won't delete your data
+- **Always backup before major updates** - better safe than sorry
 
 

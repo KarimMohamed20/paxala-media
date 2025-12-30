@@ -22,6 +22,8 @@ model User {
   managedUsers  User[]    @relation("UserManager")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  industry      String?      // Company industry (for CLIENT role only)
+  socialMedia   Json?        // Social media accounts (for CLIENT role only)
 
   accounts        Account[]
   sessions        Session[]
@@ -31,6 +33,7 @@ model User {
   comments        Comment[]
   assignedTasks   Task[]           @relation("AssignedTasks")
   approvedTasks   Task[]           @relation("ApprovedTasks")
+  contacts        ClientContact[]  @relation("ClientContacts")
 }
 
 model Account {
@@ -66,6 +69,22 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model ClientContact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  jobTitle  String?
+  clientId  String
+  client    User     @relation("ClientContacts", fields: [clientId], references: [id], onDelete: Cascade)
+
+  projects  Project[] @relation("ProjectContacts")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 enum Role {
@@ -174,6 +193,7 @@ model Project {
   files      ProjectFile[]
   comments   Comment[]
   milestones Milestone[]
+  contacts   ClientContact[] @relation("ProjectContacts")
 }
 
 model ProjectFile {

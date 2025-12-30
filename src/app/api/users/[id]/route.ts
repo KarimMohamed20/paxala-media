@@ -30,6 +30,8 @@ export async function GET(
         email: true,
         image: true,
         role: true,
+        industry: true,
+        socialMedia: true,
         managerId: true,
         manager: {
           select: {
@@ -59,6 +61,15 @@ export async function GET(
           },
           orderBy: { date: "desc" },
           take: 5,
+        },
+        contacts: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
@@ -99,7 +110,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, email, password, role, image, managerId } = body;
+    const { name, email, password, role, image, managerId, industry, socialMedia } = body;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
@@ -156,6 +167,16 @@ export async function PUT(
     // Hash new password if provided
     if (password) {
       updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    // Only admins can update industry
+    if (industry !== undefined && isAdmin) {
+      updateData.industry = industry;
+    }
+
+    // Only admins can update social media
+    if (socialMedia !== undefined && isAdmin) {
+      updateData.socialMedia = socialMedia;
     }
 
     const user = await db.user.update({

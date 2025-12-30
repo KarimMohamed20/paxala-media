@@ -54,8 +54,9 @@ interface Project {
 
 interface Client {
   id: string;
+  username: string;
   name: string | null;
-  email: string;
+  email: string | null;
 }
 
 const statusColors = {
@@ -555,7 +556,7 @@ export default function ProjectsPage() {
                   <SelectItem value="none">No client selected</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name || client.email}
+                      {client.name || client.email || client.username}
                     </SelectItem>
                   ))}
                 </SelectContent>

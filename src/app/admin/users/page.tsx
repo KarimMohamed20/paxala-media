@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -12,6 +13,7 @@ import {
   Edit,
   Loader2,
   X,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,15 @@ interface User {
   email: string | null;
   image: string | null;
   role: string;
+  industry?: string | null;
+  socialMedia?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+    tiktok?: string;
+  } | null;
   createdAt: string;
   _count: {
     projects: number;
@@ -58,6 +69,7 @@ const roleColors = {
 } as const;
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -69,6 +81,15 @@ export default function UsersPage() {
     email: "",
     password: "",
     role: "CLIENT",
+    industry: "",
+    socialMedia: {
+      facebook: "",
+      instagram: "",
+      twitter: "",
+      linkedin: "",
+      youtube: "",
+      tiktok: "",
+    },
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +98,15 @@ export default function UsersPage() {
   const [editForm, setEditForm] = useState({
     name: "",
     role: "CLIENT",
+    industry: "",
+    socialMedia: {
+      facebook: "",
+      instagram: "",
+      twitter: "",
+      linkedin: "",
+      youtube: "",
+      tiktok: "",
+    },
   });
   const [editLoading, setEditLoading] = useState(false);
 
@@ -107,10 +137,20 @@ export default function UsersPage() {
     setError(null);
 
     try {
+      // Filter out empty social media values
+      const socialMediaData = Object.fromEntries(
+        Object.entries(createForm.socialMedia).filter(([_, v]) => v.trim() !== "")
+      );
+
+      const payload = {
+        ...createForm,
+        socialMedia: Object.keys(socialMediaData).length > 0 ? socialMediaData : undefined,
+      };
+
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -120,7 +160,22 @@ export default function UsersPage() {
       }
 
       setIsCreateModalOpen(false);
-      setCreateForm({ username: "", name: "", email: "", password: "", role: "CLIENT" });
+      setCreateForm({
+        username: "",
+        name: "",
+        email: "",
+        password: "",
+        role: "CLIENT",
+        industry: "",
+        socialMedia: {
+          facebook: "",
+          instagram: "",
+          twitter: "",
+          linkedin: "",
+          youtube: "",
+          tiktok: "",
+        },
+      });
       fetchUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -153,6 +208,15 @@ export default function UsersPage() {
     setEditForm({
       name: user.name || "",
       role: user.role,
+      industry: user.industry || "",
+      socialMedia: {
+        facebook: (user.socialMedia as any)?.facebook || "",
+        instagram: (user.socialMedia as any)?.instagram || "",
+        twitter: (user.socialMedia as any)?.twitter || "",
+        linkedin: (user.socialMedia as any)?.linkedin || "",
+        youtube: (user.socialMedia as any)?.youtube || "",
+        tiktok: (user.socialMedia as any)?.tiktok || "",
+      },
     });
     setIsEditModalOpen(true);
   };
@@ -164,10 +228,20 @@ export default function UsersPage() {
     setError(null);
 
     try {
+      // Filter out empty social media values
+      const socialMediaData = Object.fromEntries(
+        Object.entries(editForm.socialMedia).filter(([_, v]) => v.trim() !== "")
+      );
+
+      const payload = {
+        ...editForm,
+        socialMedia: Object.keys(socialMediaData).length > 0 ? socialMediaData : null,
+      };
+
       const response = await fetch(`/api/users/${editingUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -298,14 +372,19 @@ export default function UsersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge
-                          variant={
-                            roleColors[user.role as keyof typeof roleColors] ||
-                            "secondary"
-                          }
-                        >
-                          {user.role}
-                        </Badge>
+                        <div>
+                          <Badge
+                            variant={
+                              roleColors[user.role as keyof typeof roleColors] ||
+                              "secondary"
+                            }
+                          >
+                            {user.role}
+                          </Badge>
+                          {user.role === "CLIENT" && user.industry && (
+                            <p className="text-white/40 text-xs mt-1">{user.industry}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-white/60">
                         {user._count.projects}
@@ -324,6 +403,12 @@ export default function UsersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {user.role === "CLIENT" && (
+                              <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.id}`)}>
+                                <Eye size={16} className="mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => openEditModal(user)}>
                               <Edit size={16} className="mr-2" />
                               Edit Role
@@ -424,6 +509,89 @@ export default function UsersPage() {
                 </SelectContent>
               </Select>
             </div>
+            {createForm.role === "CLIENT" && (
+              <>
+                <div>
+                  <label className="block text-sm text-white/70 mb-2">
+                    Industry <span className="text-white/40">(optional)</span>
+                  </label>
+                  <Input
+                    value={createForm.industry || ""}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, industry: e.target.value })
+                    }
+                    placeholder="e.g., Healthcare, Finance, E-commerce"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="block text-sm text-white/70">
+                    Social Media <span className="text-white/40">(optional)</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      value={createForm.socialMedia.facebook}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, facebook: e.target.value },
+                        })
+                      }
+                      placeholder="Facebook URL"
+                    />
+                    <Input
+                      value={createForm.socialMedia.instagram}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, instagram: e.target.value },
+                        })
+                      }
+                      placeholder="Instagram URL"
+                    />
+                    <Input
+                      value={createForm.socialMedia.twitter}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, twitter: e.target.value },
+                        })
+                      }
+                      placeholder="Twitter/X URL"
+                    />
+                    <Input
+                      value={createForm.socialMedia.linkedin}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, linkedin: e.target.value },
+                        })
+                      }
+                      placeholder="LinkedIn URL"
+                    />
+                    <Input
+                      value={createForm.socialMedia.youtube}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, youtube: e.target.value },
+                        })
+                      }
+                      placeholder="YouTube URL"
+                    />
+                    <Input
+                      value={createForm.socialMedia.tiktok}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          socialMedia: { ...createForm.socialMedia, tiktok: e.target.value },
+                        })
+                      }
+                      placeholder="TikTok URL"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
@@ -501,6 +669,89 @@ export default function UsersPage() {
                 </SelectContent>
               </Select>
             </div>
+            {editForm.role === "CLIENT" && (
+              <>
+                <div>
+                  <label className="block text-sm text-white/70 mb-2">
+                    Industry <span className="text-white/40">(optional)</span>
+                  </label>
+                  <Input
+                    value={editForm.industry || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, industry: e.target.value })
+                    }
+                    placeholder="e.g., Healthcare, Finance, E-commerce"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="block text-sm text-white/70">
+                    Social Media <span className="text-white/40">(optional)</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      value={editForm.socialMedia.facebook}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, facebook: e.target.value },
+                        })
+                      }
+                      placeholder="Facebook URL"
+                    />
+                    <Input
+                      value={editForm.socialMedia.instagram}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, instagram: e.target.value },
+                        })
+                      }
+                      placeholder="Instagram URL"
+                    />
+                    <Input
+                      value={editForm.socialMedia.twitter}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, twitter: e.target.value },
+                        })
+                      }
+                      placeholder="Twitter/X URL"
+                    />
+                    <Input
+                      value={editForm.socialMedia.linkedin}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, linkedin: e.target.value },
+                        })
+                      }
+                      placeholder="LinkedIn URL"
+                    />
+                    <Input
+                      value={editForm.socialMedia.youtube}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, youtube: e.target.value },
+                        })
+                      }
+                      placeholder="YouTube URL"
+                    />
+                    <Input
+                      value={editForm.socialMedia.tiktok}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          socialMedia: { ...editForm.socialMedia, tiktok: e.target.value },
+                        })
+                      }
+                      placeholder="TikTok URL"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"

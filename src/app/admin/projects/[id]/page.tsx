@@ -11,6 +11,7 @@ import {
   ListTodo,
   Users,
   FileText,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +21,7 @@ import { ProjectOverviewTab } from "@/components/admin/project/overview-tab";
 import { ProjectMilestonesTab } from "@/components/admin/project/milestones-tab";
 import { ProjectTeamTab } from "@/components/admin/project/team-tab";
 import { ProjectFilesTab } from "@/components/admin/project/files-tab";
+import { ProjectContactsTab } from "@/components/admin/project/contacts-tab";
 
 interface Project {
   id: string;
@@ -119,6 +121,10 @@ export default function ProjectManagePage() {
             <Folder size={16} className="mr-2" />
             Files
           </TabsTrigger>
+          <TabsTrigger value="contacts" className="data-[state=active]:bg-red-600">
+            <UserCheck size={16} className="mr-2" />
+            Contacts
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -135,6 +141,10 @@ export default function ProjectManagePage() {
 
         <TabsContent value="files">
           <ProjectFilesTab projectId={projectId} />
+        </TabsContent>
+
+        <TabsContent value="contacts">
+          <ProjectContactsTab projectId={projectId} />
         </TabsContent>
       </Tabs>
     </div>

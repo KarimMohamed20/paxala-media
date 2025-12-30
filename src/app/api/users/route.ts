@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         email: true,
         image: true,
         role: true,
+        industry: true,
         createdAt: true,
         _count: {
           select: {
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, name, email, password, role } = body;
+    const { username, name, email, password, role, industry, socialMedia } = body;
 
     if (!username || !password) {
       return NextResponse.json(
@@ -126,6 +127,8 @@ export async function POST(request: NextRequest) {
         email: email || null,
         password: hashedPassword,
         role: role || "CLIENT",
+        industry: industry || null,
+        socialMedia: socialMedia || null,
       },
       select: {
         id: true,
@@ -133,6 +136,7 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true,
         role: true,
+        industry: true,
         createdAt: true,
       },
     });

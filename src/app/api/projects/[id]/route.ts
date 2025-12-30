@@ -55,6 +55,20 @@ export async function GET(
           },
           orderBy: { createdAt: "desc" },
         },
+        contacts: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            jobTitle: true,
+            client: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
