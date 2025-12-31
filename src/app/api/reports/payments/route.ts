@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Filter by year and optionally by month
+    // Filter by year and optionally by month (using UTC to match database)
     const filteredMilestones = milestones.filter((milestone) => {
       if (!milestone.paymentDate) return false;
       const paymentDate = new Date(milestone.paymentDate);
-      const paymentYear = paymentDate.getFullYear().toString();
-      const paymentMonth = (paymentDate.getMonth() + 1).toString();
+      const paymentYear = paymentDate.getUTCFullYear().toString();
+      const paymentMonth = (paymentDate.getUTCMonth() + 1).toString();
 
       if (paymentYear !== year) return false;
       if (month && paymentMonth !== month) return false;
@@ -71,14 +71,14 @@ export async function GET(request: NextRequest) {
       if (!milestone.paymentDate) return;
 
       const paymentDate = new Date(milestone.paymentDate);
-      const monthKey = `${paymentDate.getFullYear()}-${String(
-        paymentDate.getMonth() + 1
+      const monthKey = `${paymentDate.getUTCFullYear()}-${String(
+        paymentDate.getUTCMonth() + 1
       ).padStart(2, "0")}`;
 
       if (!milestonesByMonth[monthKey]) {
         milestonesByMonth[monthKey] = {
-          month: paymentDate.getMonth() + 1,
-          year: paymentDate.getFullYear(),
+          month: paymentDate.getUTCMonth() + 1,
+          year: paymentDate.getUTCFullYear(),
           milestones: [],
           totalPaid: 0,
           clients: new Set(),
