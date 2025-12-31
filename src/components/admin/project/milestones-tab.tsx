@@ -39,6 +39,8 @@ interface Milestone {
   order: number;
   price: number | null;
   paymentStatus: "UNPAID" | "PARTIAL" | "PAID";
+  paymentDate: string | null;
+  paymentAmount: number | null;
   deadline: string | null;
   isVisible: boolean;
   tasks: Task[];
@@ -79,6 +81,8 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
     deadline: "",
   });
   const [showNewTask, setShowNewTask] = useState<string | null>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState<{milestoneId: string, status: "PARTIAL" | "PAID"} | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
   const [newTaskData, setNewTaskData] = useState({
     title: "",
     description: "",
@@ -200,9 +204,17 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
     milestoneId: string,
     paymentStatus: "UNPAID" | "PARTIAL" | "PAID"
   ) => {
+    // If changing to PARTIAL, show dialog to enter payment amount
+    if (paymentStatus === "PARTIAL") {
+      setShowPaymentDialog({ milestoneId, status: paymentStatus });
+      setPaymentAmount("");
+      return;
+    }
+
+    // Otherwise update directly
     try {
       const response = await fetch(
-        `/api/projects/${projectId}/milestones/${milestoneId}`,
+        `/api/milestones/${milestoneId}/payment`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -212,6 +224,39 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
 
       if (!response.ok) throw new Error("Failed to update payment status");
 
+      fetchMilestones();
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      alert("Failed to update payment status");
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!showPaymentDialog) return;
+
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid payment amount");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/milestones/${showPaymentDialog.milestoneId}/payment`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentStatus: showPaymentDialog.status,
+            paymentAmount: amount
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update payment status");
+
+      setShowPaymentDialog(null);
+      setPaymentAmount("");
       fetchMilestones();
     } catch (error) {
       console.error("Error updating payment status:", error);
@@ -388,6 +433,48 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
         )}
       </AnimatePresence>
 
+      {/* Payment Amount Dialog */}
+      <AnimatePresence>
+        {showPaymentDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowPaymentDialog(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-[#1a1a1a] rounded-xl border border-white/10 p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Enter Payment Amount</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label>Amount Paid (₪)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    placeholder="0.00"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button variant="ghost" onClick={() => setShowPaymentDialog(null)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleConfirmPayment}>Confirm Payment</Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Milestones List */}
       <div className="space-y-4">
         {milestones.map((milestone, index) => (
@@ -465,7 +552,12 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
                       {milestone.price && (
                         <div className="flex items-center gap-2">
                           <DollarSign size={14} />
-                          ${parseFloat(milestone.price.toString()).toFixed(2)}
+                          ₪{parseFloat(milestone.price.toString()).toFixed(2)}
+                          {milestone.paymentStatus === "PARTIAL" && milestone.paymentAmount && (
+                            <span className="text-yellow-400">
+                              (₪{parseFloat(milestone.paymentAmount.toString()).toFixed(2)} paid)
+                            </span>
+                          )}
                         </div>
                       )}
                       {milestone.deadline && (

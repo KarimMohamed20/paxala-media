@@ -20,7 +20,8 @@ import { FileUpload } from "@/components/ui/file-upload";
 interface Client {
   id: string;
   name: string | null;
-  email: string;
+  email: string | null;
+  username: string;
 }
 
 interface Service {
@@ -250,20 +251,26 @@ export function ProjectOverviewTab({ projectId, project, onUpdate }: any) {
             <div>
               <Label htmlFor="client">Client</Label>
               <Select
-                value={formData.clientId || undefined}
-                onValueChange={(value) => setFormData({ ...formData, clientId: value })}
+                value={formData.clientId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, clientId: value === "none" ? "" : value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select client (optional)" />
+                  <SelectValue placeholder="No client selected" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No client selected</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name || client.email}
+                      {client.name || client.email || client.username}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {clients.length === 0 && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  No CLIENT users found. Create users with CLIENT role in the Users section.
+                </p>
+              )}
             </div>
 
             <div>

@@ -18,6 +18,7 @@ import {
   Home,
   Briefcase,
   FileText,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/team", icon: Users, label: "Team" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/projects", icon: Folder, label: "Projects" },
+  { href: "/admin/reports/payments", icon: BarChart3, label: "Payment Reports" },
   { href: "/admin/portfolio", icon: Image, label: "Portfolio" },
   { href: "/admin/blog", icon: FileText, label: "Blog" },
   { href: "/admin/approvals", icon: ClipboardCheck, label: "Approvals" },

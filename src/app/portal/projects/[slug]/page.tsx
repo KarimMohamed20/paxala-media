@@ -538,14 +538,14 @@ export default function ProjectDetailPage() {
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <DollarSign size={24} className="mx-auto mb-2 text-blue-500" />
                         <p className="text-2xl font-bold text-white">
-                          ${milestonesData.summary.totalPrice.toLocaleString()}
+                          ₪{milestonesData.summary.totalPrice.toLocaleString()}
                         </p>
                         <p className="text-white/40 text-xs">Total Value</p>
                       </div>
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <DollarSign size={24} className="mx-auto mb-2 text-emerald-500" />
                         <p className="text-2xl font-bold text-white">
-                          ${milestonesData.summary.paidAmount.toLocaleString()}
+                          ₪{milestonesData.summary.paidAmount.toLocaleString()}
                         </p>
                         <p className="text-white/40 text-xs">Paid</p>
                       </div>
@@ -571,9 +571,16 @@ export default function ProjectDetailPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           {milestone.price && (
-                            <span className="text-white font-semibold">
-                              ${milestone.price.toLocaleString()}
-                            </span>
+                            <div className="text-right">
+                              <span className="text-white font-semibold">
+                                ₪{milestone.price.toLocaleString()}
+                              </span>
+                              {milestone.paymentStatus === "PARTIAL" && milestone.paymentAmount && (
+                                <div className="text-xs text-yellow-400">
+                                  ₪{milestone.paymentAmount.toLocaleString()} paid
+                                </div>
+                              )}
+                            </div>
                           )}
                           <Badge
                             variant={

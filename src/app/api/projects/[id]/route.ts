@@ -171,8 +171,8 @@ export async function PUT(
     if (category !== undefined) updateData.category = category;
     if (tags !== undefined) updateData.tags = tags;
     if (clientName !== undefined) updateData.clientName = clientName;
-    if (clientId !== undefined) updateData.clientId = clientId;
-    if (serviceId !== undefined) updateData.serviceId = serviceId;
+    if (clientId !== undefined) updateData.clientId = clientId || null;
+    if (serviceId !== undefined) updateData.serviceId = serviceId || null;
     if (status !== undefined) updateData.status = status;
     if (featured !== undefined) updateData.featured = featured;
     if (publishedAt !== undefined) {
