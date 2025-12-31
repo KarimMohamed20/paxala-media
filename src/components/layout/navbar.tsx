@@ -47,7 +47,7 @@ export function Navbar() {
         <nav className="mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 max-w-7xl">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link href="/" className="hidden lg:flex items-center gap-2 group">
               <Image
                 src="/images/logo/pmp.png"
                 alt="PMP Logo"
