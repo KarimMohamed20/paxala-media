@@ -219,12 +219,12 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Folder size={18} className="text-purple-500" />
-                {portal.recentProjects}
+                {portal('recentProjects')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recent?.projects.length === 0 ? (
-                <p className="text-white/40 text-sm">{portal.noProjectsYet}</p>
+                <p className="text-white/40 text-sm">{portal('noProjectsYet')}</p>
               ) : (
                 <div className="space-y-4">
                   {recent?.projects.map((project) => (

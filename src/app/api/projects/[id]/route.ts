@@ -28,7 +28,9 @@ export async function GET(
         service: {
           select: {
             id: true,
-            name: true,
+            nameEn: true,
+            nameAr: true,
+            nameHe: true,
             slug: true,
           },
         },
