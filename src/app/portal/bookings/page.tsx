@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format, isPast, isToday, isTomorrow } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   Calendar,
   Clock,
@@ -52,6 +53,8 @@ function getDateLabel(date: Date): string {
 }
 
 export default function BookingsPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past" | "all">("upcoming");
@@ -93,7 +96,7 @@ export default function BookingsPage() {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">My Bookings</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('bookings')}</h1>
           <p className="text-white/60">
             View and manage your consultation bookings.
           </p>
@@ -101,7 +104,7 @@ export default function BookingsPage() {
         <Link href="/booking">
           <Button>
             <Plus size={18} className="mr-2" />
-            New Booking
+            {t('newBooking')}
           </Button>
         </Link>
       </motion.div>
@@ -121,7 +124,7 @@ export default function BookingsPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-white">{upcomingCount}</p>
-                <p className="text-sm text-white/60">Upcoming Bookings</p>
+                <p className="text-sm text-white/60">{t('upcomingBookings')}</p>
               </div>
             </div>
           </CardContent>
@@ -136,7 +139,7 @@ export default function BookingsPage() {
                 <p className="text-3xl font-bold text-white">
                   {bookings.filter((b) => b.status === "PENDING").length}
                 </p>
-                <p className="text-sm text-white/60">Pending Confirmation</p>
+                <p className="text-sm text-white/60">{tc('pending')} {tc('confirm')}</p>
               </div>
             </div>
           </CardContent>
@@ -151,7 +154,7 @@ export default function BookingsPage() {
                 <p className="text-3xl font-bold text-white">
                   {bookings.filter((b) => b.status === "COMPLETED").length}
                 </p>
-                <p className="text-sm text-white/60">Completed Sessions</p>
+                <p className="text-sm text-white/60">{tc('completed')} Sessions</p>
               </div>
             </div>
           </CardContent>
@@ -172,7 +175,7 @@ export default function BookingsPage() {
             size="sm"
             onClick={() => setFilter(f)}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === "upcoming" ? t('upcoming') : f === "past" ? t('past') : tc('all')}
           </Button>
         ))}
       </motion.div>
@@ -190,7 +193,7 @@ export default function BookingsPage() {
         >
           <Calendar size={64} className="text-white/20 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            No bookings found
+            {t('noBookingsYet')}
           </h3>
           <p className="text-white/60 mb-6">
             {filter === "upcoming"
@@ -200,7 +203,7 @@ export default function BookingsPage() {
               : "Start by booking a consultation."}
           </p>
           <Link href="/booking">
-            <Button>Book a Consultation</Button>
+            <Button>{tc('bookConsultation')}</Button>
           </Link>
         </motion.div>
       ) : (
@@ -283,12 +286,12 @@ export default function BookingsPage() {
                         </Badge>
                         {isUpcoming && booking.status === "CONFIRMED" && (
                           <p className="text-green-500 text-xs">
-                            Confirmed
+                            {tc('confirmed')}
                           </p>
                         )}
                         {isUpcoming && booking.status === "PENDING" && (
                           <p className="text-yellow-500 text-xs">
-                            Awaiting confirmation
+                            {tc('pending')}
                           </p>
                         )}
                       </div>

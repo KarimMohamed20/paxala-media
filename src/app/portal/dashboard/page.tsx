@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   Folder,
   Calendar,
@@ -63,6 +64,8 @@ const statusColors = {
 } as const;
 
 export default function DashboardPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -101,7 +104,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white flex items-center gap-2">
           <Loader2 className="animate-spin" size={20} />
-          Loading...
+          {tc('loading')}
         </div>
       </div>
     );
@@ -112,7 +115,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button onClick={() => window.location.reload()}>{tc('back')}</Button>
         </div>
       </div>
     );
@@ -137,7 +140,7 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back, {session.user?.name || "Client"}
+                {t('welcome')}, {session.user?.name || tc('client')}
               </h1>
               <p className="text-white/60">
                 Here&apos;s an overview of your projects and upcoming activities.
@@ -156,7 +159,7 @@ export default function DashboardPage() {
                 <Link href="/admin">
                   <Button variant="secondary" className="gap-2">
                     <Settings size={16} />
-                    Admin Panel
+                    {t('adminPanel')}
                   </Button>
                 </Link>
               )}
@@ -172,10 +175,10 @@ export default function DashboardPage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
         >
           {[
-            { icon: Folder, label: "Active Projects", value: stats.activeProjects.toString(), color: "text-blue-500" },
-            { icon: Calendar, label: "Upcoming Bookings", value: stats.upcomingBookings.toString(), color: "text-green-500" },
-            { icon: FileText, label: "Files Available", value: stats.filesAvailable.toString(), color: "text-purple-500" },
-            { icon: Bell, label: "Notifications", value: stats.notifications.toString(), color: "text-orange-500" },
+            { icon: Folder, label: t('activeProjects'), value: stats.activeProjects.toString(), color: "text-blue-500" },
+            { icon: Calendar, label: t('upcomingBookings'), value: stats.upcomingBookings.toString(), color: "text-green-500" },
+            { icon: FileText, label: t('filesAvailable'), value: stats.filesAvailable.toString(), color: "text-purple-500" },
+            { icon: Bell, label: t('notifications'), value: stats.notifications.toString(), color: "text-orange-500" },
           ].map((stat) => (
             <Card key={stat.label}>
               <CardContent className="p-6">
@@ -206,10 +209,10 @@ export default function DashboardPage() {
           >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Recent Projects</CardTitle>
+                <CardTitle>{t('recentProjects')}</CardTitle>
                 <Link href="/portal/projects">
                   <Button variant="ghost" size="sm">
-                    View All
+                    {t('viewAll')}
                     <ArrowRight size={16} className="ml-2" />
                   </Button>
                 </Link>
@@ -222,7 +225,7 @@ export default function DashboardPage() {
                 ) : dashboardData?.recentProjects.length === 0 ? (
                   <div className="text-center py-8">
                     <Folder size={48} className="text-white/20 mx-auto mb-4" />
-                    <p className="text-white/40">No projects yet</p>
+                    <p className="text-white/40">{t('noProjectsYet')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -288,7 +291,7 @@ export default function DashboardPage() {
             {/* Upcoming Bookings */}
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Bookings</CardTitle>
+                <CardTitle>{t('upcomingBookings')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -298,7 +301,7 @@ export default function DashboardPage() {
                 ) : dashboardData?.upcomingBookings.length === 0 ? (
                   <div className="text-center py-4">
                     <Calendar size={32} className="text-white/20 mx-auto mb-2" />
-                    <p className="text-white/40 text-sm">No upcoming bookings</p>
+                    <p className="text-white/40 text-sm">{t('noBookingsYet')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -324,7 +327,7 @@ export default function DashboardPage() {
                 )}
                 <Link href="/booking">
                   <Button variant="secondary" className="w-full mt-4" size="sm">
-                    Book New Session
+                    {t('newBooking')}
                   </Button>
                 </Link>
               </CardContent>
@@ -333,7 +336,7 @@ export default function DashboardPage() {
             {/* Notifications */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>{t('recentActivity')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -343,7 +346,7 @@ export default function DashboardPage() {
                 ) : dashboardData?.notifications.length === 0 ? (
                   <div className="text-center py-4">
                     <Bell size={32} className="text-white/20 mx-auto mb-2" />
-                    <p className="text-white/40 text-sm">No recent activity</p>
+                    <p className="text-white/40 text-sm">{t('nothingHere')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -390,25 +393,25 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>{t('quickActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Link href="/portal/projects">
                   <Button variant="ghost" className="w-full justify-start">
                     <Folder size={18} className="mr-3" />
-                    View Projects
+                    {t('projects')}
                   </Button>
                 </Link>
                 <Link href="/portal/bookings">
                   <Button variant="ghost" className="w-full justify-start">
                     <Calendar size={18} className="mr-3" />
-                    Manage Bookings
+                    {t('bookings')}
                   </Button>
                 </Link>
                 <Link href="/portal/files">
                   <Button variant="ghost" className="w-full justify-start">
                     <Download size={18} className="mr-3" />
-                    Download Files
+                    {t('files')}
                   </Button>
                 </Link>
               </CardContent>

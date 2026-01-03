@@ -1,0 +1,552 @@
+{
+  "nav": {
+    "home": "בית",
+    "services": "שירותים",
+    "packages": "חבילות",
+    "portfolio": "תיק עבודות",
+    "about": "אודות",
+    "blog": "בלוג",
+    "contact": "צור קשר"
+  },
+  "common": {
+    "getStarted": "התחל עכשיו",
+    "bookNow": "הזמן עכשיו",
+    "bookConsultation": "הזמן ייעוץ",
+    "contactUs": "צור קשר",
+    "sendMessage": "שלח הודעה",
+    "viewProjects": "צפה בפרויקטים",
+    "readMore": "קרא עוד",
+    "learnMore": "למד עוד",
+    "loading": "טוען...",
+    "saving": "שומר...",
+    "submit": "שלח",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "back": "חזרה",
+    "next": "הבא",
+    "previous": "הקודם",
+    "close": "סגור",
+    "search": "חיפוש",
+    "filter": "סינון",
+    "all": "הכל",
+    "add": "הוסף",
+    "create": "צור",
+    "update": "עדכן",
+    "remove": "הסר",
+    "view": "צפה",
+    "download": "הורד",
+    "upload": "העלה",
+    "approve": "אשר",
+    "reject": "דחה",
+    "confirm": "אשר",
+    "actions": "פעולות",
+    "status": "סטטוס",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "published": "פורסם",
+    "draft": "טיוטה",
+    "pending": "ממתין",
+    "confirmed": "מאושר",
+    "cancelled": "בוטל",
+    "completed": "הושלם",
+    "inProgress": "בתהליך",
+    "review": "בסקירה",
+    "name": "שם",
+    "description": "תיאור",
+    "title": "כותרת",
+    "date": "תאריך",
+    "time": "שעה",
+    "category": "קטגוריה",
+    "tags": "תגיות",
+    "image": "תמונה",
+    "images": "תמונות",
+    "file": "קובץ",
+    "files": "קבצים",
+    "client": "לקוח",
+    "project": "פרויקט",
+    "noResults": "אין תוצאות",
+    "noData": "אין נתונים",
+    "searchPlaceholder": "חיפוש...",
+    "selectOption": "בחר אפשרות",
+    "required": "נדרש",
+    "optional": "אופציונלי",
+    "yes": "כן",
+    "no": "לא",
+    "more": "נוספים"
+  },
+  "form": {
+    "fullName": "שם מלא",
+    "email": "כתובת אימייל",
+    "phone": "מספר טלפון",
+    "subject": "נושא",
+    "message": "הודעה",
+    "required": "שדה זה הוא חובה",
+    "invalidEmail": "נא להזין כתובת אימייל תקינה",
+    "invalidPhone": "נא להזין מספר טלפון תקין",
+    "successMessage": "ההודעה נשלחה בהצלחה!",
+    "errorMessage": "אירעה שגיאה. אנא נסה שוב."
+  },
+  "pages": {
+    "services": {
+      "hero": {
+        "badge": "מה אנחנו עושים",
+        "title": "השירותים שלנו",
+        "description": "פתרונות יצירתיים מקיפים המותאמים לעולם הדיגיטלי המהיר של ימינו. מרעיון ועד מימוש, אנו מביאים את החזון שלך לחיים."
+      },
+      "cta": {
+        "heading": "מוכן להתחיל את הפרויקט שלך?",
+        "description": "בוא נדבר על הצרכים שלך וניצור משהו מדהים ביחד. הצוות שלנו מוכן לעזור להגשים את החזון שלך."
+      }
+    },
+    "packages": {
+      "hero": {
+        "badge": "מחירים",
+        "title": "חבילות Brand 360",
+        "description": "בחר את החבילה המושלמת לצמיחת העסק שלך"
+      },
+      "comparison": {
+        "title": "השוואת תכונות",
+        "notes": "הערות כלליות"
+      },
+      "cta": {
+        "heading": "מוכן להעלות את המותג שלך?",
+        "description": "בחר את החבילה המתאימה לצרכים שלך או צור קשר לפתרון מותאם אישית"
+      }
+    },
+    "contact": {
+      "title": "צור קשר",
+      "subtitle": "בוא נדבר על הפרויקט שלך",
+      "send": "שלח לנו הודעה",
+      "info": "פרטי התקשרות",
+      "businessHours": "שעות פעילות",
+      "location": "מיקום",
+      "social": "עקוב אחרינו"
+    },
+    "portfolio": {
+      "hero": {
+        "badge": "העבודות שלנו",
+        "title": "תיק עבודות",
+        "description": "גלה את הפרויקטים והעבודות היצירתיות האחרונות שלנו"
+      }
+    },
+    "blog": {
+      "hero": {
+        "badge": "בלוג",
+        "title": "תובנות וסיפורים",
+        "description": "חדשות אחרונות, מדריכים ותובנות בתעשייה"
+      },
+      "featured": "מאמרים מומלצים",
+      "recent": "מאמרים אחרונים"
+    },
+    "about": {
+      "hero": {
+        "badge": "אודות",
+        "title": "אודות Paxala Media"
+      },
+      "values": {
+        "subtitle": "מה מניע אותנו",
+        "title": "הערכים שלנו",
+        "description": "העקרונות המנחים את כל מה שאנו עושים ב-Paxala Media."
+      },
+      "milestones": {
+        "subtitle": "המסע שלנו",
+        "title": "אבני דרך",
+        "description": "רגעים מרכזיים בצמיחתנו כאולפן יצירתי."
+      },
+      "team": {
+        "subtitle": "הצוות שלנו",
+        "title": "פגוש את הצוות",
+        "description": "האנשי מקצוע המוכשרים שמאחורי ההפקות היצירתיות שלנו."
+      },
+      "cta": {
+        "heading": "מוכן להתחיל את הפרויקט שלך?",
+        "subtitle": "בוא נשתף פעולה וניצור משהו יוצא דופן ביחד. הצוות שלנו נרגש לשמוע על הפרויקט שלך."
+      }
+    }
+  },
+  "packages": {
+    "package-01": {
+      "name": "Brand 360°",
+      "subtitle": "שימור שיווק ויזואלי ודיגיטלי",
+      "price": "10,000",
+      "currency": "₪",
+      "period": "לחודש",
+      "minimumCommitment": "מינימום 3 חודשים",
+      "description": "מושלם למסעדות ועסקים שרוצים נוכחות מותג חזקה, תוכן עקבי ותוצאות שיווקיות ניתנות למדידה.",
+      "note": "תקציב פרסום לא כלול",
+      "idealFor": "אידיאלי עבור:",
+      "idealForItems": [
+        "מסעדות",
+        "עסקים שרוצים נוכחות מותג חזקה",
+        "צרכי תוכן עקביים",
+        "תוצאות שיווק ניתנות למדידה"
+      ],
+      "features": {
+        "videoProduction": {
+          "category": "הפקת וידאו",
+          "items": ["3 סרטוני Reels מקצועיים בחודש"]
+        },
+        "photography": {
+          "category": "צילום",
+          "items": ["סשן צילום מקצועי חודשי"]
+        },
+        "drone": {
+          "category": "רחפן",
+          "items": ["צילומי רחפן (צילומי חוץ - בהתאם לצרכים יצירתיים)"]
+        },
+        "graphicDesign": {
+          "category": "עיצוב גרפי",
+          "items": ["פוסטים ברשתות חברתיות", "עיצוב סטוריז"]
+        },
+        "paidAds": {
+          "category": "ניהול פרסום ממומן",
+          "items": [
+            "פלטפורמות Meta (אינסטגרם ופייסבוק)",
+            "מיקוד קהל וכתיבת מודעות",
+            "אופטימיזציה של ביצועים ודוחות סיכום"
+          ]
+        },
+        "fullProduction": {
+          "category": "שירותי הפקה מלאים",
+          "items": [
+            "צוות הפקה מקצועי",
+            "תאורה וציוד",
+            "הכוונה יצירתית, עריכה וגרייד צבע"
+          ]
+        }
+      }
+    },
+    "package-02": {
+      "name": "Brand 360°+ PLUS",
+      "subtitle": "שיווק ויזואלי ופיתוח אתרים",
+      "price": "מותאם אישית",
+      "currency": "",
+      "period": "בהתאם להיקף האתר",
+      "minimumCommitment": null,
+      "description": "אידיאלי לעסקים שצריכים זהות דיגיטלית מלאה עם אתר חזק התומך בפרסום ונוכחות מקצועית באינטרנט.",
+      "note": null,
+      "idealFor": "אידיאלי עבור:",
+      "idealForItems": [
+        "זהות דיגיטלית מלאה",
+        "אתר חזק התומך בפרסום",
+        "נוכחות מקצועית באינטרנט"
+      ],
+      "features": {
+        "package01": {
+          "category": "כל מה שבחבילה 01",
+          "items": ["כל שירותי השיווק הוויזואלי והדיגיטלי כלולים"]
+        },
+        "website": {
+          "category": "פיתוח אתר מקצועי",
+          "items": [
+            "עיצוב UI/UX מותאם אישית",
+            "רספונסיבי למובייל",
+            "עמודי שירותים / תפריט / צור קשר",
+            "שילוב רשתות חברתיות"
+          ]
+        },
+        "technical": {
+          "category": "הגדרה טכנית",
+          "items": [
+            "אופטימיזציה של מהירות",
+            "SEO בסיסי",
+            "שילוב Google Analytics"
+          ]
+        }
+      }
+    },
+    "package-03": {
+      "name": "Brand 360° infinite",
+      "subtitle": "מערכת אקולוגית דיגיטלית מלאה (אתר + ניהול + אפליקציה)",
+      "price": "מותאם אישית",
+      "currency": "",
+      "period": "פרויקט מותאם אישית לחלוטין",
+      "minimumCommitment": null,
+      "description": "המערכת האקולוגית הדיגיטלית המלאה לעסקים ברמת ארגון, רשתות ופלטפורמות דיגיטליות הדורשות שילוב מלא בכל הערוצים.",
+      "note": null,
+      "idealFor": "אידיאלי עבור:",
+      "idealForItems": [
+        "עסקים ברמת ארגון",
+        "רשתות מסעדות וקמעונאות",
+        "פלטפורמות דיגיטליות",
+        "דרישות שילוב מלא"
+      ],
+      "features": {
+        "previous": {
+          "category": "כל מה שבחבילות 01 ו-02",
+          "items": ["כל שירותי השיווק הוויזואלי ופיתוח האתרים כלולים"]
+        },
+        "management": {
+          "category": "ניהול דיגיטלי מלא",
+          "items": [
+            "ניהול אתר",
+            "עדכוני תוכן",
+            "תחזוקה טכנית"
+          ]
+        },
+        "app": {
+          "category": "פיתוח אפליקציות מובייל",
+          "items": [
+            "פיתוח iOS ו-Android",
+            "עיצוב UI/UX לאפליקציה",
+            "שילוב אתר/מערכת",
+            "פונקציונליות הזמנות, הזמנות או שירותים"
+          ]
+        },
+        "ecosystem": {
+          "category": "שילוב מערכת אקולוגית מלאה",
+          "items": [
+            "אתר",
+            "אפליקציית מובייל",
+            "רשתות חברתיות",
+            "פרסום ממומן"
+          ]
+        }
+      }
+    }
+  },
+  "siteConfig": {
+    "name": "Paxala Media Production",
+    "shortName": "PMP",
+    "description": "אולפן הפקה יצירתי בשירות מלא המתמחה בהפקת וידאו, צילום, עיצוב גרפי, דוגמנות תלת מימד, פיתוח אתרים ועוד.",
+    "address": "סח'נין, פלסטין",
+    "businessHours": {
+      "weekdays": "שני-חמישי: 08:00 - 17:00",
+      "sunday": "ראשון: 09:00 - 17:00",
+      "friday": "שישי: סגור",
+      "saturday": "שבת: סגור"
+    }
+  },
+  "categories": {
+    "all": "כל הפרויקטים",
+    "VIDEO_PRODUCTION": "הפקת וידאו",
+    "PHOTOGRAPHY": "צילום",
+    "GRAPHIC_DESIGN": "עיצוב גרפי",
+    "WEB_DEVELOPMENT": "פיתוח אתרים",
+    "APP_DEVELOPMENT": "פיתוח אפליקציות",
+    "THREE_D_MODELING": "דוגמנות תלת מימד",
+    "ANIMATION": "אנימציה",
+    "SOCIAL_MEDIA": "רשתות חברתיות"
+  },
+  "blogCategories": {
+    "NEWS": "חדשות",
+    "TUTORIALS": "מדריכים",
+    "BEHIND_THE_SCENES": "מאחורי הקלעים",
+    "CASE_STUDIES": "מקרי מבחן",
+    "INDUSTRY_INSIGHTS": "תובנות בתעשייה"
+  },
+  "admin": {
+    "panel": "פאנל ניהול",
+    "dashboard": "לוח בקרה",
+    "homepage": "עמוד הבית",
+    "services": "שירותים",
+    "team": "צוות",
+    "users": "משתמשים",
+    "projects": "פרויקטים",
+    "paymentReports": "דוחות תשלומים",
+    "portfolio": "תיק עבודות",
+    "blog": "בלוג",
+    "approvals": "אישורים",
+    "bookings": "הזמנות",
+    "inquiries": "פניות",
+    "backToPortal": "חזרה לפורטל"
+  },
+  "portal": {
+    "panel": "פורטל לקוח",
+    "dashboard": "לוח בקרה",
+    "projects": "פרויקטים",
+    "bookings": "הזמנות",
+    "files": "קבצים",
+    "settings": "הגדרות",
+    "adminPanel": "פאנל ניהול",
+    "signOut": "התנתק",
+    "welcome": "ברוך שובך",
+    "activeProjects": "פרויקטים פעילים",
+    "upcomingBookings": "הזמנות קרובות",
+    "filesAvailable": "קבצים זמינים",
+    "notifications": "התראות",
+    "recentProjects": "פרויקטים אחרונים",
+    "recentActivity": "פעילות אחרונה",
+    "quickActions": "פעולות מהירות",
+    "viewAll": "צפה בהכל",
+    "progress": "התקדמות",
+    "lastUpdated": "עודכן לאחרונה",
+    "dueDate": "תאריך יעד",
+    "newBooking": "הזמנה חדשה",
+    "upcoming": "קרובות",
+    "past": "עברו",
+    "serviceType": "סוג שירות",
+    "timeSlot": "משבצת זמן",
+    "notes": "הערות",
+    "totalFiles": "סה\"כ קבצים",
+    "totalSize": "גודל כולל",
+    "fileType": "סוג קובץ",
+    "profileInformation": "מידע פרופיל",
+    "changePassword": "שנה סיסמה",
+    "accountInformation": "מידע חשבון",
+    "newPassword": "סיסמה חדשה",
+    "confirmPassword": "אשר סיסמה",
+    "accountType": "סוג חשבון",
+    "userId": "מזהה משתמש",
+    "passwordChanged": "הסיסמה שונתה בהצלחה",
+    "profileUpdated": "הפרופיל עודכן בהצלחה",
+    "overview": "סקירה כללית",
+    "milestones": "אבני דרך",
+    "comments": "תגובות",
+    "addComment": "הוסף תגובה...",
+    "postComment": "פרסם תגובה",
+    "milestone": "אבן דרך",
+    "tasks": "משימות",
+    "totalValue": "ערך כולל",
+    "paid": "שולם",
+    "nothingHere": "אין כאן כלום עדיין",
+    "noProjectsYet": "אין פרויקטים עדיין",
+    "noBookingsYet": "אין הזמנות עדיין",
+    "noFilesYet": "אין קבצים זמינים עדיין"
+  },
+  "adminUI": {
+    "addNew": "הוסף חדש",
+    "addService": "הוסף שירות",
+    "addTeamMember": "הוסף חבר צוות",
+    "addUser": "הוסף משתמש",
+    "newProject": "פרויקט חדש",
+    "newPost": "פוסט חדש",
+    "newPortfolioItem": "פריט תיק עבודות חדש",
+    "saveChanges": "שמור שינויים",
+    "saveDraft": "שמור כטיוטה",
+    "publish": "פרסם",
+    "unpublish": "בטל פרסום",
+    "viewDetails": "צפה בפרטים",
+    "editRole": "ערוך תפקיד",
+    "markResponded": "סמן כנענה",
+    "archive": "העבר לארכיון",
+    "toggleActive": "החלף פעיל",
+    "togglePublish": "החלף פרסום",
+    "basicInfo": "מידע בסיסי",
+    "detailedContent": "תוכן מפורט",
+    "media": "מדיה",
+    "profileImage": "תמונת פרופיל",
+    "coverImage": "תמונת שער",
+    "thumbnail": "תמונה ממוזערת",
+    "gallery": "גלריה",
+    "videoUrl": "קישור וידאו",
+    "slug": "כתובת URL",
+    "generateSlug": "צור מהכותרת",
+    "excerpt": "תקציר",
+    "content": "תוכן",
+    "features": "תכונות",
+    "skills": "מיומנויות ומומחיות",
+    "socialMedia": "קישורי רשתות חברתיות",
+    "order": "סדר",
+    "team": "צוות",
+    "allTeams": "כל הצוותים",
+    "production": "הפקה",
+    "itDev": "IT ופיתוח",
+    "creative": "יצירתי",
+    "role": "תפקיד",
+    "username": "שם משתמש",
+    "password": "סיסמה",
+    "industry": "תעשייה",
+    "joined": "הצטרף",
+    "deadline": "מועד אחרון",
+    "clientName": "שם לקוח",
+    "featured": "מומלץ",
+    "addTag": "הוסף תגית",
+    "upcomingOnly": "קרובות בלבד",
+    "markComplete": "סמן כהושלם",
+    "rejectionReason": "סיבת דחייה",
+    "enterReason": "הזן סיבת דחייה",
+    "priority": "עדיפות",
+    "assignee": "אחראי",
+    "submitted": "הוגש",
+    "monthly": "חודשי",
+    "year": "שנה",
+    "month": "חודש",
+    "totalRevenue": "הכנסות כוללות",
+    "paidMilestones": "אבני דרך ששולמו",
+    "activeClients": "לקוחות פעילים",
+    "inactiveClients": "לקוחות לא פעילים",
+    "monthlyBreakdown": "פילוח חודשי",
+    "paymentDate": "תאריך תשלום",
+    "amount": "סכום",
+    "lastProject": "פרויקט אחרון",
+    "totalUsers": "סה\"כ משתמשים",
+    "totalProjects": "סה\"כ פרויקטים",
+    "totalBookings": "סה\"כ הזמנות",
+    "totalInquiries": "סה\"כ פניות",
+    "pendingApprovals": "אישורים ממתינים",
+    "activeCount": "פעילים",
+    "inactiveCount": "לא פעילים",
+    "newCount": "חדשים",
+    "adminCount": "מנהלים",
+    "staffCount": "צוות",
+    "clientCount": "לקוחות",
+    "viewProject": "צפה בפרויקט",
+    "viewFile": "צפה בקובץ",
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק?",
+    "deleteSuccess": "נמחק בהצלחה",
+    "saveSuccess": "נשמר בהצלחה",
+    "updateSuccess": "עודכן בהצלחה",
+    "createSuccess": "נוצר בהצלחה",
+    "errorOccurred": "אירעה שגיאה",
+    "uploadImage": "העלה תמונה",
+    "uploadVideo": "העלה וידאו",
+    "dragDropImage": "גרור ושחרר תמונה, או לחץ לבחירה",
+    "dragDropVideo": "גרור ושחרר וידאו, או לחץ לבחירה",
+    "removeImage": "הסר תמונה",
+    "chooseFile": "בחר קובץ",
+    "max10Images": "מקסימום 10 תמונות",
+    "heroSection": "קטע גיבור",
+    "aboutSection": "קטע אודות",
+    "teamSection": "קטע צוות",
+    "clientsSection": "קטע לקוחות",
+    "ctaSection": "קטע קריאה לפעולה",
+    "badge": "תג",
+    "heading": "כותרת ראשית",
+    "slogan": "סלוגן",
+    "subtitle": "כותרת משנה",
+    "paragraph": "פסקה",
+    "highlights": "נקודות בולטות",
+    "statistics": "סטטיסטיקה",
+    "addStat": "הוסף סטטיסטיקה",
+    "addHighlight": "הוסף נקודה בולטת",
+    "value": "ערך",
+    "label": "תווית",
+    "backgroundImage": "תמונת רקע",
+    "yearsText": "טקסט שנים",
+    "yearsLabel": "תווית שנים",
+    "tabLabel": "תווית כרטיסייה",
+    "testimonialsHeading": "כותרת המלצות",
+    "paymentReports": "דוחות תשלומים",
+    "trackPayments": "מעקב אחר תשלומי פרויקטים ולקוחות",
+    "allMonths": "כל החודשים",
+    "completedPayments": "תשלומים שהושלמו",
+    "clientsWhoPaid": "לקוחות ששילמו",
+    "noPayments": "אין תשלומים",
+    "milestones": "אבני דרך",
+    "paidOn": "שולם ב",
+    "inactiveClientsDesc": "לקוחות לא פעילים למעלה מ-90 יום",
+    "updated": "עודכן",
+    "noPaymentsFound": "לא נמצאו תשלומים לתקופה שנבחרה",
+    "tryAgain": "נסה שוב",
+    "portfolio": "תיק עבודות",
+    "managePortfolio": "ניהול תיק עבודות",
+    "blog": "בלוג",
+    "bookings": "הזמנות",
+    "manageBookings": "ניהול הזמנות",
+    "service": "שירות",
+    "inquiries": "פניות",
+    "manageInquiries": "ניהול פניות",
+    "from": "מאת",
+    "subject": "נושא",
+    "message": "הודעה",
+    "inquiryDetails": "פרטי פנייה",
+    "received": "התקבל",
+    "reply": "השב",
+    "createFirstBlogPost": "צור את הפוסט הראשון שלך בבלוג כדי להתחיל",
+    "noDraftPosts": "אין עדיין טיוטות",
+    "noPublishedPosts": "אין עדיין פוסטים מפורסמים"
+  }
+}

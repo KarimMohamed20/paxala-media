@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   Users,
   Folder,
@@ -65,6 +66,10 @@ const statusColors = {
 } as const;
 
 export default function AdminDashboard() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
+  const t = useTranslations('admin');
+  const portal = useTranslations('portal');
   const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +117,7 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('dashboard')}</h1>
         <p className="text-white/60">
           Overview of your media production business.
         </p>
@@ -135,9 +140,9 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {stats?.users.total || 0}
                 </p>
-                <p className="text-sm text-white/60">Total Users</p>
+                <p className="text-sm text-white/60">{ta('totalUsers')}</p>
                 <p className="text-xs text-white/40">
-                  {stats?.users.clients || 0} clients
+                  {stats?.users.clients || 0} {ta('clientCount')}
                 </p>
               </div>
             </div>
@@ -154,9 +159,9 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {stats?.projects.total || 0}
                 </p>
-                <p className="text-sm text-white/60">Projects</p>
+                <p className="text-sm text-white/60">{t('projects')}</p>
                 <p className="text-xs text-white/40">
-                  {stats?.projects.active || 0} active
+                  {stats?.projects.active || 0} {tc('active')}
                 </p>
               </div>
             </div>
@@ -173,9 +178,9 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {stats?.bookings.total || 0}
                 </p>
-                <p className="text-sm text-white/60">Bookings</p>
+                <p className="text-sm text-white/60">{t('bookings')}</p>
                 <p className="text-xs text-white/40">
-                  {stats?.bookings.pending || 0} pending
+                  {stats?.bookings.pending || 0} {tc('pending')}
                 </p>
               </div>
             </div>
@@ -192,9 +197,9 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {stats?.inquiries.total || 0}
                 </p>
-                <p className="text-sm text-white/60">Inquiries</p>
+                <p className="text-sm text-white/60">{t('inquiries')}</p>
                 <p className="text-xs text-white/40">
-                  {stats?.inquiries.new || 0} new
+                  {stats?.inquiries.new || 0} {ta('newCount')}
                 </p>
               </div>
             </div>
@@ -214,12 +219,12 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Folder size={18} className="text-purple-500" />
-                Recent Projects
+                {portal.recentProjects}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recent?.projects.length === 0 ? (
-                <p className="text-white/40 text-sm">No projects yet</p>
+                <p className="text-white/40 text-sm">{portal.noProjectsYet}</p>
               ) : (
                 <div className="space-y-4">
                   {recent?.projects.map((project) => (
@@ -262,12 +267,12 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar size={18} className="text-green-500" />
-                Recent Bookings
+                {portal('upcomingBookings')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recent?.bookings.length === 0 ? (
-                <p className="text-white/40 text-sm">No bookings yet</p>
+                <p className="text-white/40 text-sm">{portal('noBookingsYet')}</p>
               ) : (
                 <div className="space-y-4">
                   {recent?.bookings.map((booking) => (
@@ -310,12 +315,12 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare size={18} className="text-orange-500" />
-                Recent Inquiries
+                {t('inquiries')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recent?.inquiries.length === 0 ? (
-                <p className="text-white/40 text-sm">No inquiries yet</p>
+                <p className="text-white/40 text-sm">{tc('noData')}</p>
               ) : (
                 <div className="space-y-4">
                   {recent?.inquiries.map((inquiry) => (

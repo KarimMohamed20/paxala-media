@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from 'next-intl';
 
 interface Project {
   id: string;
@@ -79,6 +80,8 @@ const categories = [
 ];
 
 export default function ProjectsPage() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +199,7 @@ export default function ProjectsPage() {
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/projects/${id}`, {
@@ -210,7 +213,7 @@ export default function ProjectsPage() {
 
       fetchProjects();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete project");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
@@ -228,7 +231,7 @@ export default function ProjectsPage() {
 
       fetchProjects();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update status");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
@@ -240,12 +243,12 @@ export default function ProjectsPage() {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Projects</h1>
-          <p className="text-white/60">Manage client projects and portfolio.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{ta('projects')}</h1>
+          <p className="text-white/60">{ta('manageProjects')}</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus size={18} className="mr-2" />
-          New Project
+          {ta('newProject')}
         </Button>
       </motion.div>
 
@@ -264,7 +267,7 @@ export default function ProjectsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects..."
+            placeholder={tc('search')}
             className="pl-10"
           />
         </div>
@@ -299,26 +302,26 @@ export default function ProjectsPage() {
             ) : projects.length === 0 ? (
               <div className="text-center py-12">
                 <Folder size={48} className="text-white/20 mx-auto mb-4" />
-                <p className="text-white/40">No projects found</p>
+                <p className="text-white/40">{tc('noResults')}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Project
+                      {tc('project')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Category
+                      {tc('category')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Client
+                      {tc('client')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Status
+                      {tc('status')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Created
+                      {tc('date')}
                     </th>
                     <th className="w-10"></th>
                   </tr>
@@ -343,7 +346,7 @@ export default function ProjectsPage() {
                             </p>
                             {project.deadline && (
                               <p className="text-orange-400 text-xs mt-0.5">
-                                Deadline: {format(new Date(project.deadline), "MMM d, yyyy")}
+                                {ta('deadline')}: {format(new Date(project.deadline), "MMM d, yyyy")}
                               </p>
                             )}
                           </div>
@@ -400,7 +403,7 @@ export default function ProjectsPage() {
                             <DropdownMenuItem asChild>
                               <a href={`/admin/projects/${project.id}`}>
                                 <Edit size={16} className="mr-2" />
-                                Manage
+                                {tc('edit')}
                               </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
@@ -409,7 +412,7 @@ export default function ProjectsPage() {
                                 target="_blank"
                               >
                                 <Eye size={16} className="mr-2" />
-                                View
+                                {tc('view')}
                               </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -417,7 +420,7 @@ export default function ProjectsPage() {
                               className="text-red-500"
                             >
                               <Trash2 size={16} className="mr-2" />
-                              Delete
+                              {tc('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -435,7 +438,7 @@ export default function ProjectsPage() {
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle>{ta('newProject')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateProject} className="space-y-4">
             {error && (
@@ -444,7 +447,7 @@ export default function ProjectsPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm text-white/70 mb-2">Title</label>
+              <label className="block text-sm text-white/70 mb-2">{tc('title')}</label>
               <Input
                 value={createForm.title}
                 onChange={(e) => {
@@ -454,36 +457,36 @@ export default function ProjectsPage() {
                     slug: generateSlug(e.target.value),
                   });
                 }}
-                placeholder="Project title"
+                placeholder={tc('title')}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm text-white/70 mb-2">Slug</label>
+              <label className="block text-sm text-white/70 mb-2">{ta('slug')}</label>
               <Input
                 value={createForm.slug}
                 onChange={(e) =>
                   setCreateForm({ ...createForm, slug: e.target.value })
                 }
-                placeholder="project-slug"
+                placeholder={ta('slug')}
               />
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">
-                Description
+                {tc('description')}
               </label>
               <Textarea
                 value={createForm.description}
                 onChange={(e) =>
                   setCreateForm({ ...createForm, description: e.target.value })
                 }
-                placeholder="Project description"
+                placeholder={tc('description')}
                 required
               />
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">
-                Deadline
+                {ta('deadline')}
               </label>
               <Input
                 type="date"
@@ -496,7 +499,7 @@ export default function ProjectsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Category
+                  {tc('category')}
                 </label>
                 <Select
                   value={createForm.category}
@@ -505,7 +508,7 @@ export default function ProjectsPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={tc('category')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -518,7 +521,7 @@ export default function ProjectsPage() {
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Status
+                  {tc('status')}
                 </label>
                 <Select
                   value={createForm.status}
@@ -527,7 +530,7 @@ export default function ProjectsPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={tc('status')} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.keys(statusColors).map((status) => (
@@ -541,7 +544,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="block text-sm text-white/70 mb-2">
-                Client
+                {tc('client')}
               </label>
               <Select
                 value={createForm.clientId || "none"}
@@ -550,10 +553,10 @@ export default function ProjectsPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="No client selected" />
+                  <SelectValue placeholder={tc('client')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No client selected</SelectItem>
+                  <SelectItem value="none">{tc('noData')}</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name || client.email || client.username}
@@ -568,16 +571,16 @@ export default function ProjectsPage() {
                 variant="ghost"
                 onClick={() => setIsCreateModalOpen(false)}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button type="submit" disabled={createLoading}>
                 {createLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    Creating...
+                    {tc('loading')}
                   </>
                 ) : (
-                  "Create Project"
+                  tc('create')
                 )}
               </Button>
             </div>

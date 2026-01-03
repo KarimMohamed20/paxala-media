@@ -21,20 +21,21 @@ import {
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const navItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/homepage", icon: Home, label: "Homepage" },
-  { href: "/admin/services", icon: Briefcase, label: "Services" },
-  { href: "/admin/team", icon: Users, label: "Team" },
-  { href: "/admin/users", icon: Users, label: "Users" },
-  { href: "/admin/projects", icon: Folder, label: "Projects" },
-  { href: "/admin/reports/payments", icon: BarChart3, label: "Payment Reports" },
-  { href: "/admin/portfolio", icon: Image, label: "Portfolio" },
-  { href: "/admin/blog", icon: FileText, label: "Blog" },
-  { href: "/admin/approvals", icon: ClipboardCheck, label: "Approvals" },
-  { href: "/admin/bookings", icon: Calendar, label: "Bookings" },
-  { href: "/admin/inquiries", icon: MessageSquare, label: "Inquiries" },
+  { href: "/admin", icon: LayoutDashboard, labelKey: "dashboard" },
+  { href: "/admin/homepage", icon: Home, labelKey: "homepage" },
+  { href: "/admin/services", icon: Briefcase, labelKey: "services" },
+  { href: "/admin/team", icon: Users, labelKey: "team" },
+  { href: "/admin/users", icon: Users, labelKey: "users" },
+  { href: "/admin/projects", icon: Folder, labelKey: "projects" },
+  { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
+  { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },
+  { href: "/admin/blog", icon: FileText, labelKey: "blog" },
+  { href: "/admin/approvals", icon: ClipboardCheck, labelKey: "approvals" },
+  { href: "/admin/bookings", icon: Calendar, labelKey: "bookings" },
+  { href: "/admin/inquiries", icon: MessageSquare, labelKey: "inquiries" },
 ];
 
 export default function AdminLayout({
@@ -45,6 +46,7 @@ export default function AdminLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("admin");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -79,11 +81,11 @@ export default function AdminLayout({
             className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-8"
           >
             <ArrowLeft size={16} />
-            <span className="text-sm">Back to Portal</span>
+            <span className="text-sm">{t("backToPortal")}</span>
           </Link>
 
           <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
-            Admin Panel
+            {t("panel")}
           </h2>
 
           <nav className="space-y-1">
@@ -101,7 +103,7 @@ export default function AdminLayout({
                   )}
                 >
                   <item.icon size={18} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey)}</span>
                 </Link>
               );
             })}

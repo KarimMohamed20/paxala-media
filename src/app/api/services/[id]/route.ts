@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeService } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch single service (public)
 export async function GET(
@@ -10,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const allLocales = searchParams.get('allLocales') === 'true';
 
     const service = await db.service.findUnique({
       where: { id },
@@ -22,7 +26,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(service);
+    // If admin request, return all localized fields
+    if (allLocales) {
+      return NextResponse.json(service);
+    }
+
+    // Otherwise, localize for public use
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+    const localizedService = localizeService(service, locale);
+
+    return NextResponse.json(localizedService);
   } catch (error) {
     console.error("Error fetching service:", error);
     return NextResponse.json(
@@ -50,12 +63,18 @@ export async function PUT(
     const service = await db.service.update({
       where: { id },
       data: {
-        name: data.name,
+        nameEn: data.nameEn,
+        nameAr: data.nameAr,
+        nameHe: data.nameHe,
         slug: data.slug,
-        description: data.description,
+        descriptionEn: data.descriptionEn,
+        descriptionAr: data.descriptionAr,
+        descriptionHe: data.descriptionHe,
         icon: data.icon,
         image: data.image,
-        features: data.features,
+        featuresEn: data.featuresEn,
+        featuresAr: data.featuresAr,
+        featuresHe: data.featuresHe,
         order: data.order,
         isActive: data.isActive,
       },

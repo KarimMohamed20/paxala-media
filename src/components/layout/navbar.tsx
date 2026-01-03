@@ -9,15 +9,30 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { navLinks, siteConfig } from "@/lib/constants";
+import { siteConfig } from "@/lib/constants";
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher, LanguageSwitcherMobile } from "./language-switcher";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const t = useTranslations('nav');
+  const tCommon = useTranslations('common');
 
   const isAuthenticated = status === "authenticated";
+
+  // Navigation links with translations
+  const navLinks = [
+    { href: "/", label: t('home') },
+    { href: "/services", label: t('services') },
+    { href: "/packages", label: t('packages') },
+    { href: "/portfolio", label: t('portfolio') },
+    { href: "/about", label: t('about') },
+    { href: "/blog", label: t('blog') },
+    { href: "/contact", label: t('contact') },
+  ];
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -80,8 +95,9 @@ export function Navbar() {
               ))}
             </div>
 
-            {/* CTA Buttons */}
+            {/* Language Switcher & CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              <LanguageSwitcher />
               {isAuthenticated ? (
                 <Link href="/portal/dashboard">
                   <Button variant="ghost" size="sm" className="gap-2">
@@ -98,7 +114,7 @@ export function Navbar() {
                 </Link>
               )}
               <Link href="/booking">
-                <Button size="sm">Book Now</Button>
+                <Button size="sm">{tCommon('bookNow')}</Button>
               </Link>
             </div>
 
@@ -151,6 +167,8 @@ export function Navbar() {
                   </Link>
                 ))}
                 <div className="border-t border-white/10 my-4" />
+                <LanguageSwitcherMobile />
+                <div className="border-t border-white/10 my-4" />
                 {isAuthenticated ? (
                   <Link href="/portal/dashboard">
                     <Button variant="secondary" className="w-full mb-2 gap-2">
@@ -167,7 +185,7 @@ export function Navbar() {
                   </Link>
                 )}
                 <Link href="/booking">
-                  <Button className="w-full">Book Now</Button>
+                  <Button className="w-full">{tCommon('bookNow')}</Button>
                 </Link>
               </div>
             </motion.nav>

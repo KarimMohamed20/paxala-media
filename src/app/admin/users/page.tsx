@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   Users,
   Search,
@@ -70,6 +71,9 @@ const roleColors = {
 
 export default function UsersPage() {
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
+  const t = useTranslations('admin');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -273,7 +277,7 @@ export default function UsersPage() {
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus size={18} className="mr-2" />
-          Add User
+          {ta('addUser')}
         </Button>
       </motion.div>
 
@@ -292,7 +296,7 @@ export default function UsersPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search users..."
+            placeholder={tc('searchPlaceholder')}
             className="pl-10"
           />
         </div>
@@ -406,19 +410,19 @@ export default function UsersPage() {
                             {user.role === "CLIENT" && (
                               <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.id}`)}>
                                 <Eye size={16} className="mr-2" />
-                                View Details
+                                {ta('viewDetails')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => openEditModal(user)}>
                               <Edit size={16} className="mr-2" />
-                              Edit Role
+                              {ta('editRole')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteUser(user.id)}
                               className="text-red-500"
                             >
                               <Trash2 size={16} className="mr-2" />
-                              Delete
+                              {tc('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -598,16 +602,16 @@ export default function UsersPage() {
                 variant="ghost"
                 onClick={() => setIsCreateModalOpen(false)}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button type="submit" disabled={createLoading}>
                 {createLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    Creating...
+                    {tc('saving')}
                   </>
                 ) : (
-                  "Create User"
+                  `${tc('create')} ${ta('addUser')}`
                 )}
               </Button>
             </div>
@@ -758,16 +762,16 @@ export default function UsersPage() {
                 variant="ghost"
                 onClick={() => setIsEditModalOpen(false)}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button type="submit" disabled={editLoading}>
                 {editLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    Saving...
+                    {tc('saving')}
                   </>
                 ) : (
-                  "Save Changes"
+                  ta('saveChanges')
                 )}
               </Button>
             </div>

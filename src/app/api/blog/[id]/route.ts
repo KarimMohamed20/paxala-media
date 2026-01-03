@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeBlogPost } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch single blog post by ID
 export async function GET(
@@ -10,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const allLocales = searchParams.get('allLocales') === 'true';
 
     const post = await db.blogPost.findUnique({
       where: { id },
@@ -19,13 +23,24 @@ export async function GET(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Increment views
-    await db.blogPost.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Increment views (only for public requests, not admin)
+    if (!allLocales) {
+      await db.blogPost.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    }
 
-    return NextResponse.json(post);
+    // If admin request, return all localized fields
+    if (allLocales) {
+      return NextResponse.json(post);
+    }
+
+    // Otherwise, localize for public use
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+    const localizedPost = localizeBlogPost(post, locale);
+
+    return NextResponse.json(localizedPost);
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return NextResponse.json(
@@ -59,20 +74,28 @@ export async function PUT(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Generate slug from title if not provided
-    const slug = data.slug || data.title
+    // Generate slug from English title if not provided
+    const slug = data.slug || data.titleEn
       ?.toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
     const updateData: any = {
-      title: data.title,
+      titleEn: data.titleEn,
+      titleAr: data.titleAr,
+      titleHe: data.titleHe,
       slug,
-      excerpt: data.excerpt,
-      content: data.content,
+      excerptEn: data.excerptEn,
+      excerptAr: data.excerptAr,
+      excerptHe: data.excerptHe,
+      contentEn: data.contentEn,
+      contentAr: data.contentAr,
+      contentHe: data.contentHe,
       coverImage: data.coverImage,
       category: data.category,
-      tags: data.tags,
+      tagsEn: data.tagsEn,
+      tagsAr: data.tagsAr,
+      tagsHe: data.tagsHe,
       published: data.published,
     };
 

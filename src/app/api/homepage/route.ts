@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeHomePageContent } from "@/lib/localization-utils";
+import { defaultLocale, type Locale, locales } from "@/i18n/config";
 
 // GET - Fetch homepage content (public)
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const allLocales = searchParams.get('allLocales') === 'true';
+
     // Get or create homepage content
     let content = await db.homePageContent.findFirst();
 
@@ -16,7 +21,16 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(content);
+    // If admin request, return all localized fields
+    if (allLocales) {
+      return NextResponse.json(content);
+    }
+
+    // Otherwise, localize the content based on the requested locale
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+    const localizedContent = localizeHomePageContent(content, locale);
+
+    return NextResponse.json(localizedContent);
   } catch (error) {
     console.error("Error fetching homepage content:", error);
     return NextResponse.json(

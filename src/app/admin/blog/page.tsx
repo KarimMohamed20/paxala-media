@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface BlogPost {
   id: string;
@@ -35,6 +36,8 @@ interface BlogPost {
 
 export default function AdminBlogPage() {
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [filter, setFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT">("ALL");
@@ -57,7 +60,7 @@ export default function AdminBlogPage() {
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/blog/${id}`, {
@@ -69,7 +72,7 @@ export default function AdminBlogPage() {
       fetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
-      alert("Failed to delete post");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -89,7 +92,7 @@ export default function AdminBlogPage() {
       fetchPosts();
     } catch (error) {
       console.error("Error updating post:", error);
-      alert("Failed to update post");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -135,7 +138,7 @@ export default function AdminBlogPage() {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              Blog Posts
+              {ta('blog')}
             </h1>
             <p className="text-white/60 text-sm">
               Manage your blog content
@@ -144,7 +147,7 @@ export default function AdminBlogPage() {
         </div>
         <Button onClick={() => router.push("/admin/blog/new")} size="lg">
           <Plus size={18} className="mr-2" />
-          New Post
+          {ta('newPost')}
         </Button>
       </div>
 
@@ -170,18 +173,18 @@ export default function AdminBlogPage() {
         <div className="text-center py-20">
           <FileText className="mx-auto mb-4 text-white/20" size={64} />
           <h3 className="text-xl font-semibold text-white mb-2">
-            No posts found
+            {tc('noResults')}
           </h3>
           <p className="text-white/60 mb-6">
             {filter === "DRAFT"
-              ? "No draft posts yet"
+              ? ta('noDraftPosts')
               : filter === "PUBLISHED"
-              ? "No published posts yet"
-              : "Create your first blog post to get started"}
+              ? ta('noPublishedPosts')
+              : ta('createFirstBlogPost')}
           </p>
           <Button onClick={() => router.push("/admin/blog/new")}>
             <Plus size={18} className="mr-2" />
-            Create Post
+            {tc('create')}
           </Button>
         </div>
       ) : (
@@ -213,9 +216,9 @@ export default function AdminBlogPage() {
                     {post.category.replace("_", " ")}
                   </Badge>
                   {post.published ? (
-                    <Badge className="bg-green-600">Published</Badge>
+                    <Badge className="bg-green-600">{tc('published')}</Badge>
                   ) : (
-                    <Badge variant="secondary">Draft</Badge>
+                    <Badge variant="secondary">{tc('draft')}</Badge>
                   )}
                 </div>
               </div>

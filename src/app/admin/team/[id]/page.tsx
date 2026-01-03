@@ -8,15 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/ui/file-upload";
+import { LocalizedInput } from "@/components/admin/localized-input";
+import { LocalizedArrayInput } from "@/components/admin/localized-array-input";
+import { type Locale } from "@/i18n/config";
+import { useTranslations } from "next-intl";
 
 interface TeamMemberData {
-  name: string;
-  role: string;
-  bio: string;
+  nameEn: string;
+  nameAr: string;
+  nameHe: string;
+  roleEn: string;
+  roleAr: string;
+  roleHe: string;
+  bioEn: string;
+  bioAr: string;
+  bioHe: string;
   image: string | null;
   team: "PRODUCTION" | "IT_DEV" | "CREATIVE";
   order: number;
-  skills: string[];
+  skillsEn: string[];
+  skillsAr: string[];
+  skillsHe: string[];
   social: {
     instagram?: string;
     linkedin?: string;
@@ -27,23 +39,32 @@ interface TeamMemberData {
 export default function AdminTeamMemberPage() {
   const params = useParams();
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const id = params?.id as string;
   const isNew = id === "new";
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<TeamMemberData>({
-    name: "",
-    role: "",
-    bio: "",
+    nameEn: "",
+    nameAr: "",
+    nameHe: "",
+    roleEn: "",
+    roleAr: "",
+    roleHe: "",
+    bioEn: "",
+    bioAr: "",
+    bioHe: "",
     image: null,
     team: "PRODUCTION",
     order: 0,
-    skills: [],
+    skillsEn: [],
+    skillsAr: [],
+    skillsHe: [],
     social: {},
     isActive: true,
   });
-  const [newSkill, setNewSkill] = useState("");
 
   useEffect(() => {
     if (!isNew) {
@@ -53,24 +74,34 @@ export default function AdminTeamMemberPage() {
 
   const fetchTeamMember = async () => {
     try {
-      const response = await fetch(`/api/team/${id}`);
+      // Fetch with allLocales=true to get all language fields
+      const response = await fetch(`/api/team/${id}?allLocales=true`);
       if (!response.ok) throw new Error("Failed to fetch");
       const member = await response.json();
 
+      // Map the data directly - it already has all localized fields
       setData({
-        name: member.name,
-        role: member.role,
-        bio: member.bio || "",
+        nameEn: member.nameEn || "",
+        nameAr: member.nameAr || "",
+        nameHe: member.nameHe || "",
+        roleEn: member.roleEn || "",
+        roleAr: member.roleAr || "",
+        roleHe: member.roleHe || "",
+        bioEn: member.bioEn || "",
+        bioAr: member.bioAr || "",
+        bioHe: member.bioHe || "",
         image: member.image,
         team: member.team,
         order: member.order,
-        skills: member.skills || [],
+        skillsEn: member.skillsEn || [],
+        skillsAr: member.skillsAr || [],
+        skillsHe: member.skillsHe || [],
         social: member.social || {},
         isActive: member.isActive,
       });
     } catch (error) {
       console.error("Error fetching team member:", error);
-      alert("Failed to load team member");
+      alert(ta('errorOccurred'));
       router.push("/admin/team");
     } finally {
       setLoading(false);
@@ -78,8 +109,8 @@ export default function AdminTeamMemberPage() {
   };
 
   const handleSave = async () => {
-    if (!data.name || !data.role) {
-      alert("Name and role are required");
+    if (!data.nameEn || !data.roleEn) {
+      alert(tc('required'));
       return;
     }
 
@@ -99,7 +130,7 @@ export default function AdminTeamMemberPage() {
       router.push("/admin/team");
     } catch (error) {
       console.error("Error saving team member:", error);
-      alert("Failed to save team member");
+      alert(ta('errorOccurred'));
     } finally {
       setSaving(false);
     }
@@ -124,7 +155,7 @@ export default function AdminTeamMemberPage() {
       setData({ ...data, image: result.url });
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -132,15 +163,6 @@ export default function AdminTeamMemberPage() {
     setData({ ...data, image: null });
   };
 
-  const addSkill = () => {
-    if (!newSkill.trim()) return;
-    setData({ ...data, skills: [...data.skills, newSkill.trim()] });
-    setNewSkill("");
-  };
-
-  const removeSkill = (index: number) => {
-    setData({ ...data, skills: data.skills.filter((_, i) => i !== index) });
-  };
 
   if (loading) {
     return (
@@ -161,7 +183,7 @@ export default function AdminTeamMemberPage() {
             className="text-white/60 hover:text-white"
           >
             <ArrowLeft size={18} className="mr-2" />
-            Back
+            {tc('back')}
           </Button>
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-red-600/10">
@@ -169,10 +191,10 @@ export default function AdminTeamMemberPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                {isNew ? "Add Team Member" : "Edit Team Member"}
+                {isNew ? ta('addTeamMember') : ta('team')}
               </h1>
               <p className="text-white/60 text-sm">
-                {isNew ? "Create a new team member profile" : data.name}
+                {isNew ? "Create a new team member profile" : data.nameEn}
               </p>
             </div>
           </div>
@@ -181,12 +203,12 @@ export default function AdminTeamMemberPage() {
           {saving ? (
             <>
               <Loader2 className="animate-spin mr-2" size={18} />
-              Saving...
+              {tc('saving')}
             </>
           ) : (
             <>
               <Save size={18} className="mr-2" />
-              Save
+              {tc('save')}
             </>
           )}
         </Button>
@@ -201,47 +223,61 @@ export default function AdminTeamMemberPage() {
         >
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            Basic Information
+            {ta('basicInfo')}
           </h2>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-white/70 mb-2">
-                  Full Name *
-                </label>
-                <Input
-                  value={data.name}
-                  onChange={(e) => setData({ ...data, name: e.target.value })}
-                  placeholder="Ahmed Hajuj"
-                />
-              </div>
+              <LocalizedInput
+                label={tc('name')}
+                values={{
+                  en: data.nameEn,
+                  ar: data.nameAr,
+                  he: data.nameHe,
+                }}
+                onChange={(locale, value) => {
+                  const fieldName = `name${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof TeamMemberData;
+                  setData({ ...data, [fieldName]: value });
+                }}
+                placeholder="Ahmed Hajuj"
+                required
+              />
 
-              <div>
-                <label className="block text-sm text-white/70 mb-2">
-                  Role/Title *
-                </label>
-                <Input
-                  value={data.role}
-                  onChange={(e) => setData({ ...data, role: e.target.value })}
-                  placeholder="Photographer"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/70 mb-2">Bio</label>
-              <Textarea
-                value={data.bio}
-                onChange={(e) => setData({ ...data, bio: e.target.value })}
-                placeholder="Brief description about the team member..."
-                rows={4}
+              <LocalizedInput
+                label={ta('role')}
+                values={{
+                  en: data.roleEn,
+                  ar: data.roleAr,
+                  he: data.roleHe,
+                }}
+                onChange={(locale, value) => {
+                  const fieldName = `role${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof TeamMemberData;
+                  setData({ ...data, [fieldName]: value });
+                }}
+                placeholder="Photographer"
+                required
               />
             </div>
 
+            <LocalizedInput
+              label={tc('description')}
+              type="textarea"
+              values={{
+                en: data.bioEn,
+                ar: data.bioAr,
+                he: data.bioHe,
+              }}
+              onChange={(locale, value) => {
+                const fieldName = `bio${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof TeamMemberData;
+                setData({ ...data, [fieldName]: value });
+              }}
+              placeholder="Brief description about the team member..."
+              rows={4}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-white/70 mb-2">Team</label>
+                <label className="block text-sm text-white/70 mb-2">{ta('team')}</label>
                 <select
                   value={data.team}
                   onChange={(e) =>
@@ -252,15 +288,15 @@ export default function AdminTeamMemberPage() {
                   }
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  <option value="PRODUCTION">Production Team</option>
-                  <option value="IT_DEV">IT & Dev Team</option>
-                  <option value="CREATIVE">Creative Team</option>
+                  <option value="PRODUCTION">{ta('production')}</option>
+                  <option value="IT_DEV">{ta('itDev')}</option>
+                  <option value="CREATIVE">{ta('creative')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Order (Display Priority)
+                  {ta('order')}
                 </label>
                 <Input
                   type="number"
@@ -284,7 +320,7 @@ export default function AdminTeamMemberPage() {
                 className="w-4 h-4 rounded border-white/20 bg-white/5 text-red-600 focus:ring-red-500"
               />
               <label htmlFor="isActive" className="text-white/70 text-sm">
-                Active (Show on website)
+                {tc('active')}
               </label>
             </div>
           </div>
@@ -299,14 +335,14 @@ export default function AdminTeamMemberPage() {
         >
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            Profile Image
+            {ta('profileImage')}
           </h2>
 
           {data.image ? (
             <div className="relative inline-block">
               <img
                 src={data.image}
-                alt={data.name}
+                alt={data.nameEn}
                 className="w-full h-64 object-cover rounded-lg"
               />
               <Button
@@ -316,7 +352,7 @@ export default function AdminTeamMemberPage() {
                 onClick={removeImage}
                 className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
               >
-                Remove
+                {tc('remove')}
               </Button>
             </div>
           ) : (
@@ -336,44 +372,22 @@ export default function AdminTeamMemberPage() {
         >
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            Skills & Expertise
+            {ta('skills')}
           </h2>
 
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && addSkill()}
-                placeholder="Add a skill (e.g., Photographer)"
-                className="flex-1"
-              />
-              <Button onClick={addSkill} variant="secondary">
-                <Plus size={18} />
-              </Button>
-            </div>
-
-            {data.skills.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {data.skills.map((skill, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full"
-                  >
-                    <span className="text-white text-sm">{skill}</span>
-                    <button
-                      onClick={() => removeSkill(index)}
-                      className="text-white/60 hover:text-red-500 transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
+          <LocalizedArrayInput
+            label={ta('skills')}
+            values={{
+              en: data.skillsEn,
+              ar: data.skillsAr,
+              he: data.skillsHe,
+            }}
+            onChange={(locale, value) => {
+              const fieldName = `skills${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof TeamMemberData;
+              setData({ ...data, [fieldName]: value });
+            }}
+            placeholder="Add a skill (e.g., Photographer)"
+          />
         </motion.div>
 
         {/* Social Links */}
@@ -385,7 +399,7 @@ export default function AdminTeamMemberPage() {
         >
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            Social Media Links
+            {ta('socialMedia')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -429,12 +443,12 @@ export default function AdminTeamMemberPage() {
             {saving ? (
               <>
                 <Loader2 className="animate-spin mr-2" size={18} />
-                Saving...
+                {tc('saving')}
               </>
             ) : (
               <>
                 <Save size={18} className="mr-2" />
-                {isNew ? "Create Team Member" : "Save Changes"}
+                {isNew ? ta('addTeamMember') : ta('saveChanges')}
               </>
             )}
           </Button>

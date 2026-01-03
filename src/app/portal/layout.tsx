@@ -24,13 +24,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 
 const navItems = [
-  { href: "/portal/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/portal/projects", icon: Folder, label: "Projects" },
-  { href: "/portal/bookings", icon: Calendar, label: "Bookings" },
-  { href: "/portal/files", icon: Download, label: "Files" },
-  { href: "/portal/settings", icon: Settings, label: "Settings" },
+  { href: "/portal/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
+  { href: "/portal/projects", icon: Folder, labelKey: "projects" },
+  { href: "/portal/bookings", icon: Calendar, labelKey: "bookings" },
+  { href: "/portal/files", icon: Download, labelKey: "files" },
+  { href: "/portal/settings", icon: Settings, labelKey: "settings" },
 ];
 
 export default function PortalLayout({
@@ -41,6 +42,7 @@ export default function PortalLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("portal");
 
   useEffect(() => {
     if (status === "unauthenticated" && pathname !== "/portal/login") {
@@ -93,7 +95,7 @@ export default function PortalLayout({
           </div>
 
           <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
-            Client Portal
+            {t("panel")}
           </h2>
 
           <nav className="space-y-1">
@@ -114,7 +116,7 @@ export default function PortalLayout({
                   )}
                 >
                   <item.icon size={18} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey)}</span>
                 </Link>
               );
             })}
@@ -128,7 +130,7 @@ export default function PortalLayout({
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors"
               >
                 <Shield size={18} />
-                <span>Admin Panel</span>
+                <span>{t("adminPanel")}</span>
               </Link>
             </div>
           )}
@@ -140,7 +142,7 @@ export default function PortalLayout({
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-red-500 hover:bg-white/5 transition-colors w-full"
             >
               <LogOut size={18} />
-              <span>Sign Out</span>
+              <span>{t("signOut")}</span>
             </button>
           </div>
         </div>

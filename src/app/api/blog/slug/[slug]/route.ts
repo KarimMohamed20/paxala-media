@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { localizeBlogPost } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch blog post by slug (public for published posts only)
 export async function GET(
@@ -7,6 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    // Get locale from headers
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+
     const { slug } = await params;
 
     const post = await db.blogPost.findFirst({
@@ -26,7 +31,10 @@ export async function GET(
       data: { views: { increment: 1 } },
     });
 
-    return NextResponse.json(post);
+    // Localize the blog post
+    const localizedPost = localizeBlogPost(post, locale);
+
+    return NextResponse.json(localizedPost);
   } catch (error) {
     console.error("Error fetching blog post by slug:", error);
     return NextResponse.json(

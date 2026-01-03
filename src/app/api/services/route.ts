@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeService } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch all services (public)
 export async function GET(request: Request) {
   try {
+    // Get locale from headers
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get("activeOnly") === "true";
 
@@ -17,7 +22,10 @@ export async function GET(request: Request) {
       orderBy: { order: "asc" },
     });
 
-    return NextResponse.json(services);
+    // Localize each service
+    const localizedServices = services.map(service => localizeService(service, locale));
+
+    return NextResponse.json(localizedServices);
   } catch (error) {
     console.error("Error fetching services:", error);
     return NextResponse.json(
@@ -40,12 +48,18 @@ export async function POST(request: Request) {
 
     const service = await db.service.create({
       data: {
-        name: data.name,
+        nameEn: data.nameEn,
+        nameAr: data.nameAr,
+        nameHe: data.nameHe,
         slug: data.slug,
-        description: data.description,
+        descriptionEn: data.descriptionEn,
+        descriptionAr: data.descriptionAr,
+        descriptionHe: data.descriptionHe,
         icon: data.icon || null,
         image: data.image || null,
-        features: data.features || [],
+        featuresEn: data.featuresEn || [],
+        featuresAr: data.featuresAr || [],
+        featuresHe: data.featuresHe || [],
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
       },

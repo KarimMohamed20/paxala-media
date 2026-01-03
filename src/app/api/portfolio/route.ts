@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { localizePortfolio } from '@/lib/localization-utils'
+import { defaultLocale, type Locale } from '@/i18n/config'
 
 // GET /api/portfolio - List portfolio items
 export async function GET(request: NextRequest) {
   try {
+    // Get locale from headers
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale
+
     const { searchParams } = new URL(request.url)
     const session = await getServerSession(authOptions)
     const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'STAFF'
@@ -38,12 +43,16 @@ export async function GET(request: NextRequest) {
       where.published = false
     }
 
-    // Search
+    // Search - search across all language fields
     const search = searchParams.get('search')
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
+        { titleEn: { contains: search, mode: 'insensitive' } },
+        { titleAr: { contains: search, mode: 'insensitive' } },
+        { titleHe: { contains: search, mode: 'insensitive' } },
+        { descriptionEn: { contains: search, mode: 'insensitive' } },
+        { descriptionAr: { contains: search, mode: 'insensitive' } },
+        { descriptionHe: { contains: search, mode: 'insensitive' } },
         { clientName: { contains: search, mode: 'insensitive' } },
       ]
     }
@@ -56,7 +65,10 @@ export async function GET(request: NextRequest) {
       ],
     })
 
-    return NextResponse.json(portfolio)
+    // Localize each portfolio item
+    const localizedPortfolio = portfolio.map(item => localizePortfolio(item, locale))
+
+    return NextResponse.json(localizedPortfolio)
   } catch (error) {
     console.error('Portfolio fetch error:', error)
     return NextResponse.json(
@@ -79,15 +91,23 @@ export async function POST(request: NextRequest) {
 
     const portfolio = await db.portfolio.create({
       data: {
-        title: body.title,
+        titleEn: body.titleEn,
+        titleAr: body.titleAr,
+        titleHe: body.titleHe,
         slug: body.slug,
-        description: body.description,
-        content: body.content || null,
+        descriptionEn: body.descriptionEn,
+        descriptionAr: body.descriptionAr,
+        descriptionHe: body.descriptionHe,
+        contentEn: body.contentEn || null,
+        contentAr: body.contentAr || null,
+        contentHe: body.contentHe || null,
         thumbnail: body.thumbnail || null,
         images: body.images || [],
         videoUrl: body.videoUrl || null,
         category: body.category,
-        tags: body.tags || [],
+        tagsEn: body.tagsEn || [],
+        tagsAr: body.tagsAr || [],
+        tagsHe: body.tagsHe || [],
         clientName: body.clientName || null,
         featured: body.featured || false,
         published: body.published || false,

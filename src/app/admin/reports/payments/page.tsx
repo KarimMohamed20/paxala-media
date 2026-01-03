@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import { useTranslations } from 'next-intl';
 
 interface MilestoneData {
   id: string;
@@ -97,6 +98,8 @@ const monthNames = [
 ];
 
 export default function PaymentReportsPage() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [report, setReport] = useState<PaymentReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(
@@ -155,9 +158,9 @@ export default function PaymentReportsPage() {
       <div className="text-center py-20">
         <FileText className="mx-auto text-white/20 mb-4" size={64} />
         <h3 className="text-xl font-semibold text-white mb-2">
-          Failed to load report
+          {ta('errorOccurred')}
         </h3>
-        <p className="text-white/60">Please try again later</p>
+        <p className="text-white/60">{ta('tryAgain')}</p>
       </div>
     );
   }
@@ -167,9 +170,9 @@ export default function PaymentReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Payment Reports</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{ta('paymentReports')}</h1>
           <p className="text-white/60">
-            Track payments, revenue, and client activity
+            {ta('trackPayments')}
           </p>
         </div>
 
@@ -192,7 +195,7 @@ export default function PaymentReportsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
+              <SelectItem value="all">{ta('allMonths')}</SelectItem>
               {monthNames.map((month, index) => (
                 <SelectItem key={index} value={(index + 1).toString()}>
                   {month}
@@ -213,7 +216,7 @@ export default function PaymentReportsPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-white/60 text-sm">Total Revenue</p>
+                <p className="text-white/60 text-sm">{ta('totalRevenue')}</p>
                 <DollarSign className="text-green-500" size={20} />
               </div>
               <p className="text-3xl font-bold text-white mb-1">
@@ -221,7 +224,7 @@ export default function PaymentReportsPage() {
               </p>
               <p className="text-white/40 text-xs">
                 {selectedMonth === "all"
-                  ? `Year ${selectedYear}`
+                  ? `${ta('year')} ${selectedYear}`
                   : `${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`}
               </p>
             </CardContent>
@@ -236,13 +239,13 @@ export default function PaymentReportsPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-white/60 text-sm">Paid Milestones</p>
+                <p className="text-white/60 text-sm">{ta('paidMilestones')}</p>
                 <TrendingUp className="text-blue-500" size={20} />
               </div>
               <p className="text-3xl font-bold text-white mb-1">
                 {report.summary.totalMilestones}
               </p>
-              <p className="text-white/40 text-xs">Completed payments</p>
+              <p className="text-white/40 text-xs">{ta('completedPayments')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -255,13 +258,13 @@ export default function PaymentReportsPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-white/60 text-sm">Active Clients</p>
+                <p className="text-white/60 text-sm">{ta('activeClients')}</p>
                 <Users className="text-purple-500" size={20} />
               </div>
               <p className="text-3xl font-bold text-white mb-1">
                 {report.summary.uniqueClients}
               </p>
-              <p className="text-white/40 text-xs">Clients who paid</p>
+              <p className="text-white/40 text-xs">{ta('clientsWhoPaid')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -274,13 +277,13 @@ export default function PaymentReportsPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-white/60 text-sm">Inactive Clients</p>
+                <p className="text-white/60 text-sm">{ta('inactiveClients')}</p>
                 <UserX className="text-orange-500" size={20} />
               </div>
               <p className="text-3xl font-bold text-white mb-1">
                 {report.summary.inactiveClientsCount}
               </p>
-              <p className="text-white/40 text-xs">No payments this period</p>
+              <p className="text-white/40 text-xs">{ta('noPayments')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -295,7 +298,7 @@ export default function PaymentReportsPage() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Breakdown</CardTitle>
+              <CardTitle>{ta('monthlyBreakdown')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -315,8 +318,8 @@ export default function PaymentReportsPage() {
                             {monthNames[monthData.month - 1]} {monthData.year}
                           </h3>
                           <p className="text-white/60 text-sm">
-                            {monthData.milestonesCount} milestones •{" "}
-                            {monthData.clientsCount} clients
+                            {monthData.milestonesCount} {ta('milestones')} •{" "}
+                            {monthData.clientsCount} {tc('client')}
                           </p>
                         </div>
                       </div>
@@ -346,7 +349,7 @@ export default function PaymentReportsPage() {
                                     {milestone.title}
                                   </h4>
                                   <p className="text-white/60 text-sm mb-2">
-                                    Project:{" "}
+                                    {tc('project')}:{" "}
                                     <Link
                                       href={`/admin/projects/${milestone.project.slug}`}
                                       className="text-blue-400 hover:text-blue-300"
@@ -356,11 +359,11 @@ export default function PaymentReportsPage() {
                                   </p>
                                   {milestone.project.client && (
                                     <p className="text-white/60 text-sm">
-                                      Client: {milestone.project.client.name}
+                                      {tc('client')}: {milestone.project.client.name}
                                     </p>
                                   )}
                                   <p className="text-white/40 text-xs mt-1">
-                                    Paid on:{" "}
+                                    {ta('paidOn')}:{" "}
                                     {new Date(
                                       milestone.paymentDate
                                     ).toLocaleDateString()}
@@ -412,12 +415,12 @@ export default function PaymentReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserX size={20} className="text-orange-500" />
-                Inactive Clients
+                {ta('inactiveClients')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-white/60 text-sm mb-4">
-                Clients with active projects but no payments during this period
+                {ta('inactiveClientsDesc')}
               </p>
               <div className="space-y-3">
                 {report.inactiveClients.map((client) => (
@@ -432,7 +435,7 @@ export default function PaymentReportsPage() {
                           {client.email}
                         </p>
                         <p className="text-white/40 text-xs">
-                          Last project:{" "}
+                          {ta('lastProject')}:{" "}
                           <Link
                             href={`/admin/projects/${client.lastProject.slug}`}
                             className="text-blue-400 hover:text-blue-300"
@@ -441,7 +444,7 @@ export default function PaymentReportsPage() {
                           </Link>
                         </p>
                         <p className="text-white/40 text-xs">
-                          Updated:{" "}
+                          {ta('updated')}:{" "}
                           {new Date(
                             client.lastProject.updatedAt
                           ).toLocaleDateString()}
@@ -470,10 +473,10 @@ export default function PaymentReportsPage() {
             <CardContent className="py-20 text-center">
               <FileText size={64} className="mx-auto text-white/20 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">
-                No payments found
+                {tc('noResults')}
               </h3>
               <p className="text-white/60">
-                No milestone payments were recorded for the selected period
+                {ta('noPaymentsFound')}
               </p>
             </CardContent>
           </Card>

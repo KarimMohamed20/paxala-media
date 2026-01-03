@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { FileUpload } from "@/components/ui/file-upload";
+import { useTranslations } from 'next-intl';
 
 const categories = [
   "VIDEO_PRODUCTION",
@@ -32,6 +33,8 @@ const categories = [
 export default function PortfolioManagePage() {
   const router = useRouter();
   const params = useParams();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const portfolioId = params?.id as string;
   const isNew = portfolioId === "new";
 
@@ -85,7 +88,7 @@ export default function PortfolioManagePage() {
         order: data.order || 0,
       });
     } catch (err) {
-      setError("Failed to load portfolio item");
+      setError(ta('errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -116,7 +119,7 @@ export default function PortfolioManagePage() {
       setFormData((prev) => ({ ...prev, thumbnail: result.url }));
     } catch (error) {
       console.error("Error uploading thumbnail:", error);
-      alert("Failed to upload thumbnail");
+      alert(ta('errorOccurred'));
     } finally {
       setUploading(false);
     }
@@ -145,7 +148,7 @@ export default function PortfolioManagePage() {
       setFormData((prev) => ({ ...prev, images: [...prev.images, ...urls] }));
     } catch (error) {
       console.error("Error uploading gallery images:", error);
-      alert("Failed to upload gallery images");
+      alert(ta('errorOccurred'));
     } finally {
       setUploading(false);
     }
@@ -169,7 +172,7 @@ export default function PortfolioManagePage() {
       setFormData((prev) => ({ ...prev, videoUrl: result.url }));
     } catch (error) {
       console.error("Error uploading video:", error);
-      alert("Failed to upload video");
+      alert(ta('errorOccurred'));
     } finally {
       setUploading(false);
     }
@@ -177,7 +180,7 @@ export default function PortfolioManagePage() {
 
   const handleSave = async () => {
     if (!formData.title || !formData.slug || !formData.description) {
-      setError("Please fill in all required fields");
+      setError(ta('requiredFields'));
       return;
     }
 
@@ -229,9 +232,7 @@ export default function PortfolioManagePage() {
 
   const handleDelete = async () => {
     if (
-      !confirm(
-        "Are you sure you want to delete this portfolio item? This action cannot be undone."
-      )
+      !confirm(ta('deleteConfirm'))
     ) {
       return;
     }
@@ -244,7 +245,7 @@ export default function PortfolioManagePage() {
       if (!response.ok) throw new Error("Failed to delete");
       router.push("/admin/portfolio");
     } catch (err) {
-      alert("Failed to delete portfolio item");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -270,11 +271,11 @@ export default function PortfolioManagePage() {
             onClick={() => router.push("/admin/portfolio")}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            {tc('back')}
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-white">
-              {isNew ? "New Portfolio Item" : "Edit Portfolio Item"}
+              {isNew ? ta('newPortfolioItem') : ta('editPortfolioItem')}
             </h1>
             {!isNew && (
               <p className="text-white/60 text-sm mt-1">{formData.title}</p>
@@ -285,19 +286,19 @@ export default function PortfolioManagePage() {
           {!isNew && (
             <Button variant="destructive" size="sm" onClick={handleDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete
+              {tc('delete')}
             </Button>
           )}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                Saving...
+                {tc('saving')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                {isNew ? "Create" : "Save Changes"}
+                {isNew ? tc('create') : ta('saveChanges')}
               </>
             )}
           </Button>
@@ -321,7 +322,7 @@ export default function PortfolioManagePage() {
           className="bg-green-600/10 border border-green-600/20 rounded-lg p-4 mb-6"
         >
           <p className="text-green-500">
-            Portfolio item {isNew ? "created" : "updated"} successfully!
+            {isNew ? ta('createSuccess') : ta('updateSuccess')}
           </p>
         </motion.div>
       )}
@@ -336,13 +337,13 @@ export default function PortfolioManagePage() {
         <Card>
           <CardContent className="p-6 space-y-4">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Basic Information
+              {ta('basicInfo')}
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm text-white/70 mb-2">
-                  Title *
+                  {tc('title')} *
                 </label>
                 <Input
                   value={formData.title}
@@ -353,40 +354,40 @@ export default function PortfolioManagePage() {
                       slug: generateSlug(e.target.value),
                     })
                   }
-                  placeholder="Portfolio item title"
+                  placeholder={tc('title')}
                 />
               </div>
 
               <div className="col-span-2">
                 <label className="block text-sm text-white/70 mb-2">
-                  Slug *
+                  {ta('slug')} *
                 </label>
                 <Input
                   value={formData.slug}
                   onChange={(e) =>
                     setFormData({ ...formData, slug: e.target.value })
                   }
-                  placeholder="portfolio-item-slug"
+                  placeholder={ta('slug')}
                 />
               </div>
 
               <div className="col-span-2">
                 <label className="block text-sm text-white/70 mb-2">
-                  Description *
+                  {tc('description')} *
                 </label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Brief description"
+                  placeholder={tc('description')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Category *
+                  {tc('category')} *
                 </label>
                 <Select
                   value={formData.category}
@@ -409,27 +410,27 @@ export default function PortfolioManagePage() {
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Client Name
+                  {ta('clientName')}
                 </label>
                 <Input
                   value={formData.clientName}
                   onChange={(e) =>
                     setFormData({ ...formData, clientName: e.target.value })
                   }
-                  placeholder="Optional client name"
+                  placeholder={ta('clientName')}
                 />
               </div>
 
               <div className="col-span-2">
                 <label className="block text-sm text-white/70 mb-2">
-                  Tags (comma-separated)
+                  {tc('tags')}
                 </label>
                 <Input
                   value={formData.tags}
                   onChange={(e) =>
                     setFormData({ ...formData, tags: e.target.value })
                   }
-                  placeholder="e.g., branding, commercial, corporate"
+                  placeholder={tc('tags')}
                 />
               </div>
 
@@ -443,7 +444,7 @@ export default function PortfolioManagePage() {
                     }
                     className="w-4 h-4 rounded"
                   />
-                  Featured (show on homepage)
+                  {tc('featured')}
                 </label>
                 <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
                   <input
@@ -454,7 +455,7 @@ export default function PortfolioManagePage() {
                     }
                     className="w-4 h-4 rounded"
                   />
-                  Published (visible to public)
+                  {tc('published')}
                 </label>
               </div>
             </div>
@@ -465,12 +466,12 @@ export default function PortfolioManagePage() {
         <Card>
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Detailed Content
+              {ta('detailedContent')}
             </h2>
             <RichTextEditor
               content={formData.content}
               onChange={(content) => setFormData({ ...formData, content })}
-              placeholder="Write detailed content about this portfolio item..."
+              placeholder={ta('detailedContent')}
             />
           </CardContent>
         </Card>
@@ -478,11 +479,11 @@ export default function PortfolioManagePage() {
         {/* Media */}
         <Card>
           <CardContent className="p-6 space-y-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Media</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{ta('media')}</h2>
 
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">
-                Thumbnail Image *
+                {tc('image')} *
               </label>
               {formData.thumbnail ? (
                 <div className="relative inline-block">
@@ -512,7 +513,7 @@ export default function PortfolioManagePage() {
 
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">
-                Gallery Images (max 10)
+                {ta('gallery')}
               </label>
               {formData.images.length > 0 && (
                 <div className="grid grid-cols-3 gap-4 mb-4">
@@ -549,7 +550,7 @@ export default function PortfolioManagePage() {
 
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">
-                Video File (optional)
+                {tc('file')}
               </label>
               {formData.videoUrl ? (
                 <div className="relative">
@@ -584,18 +585,18 @@ export default function PortfolioManagePage() {
             variant="ghost"
             onClick={() => router.push("/admin/portfolio")}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                Saving...
+                {tc('saving')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                {isNew ? "Create Portfolio Item" : "Save Changes"}
+                {isNew ? ta('newPortfolioItem') : ta('saveChanges')}
               </>
             )}
           </Button>

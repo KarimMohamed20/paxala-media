@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   Folder,
   Search,
@@ -51,6 +52,8 @@ const statusProgress = {
 } as const;
 
 export default function ProjectsPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +93,7 @@ export default function ProjectsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">My Projects</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('projects')}</h1>
         <p className="text-white/60">
           View and track the progress of your projects.
         </p>
@@ -111,7 +114,7 @@ export default function ProjectsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects..."
+            placeholder={`${tc('search')} ${t('projects').toLowerCase()}...`}
             className="pl-10"
           />
         </div>
@@ -121,7 +124,7 @@ export default function ProjectsPage() {
             size="sm"
             onClick={() => setStatusFilter(null)}
           >
-            All
+            {tc('all')}
           </Button>
           {["IN_PROGRESS", "REVIEW", "COMPLETED"].map((status) => (
             <Button
@@ -130,7 +133,7 @@ export default function ProjectsPage() {
               size="sm"
               onClick={() => setStatusFilter(status)}
             >
-              {status.replace("_", " ")}
+              {status === "IN_PROGRESS" ? tc('inProgress') : status === "REVIEW" ? tc('review') : tc('completed')}
             </Button>
           ))}
         </div>
@@ -149,15 +152,15 @@ export default function ProjectsPage() {
         >
           <Folder size={64} className="text-white/20 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            No projects yet
+            {t('noProjectsYet')}
           </h3>
           <p className="text-white/60 mb-6">
             {search || statusFilter
-              ? "No projects match your filters."
+              ? tc('noResults')
               : "Your projects will appear here once started."}
           </p>
           <Link href="/booking">
-            <Button>Book a Consultation</Button>
+            <Button>{tc('bookConsultation')}</Button>
           </Link>
         </motion.div>
       ) : (
@@ -204,7 +207,7 @@ export default function ProjectsPage() {
                     {/* Progress Bar */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs text-white/40 mb-1">
-                        <span>Progress</span>
+                        <span>{t('progress')}</span>
                         <span>
                           {statusProgress[
                             project.status as keyof typeof statusProgress
@@ -231,7 +234,7 @@ export default function ProjectsPage() {
                       <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <FileText size={14} />
-                          {project._count?.files || 0} files
+                          {project._count?.files || 0} {tc('files').toLowerCase()}
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageSquare size={14} />

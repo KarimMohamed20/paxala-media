@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from 'next-intl';
 
 interface Booking {
   id: string;
@@ -50,6 +51,8 @@ const statusColors = {
 } as const;
 
 export default function BookingsPage() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -93,12 +96,12 @@ export default function BookingsPage() {
 
       fetchBookings();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update status");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
   const handleDeleteBooking = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this booking?")) return;
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/admin/bookings?id=${id}`, {
@@ -111,7 +114,7 @@ export default function BookingsPage() {
 
       fetchBookings();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete booking");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
@@ -123,9 +126,9 @@ export default function BookingsPage() {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Bookings</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{ta('bookings')}</h1>
           <p className="text-white/60">
-            Manage consultation and service bookings.
+            {ta('manageBookings')}
           </p>
         </div>
       </motion.div>
@@ -145,7 +148,7 @@ export default function BookingsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search bookings..."
+            placeholder={tc('search')}
             className="pl-10"
           />
         </div>
@@ -155,7 +158,7 @@ export default function BookingsPage() {
           onClick={() => setShowUpcoming(!showUpcoming)}
         >
           <Clock size={16} className="mr-2" />
-          Upcoming Only
+          {ta('upcomingOnly')}
         </Button>
         <div className="flex gap-2">
           {["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"].map((status) => (
@@ -188,26 +191,26 @@ export default function BookingsPage() {
             ) : bookings.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar size={48} className="text-white/20 mx-auto mb-4" />
-                <p className="text-white/40">No bookings found</p>
+                <p className="text-white/40">{tc('noResults')}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Client
+                      {tc('client')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Service
+                      {ta('service')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Date & Time
+                      {tc('date')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Status
+                      {tc('status')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Actions
+                      {ta('actions')}
                     </th>
                     <th className="w-10"></th>
                   </tr>
@@ -268,7 +271,7 @@ export default function BookingsPage() {
                                 }
                               >
                                 <Check size={16} className="mr-1" />
-                                Confirm
+                                {tc('confirm')}
                               </Button>
                               <Button
                                 size="sm"
@@ -279,7 +282,7 @@ export default function BookingsPage() {
                                 }
                               >
                                 <X size={16} className="mr-1" />
-                                Cancel
+                                {tc('cancel')}
                               </Button>
                             </>
                           )}
@@ -291,7 +294,7 @@ export default function BookingsPage() {
                                 handleStatusChange(booking.id, "COMPLETED")
                               }
                             >
-                              Mark Complete
+                              {ta('markComplete')}
                             </Button>
                           )}
                         </div>
@@ -309,7 +312,7 @@ export default function BookingsPage() {
                               className="text-red-500"
                             >
                               <Trash2 size={16} className="mr-2" />
-                              Delete
+                              {tc('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

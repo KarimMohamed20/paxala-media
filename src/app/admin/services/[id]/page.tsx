@@ -10,33 +10,50 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Switch } from "@/components/ui/switch";
+import { LocalizedInput } from "@/components/admin/localized-input";
+import { LocalizedArrayInput } from "@/components/admin/localized-array-input";
+import { type Locale } from "@/i18n/config";
+import { useTranslations } from "next-intl";
 
 interface ServiceData {
-  name: string;
+  nameEn: string;
+  nameAr: string;
+  nameHe: string;
   slug: string;
-  description: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  descriptionHe: string;
   icon: string | null;
   image: string | null;
-  features: string[];
+  featuresEn: string[];
+  featuresAr: string[];
+  featuresHe: string[];
   order: number;
   isActive: boolean;
 }
 
 export default function AdminServiceEditPage() {
+  const ta = useTranslations("adminUI");
+  const tc = useTranslations("common");
   const router = useRouter();
   const params = useParams();
   const isNew = params.id === "new";
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
-  const [newFeature, setNewFeature] = useState("");
   const [data, setData] = useState<ServiceData>({
-    name: "",
+    nameEn: "",
+    nameAr: "",
+    nameHe: "",
     slug: "",
-    description: "",
+    descriptionEn: "",
+    descriptionAr: "",
+    descriptionHe: "",
     icon: null,
     image: null,
-    features: [],
+    featuresEn: [],
+    featuresAr: [],
+    featuresHe: [],
     order: 0,
     isActive: true,
   });
@@ -49,13 +66,31 @@ export default function AdminServiceEditPage() {
 
   const fetchService = async () => {
     try {
-      const response = await fetch(`/api/services/${params.id}`);
+      // Fetch with allLocales=true to get all language fields
+      const response = await fetch(`/api/services/${params.id}?allLocales=true`);
       if (!response.ok) throw new Error("Failed to fetch");
       const service = await response.json();
-      setData(service);
+
+      // Map the data directly - it already has all localized fields
+      setData({
+        nameEn: service.nameEn || "",
+        nameAr: service.nameAr || "",
+        nameHe: service.nameHe || "",
+        slug: service.slug || "",
+        descriptionEn: service.descriptionEn || "",
+        descriptionAr: service.descriptionAr || "",
+        descriptionHe: service.descriptionHe || "",
+        icon: service.icon,
+        image: service.image,
+        featuresEn: service.featuresEn || [],
+        featuresAr: service.featuresAr || [],
+        featuresHe: service.featuresHe || [],
+        order: service.order || 0,
+        isActive: service.isActive,
+      });
     } catch (error) {
       console.error("Error fetching service:", error);
-      alert("Failed to load service");
+      alert(ta("errorOccurred"));
       router.push("/admin/services");
     } finally {
       setLoading(false);
@@ -79,22 +114,8 @@ export default function AdminServiceEditPage() {
       setData({ ...data, [type]: result.url });
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image");
+      alert(ta("errorOccurred"));
     }
-  };
-
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setData({ ...data, features: [...data.features, newFeature.trim()] });
-      setNewFeature("");
-    }
-  };
-
-  const removeFeature = (index: number) => {
-    setData({
-      ...data,
-      features: data.features.filter((_, i) => i !== index),
-    });
   };
 
   const generateSlug = (name: string) => {
@@ -104,11 +125,13 @@ export default function AdminServiceEditPage() {
       .replace(/(^-|-$)/g, "");
   };
 
-  const handleNameChange = (name: string) => {
+  const handleNameChange = (locale: Locale, value: string) => {
+    const fieldName = `name${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof ServiceData;
     setData({
       ...data,
-      name,
-      slug: isNew ? generateSlug(name) : data.slug,
+      [fieldName]: value,
+      // Auto-generate slug from English name for new services
+      slug: isNew && locale === "en" ? generateSlug(value) : data.slug,
     });
   };
 
@@ -131,7 +154,7 @@ export default function AdminServiceEditPage() {
       router.push("/admin/services");
     } catch (error) {
       console.error("Error saving service:", error);
-      alert("Failed to save service");
+      alert(ta("errorOccurred"));
     } finally {
       setSaving(false);
     }
@@ -162,12 +185,12 @@ export default function AdminServiceEditPage() {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              {isNew ? "Add Service" : "Edit Service"}
+              {isNew ? ta("addService") : tc("edit")}
             </h1>
             <p className="text-white/60 text-sm">
               {isNew
-                ? "Create a new service offering"
-                : "Update service details"}
+                ? ta("basicInfo")
+                : ta("detailedContent")}
             </p>
           </div>
         </div>
@@ -182,23 +205,24 @@ export default function AdminServiceEditPage() {
           className="bg-white/5 rounded-xl border border-white/10 p-6"
         >
           <h2 className="text-xl font-semibold text-white mb-6">
-            Basic Information
+            {ta("basicInfo")}
           </h2>
 
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Service Name *</Label>
-              <Input
-                id="name"
-                value={data.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g., Video Production"
-                required
-              />
-            </div>
+            <LocalizedInput
+              label={tc("name")}
+              values={{
+                en: data.nameEn,
+                ar: data.nameAr,
+                he: data.nameHe,
+              }}
+              onChange={handleNameChange}
+              placeholder="e.g., Video Production"
+              required
+            />
 
             <div>
-              <Label htmlFor="slug">URL Slug *</Label>
+              <Label htmlFor="slug">{ta("slug")} *</Label>
               <Input
                 id="slug"
                 value={data.slug}
@@ -207,27 +231,30 @@ export default function AdminServiceEditPage() {
                 required
               />
               <p className="text-xs text-white/40 mt-1">
-                Used in URLs - lowercase letters, numbers, and hyphens only
+                {ta("generateSlug")}
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                value={data.description}
-                onChange={(e) =>
-                  setData({ ...data, description: e.target.value })
-                }
-                placeholder="Brief description of the service"
-                rows={4}
-                required
-              />
-            </div>
+            <LocalizedInput
+              label={tc("description")}
+              type="textarea"
+              values={{
+                en: data.descriptionEn,
+                ar: data.descriptionAr,
+                he: data.descriptionHe,
+              }}
+              onChange={(locale, value) => {
+                const fieldName = `description${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof ServiceData;
+                setData({ ...data, [fieldName]: value });
+              }}
+              placeholder={tc("description")}
+              rows={4}
+              required
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="order">Display Order</Label>
+                <Label htmlFor="order">{ta("order")}</Label>
                 <Input
                   id="order"
                   type="number"
@@ -238,12 +265,12 @@ export default function AdminServiceEditPage() {
                   placeholder="0"
                 />
                 <p className="text-xs text-white/40 mt-1">
-                  Lower numbers appear first
+                  {ta("order")}
                 </p>
               </div>
 
               <div className="flex items-center justify-between pt-6">
-                <Label htmlFor="isActive">Active Status</Label>
+                <Label htmlFor="isActive">{tc("status")}</Label>
                 <Switch
                   id="isActive"
                   checked={data.isActive}
@@ -263,64 +290,21 @@ export default function AdminServiceEditPage() {
           transition={{ delay: 0.1 }}
           className="bg-white/5 rounded-xl border border-white/10 p-6"
         >
-          <h2 className="text-xl font-semibold text-white mb-6">Features</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">{ta("features")}</h2>
 
-          <div className="space-y-4">
-            {/* Add Feature */}
-            <div className="flex gap-2">
-              <Input
-                value={newFeature}
-                onChange={(e) => setNewFeature(e.target.value)}
-                placeholder="Add a feature..."
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addFeature();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={addFeature}
-                variant="secondary"
-                size="sm"
-              >
-                <Plus size={18} />
-              </Button>
-            </div>
-
-            {/* Features List */}
-            {data.features.length > 0 && (
-              <div className="space-y-2">
-                {data.features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center gap-2 bg-white/5 rounded-lg p-3"
-                  >
-                    <span className="flex-1 text-white/80">{feature}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFeature(index)}
-                      className="text-red-500 hover:text-red-400"
-                    >
-                      <X size={16} />
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
-            {data.features.length === 0 && (
-              <p className="text-white/40 text-sm text-center py-4">
-                No features added yet
-              </p>
-            )}
-          </div>
+          <LocalizedArrayInput
+            label={ta("features")}
+            values={{
+              en: data.featuresEn,
+              ar: data.featuresAr,
+              he: data.featuresHe,
+            }}
+            onChange={(locale, value) => {
+              const fieldName = `features${locale.charAt(0).toUpperCase() + locale.slice(1)}` as keyof ServiceData;
+              setData({ ...data, [fieldName]: value });
+            }}
+            placeholder={ta("features")}
+          />
         </motion.div>
 
         {/* Images */}
@@ -330,13 +314,13 @@ export default function AdminServiceEditPage() {
           transition={{ delay: 0.2 }}
           className="bg-white/5 rounded-xl border border-white/10 p-6"
         >
-          <h2 className="text-xl font-semibold text-white mb-6">Images</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">{ta("media")}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label>Service Icon</Label>
+              <Label>{tc("image")}</Label>
               <p className="text-xs text-white/40 mb-3">
-                Small icon for service cards
+                {ta("profileImage")}
               </p>
               <FileUpload
                 onChange={(files) => handleImageUpload(files, "icon")}
@@ -346,7 +330,7 @@ export default function AdminServiceEditPage() {
                 <div className="mt-3">
                   <img
                     src={data.icon}
-                    alt="Service icon"
+                    alt={tc("image")}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
                   <Button
@@ -356,16 +340,16 @@ export default function AdminServiceEditPage() {
                     onClick={() => setData({ ...data, icon: null })}
                     className="text-red-500 hover:text-red-400 mt-2"
                   >
-                    Remove
+                    {tc("remove")}
                   </Button>
                 </div>
               )}
             </div>
 
             <div>
-              <Label>Service Image</Label>
+              <Label>{ta("coverImage")}</Label>
               <p className="text-xs text-white/40 mb-3">
-                Large image for service page
+                {ta("coverImage")}
               </p>
               <FileUpload
                 onChange={(files) => handleImageUpload(files, "image")}
@@ -375,7 +359,7 @@ export default function AdminServiceEditPage() {
                 <div className="mt-3">
                   <img
                     src={data.image}
-                    alt="Service image"
+                    alt={tc("image")}
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <Button
@@ -385,7 +369,7 @@ export default function AdminServiceEditPage() {
                     onClick={() => setData({ ...data, image: null })}
                     className="text-red-500 hover:text-red-400 mt-2"
                   >
-                    Remove
+                    {tc("remove")}
                   </Button>
                 </div>
               )}
@@ -401,18 +385,18 @@ export default function AdminServiceEditPage() {
             onClick={() => router.push("/admin/services")}
             disabled={saving}
           >
-            Cancel
+            {tc("cancel")}
           </Button>
           <Button type="submit" disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="animate-spin mr-2" size={18} />
-                Saving...
+                {tc("saving")}
               </>
             ) : (
               <>
                 <Save className="mr-2" size={18} />
-                Save Service
+                {ta("saveChanges")}
               </>
             )}
           </Button>

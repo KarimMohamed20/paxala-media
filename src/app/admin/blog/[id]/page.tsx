@@ -26,6 +26,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface BlogPostData {
   title: string;
@@ -39,6 +40,9 @@ interface BlogPostData {
 }
 
 export default function AdminBlogEditPage() {
+  const ta = useTranslations("adminUI");
+  const tc = useTranslations("common");
+  const tb = useTranslations("blogCategories");
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -83,7 +87,7 @@ export default function AdminBlogEditPage() {
       });
     } catch (error) {
       console.error("Error fetching post:", error);
-      alert("Failed to load post");
+      alert(ta("errorOccurred"));
       router.push("/admin/blog");
     } finally {
       setLoading(false);
@@ -92,7 +96,7 @@ export default function AdminBlogEditPage() {
 
   const handleSave = async (publish?: boolean) => {
     if (!data.title || !data.excerpt || !data.content) {
-      alert("Please fill in all required fields");
+      alert(ta("errorOccurred"));
       return;
     }
 
@@ -115,7 +119,7 @@ export default function AdminBlogEditPage() {
       router.push("/admin/blog");
     } catch (error) {
       console.error("Error saving post:", error);
-      alert("Failed to save post");
+      alert(ta("errorOccurred"));
     } finally {
       setSaving(false);
     }
@@ -141,7 +145,7 @@ export default function AdminBlogEditPage() {
       setData({ ...data, coverImage: result.url });
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image");
+      alert(ta("errorOccurred"));
     } finally {
       setUploading(false);
     }
@@ -192,10 +196,10 @@ export default function AdminBlogEditPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                {isNew ? "New Blog Post" : "Edit Blog Post"}
+                {isNew ? ta("newPost") : tc("edit")}
               </h1>
               <p className="text-white/60 text-sm">
-                {isNew ? "Create a new blog post" : "Edit your blog post"}
+                {isNew ? ta("basicInfo") : ta("detailedContent")}
               </p>
             </div>
           </div>
@@ -211,7 +215,7 @@ export default function AdminBlogEditPage() {
             ) : (
               <Save size={18} className="mr-2" />
             )}
-            Save Draft
+            {ta("saveDraft")}
           </Button>
           <Button onClick={() => handleSave(true)} disabled={saving}>
             {saving ? (
@@ -219,7 +223,7 @@ export default function AdminBlogEditPage() {
             ) : (
               <Eye size={18} className="mr-2" />
             )}
-            Publish
+            {ta("publish")}
           </Button>
         </div>
       </div>
@@ -229,11 +233,11 @@ export default function AdminBlogEditPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Title */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2">Title *</Label>
+            <Label className="mb-2">{tc("title")} *</Label>
             <Input
               value={data.title}
               onChange={(e) => setData({ ...data, title: e.target.value })}
-              placeholder="Enter post title"
+              placeholder={tc("title")}
               className="text-lg"
             />
           </div>
@@ -241,40 +245,40 @@ export default function AdminBlogEditPage() {
           {/* Slug */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <div className="flex items-center justify-between mb-2">
-              <Label>URL Slug</Label>
+              <Label>{ta("slug")}</Label>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={generateSlug}
                 className="text-xs"
               >
-                Generate from title
+                {ta("generateSlug")}
               </Button>
             </div>
             <Input
               value={data.slug}
               onChange={(e) => setData({ ...data, slug: e.target.value })}
-              placeholder="post-url-slug"
+              placeholder={ta("slug")}
             />
             <p className="text-xs text-white/40 mt-2">
-              URL: /blog/{data.slug || "post-url-slug"}
+              URL: /blog/{data.slug || ta("slug")}
             </p>
           </div>
 
           {/* Excerpt */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2">Excerpt *</Label>
+            <Label className="mb-2">{ta("excerpt")} *</Label>
             <Textarea
               value={data.excerpt}
               onChange={(e) => setData({ ...data, excerpt: e.target.value })}
-              placeholder="Brief summary of the post (shown in listings)"
+              placeholder={ta("excerpt")}
               rows={3}
             />
           </div>
 
           {/* Content */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-4 block">Content *</Label>
+            <Label className="mb-4 block">{ta("content")} *</Label>
             <RichTextEditor
               content={data.content}
               onChange={(value) => setData({ ...data, content: value })}
@@ -286,12 +290,12 @@ export default function AdminBlogEditPage() {
         <div className="space-y-6">
           {/* Cover Image */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-4 block">Cover Image</Label>
+            <Label className="mb-4 block">{ta("coverImage")}</Label>
             {data.coverImage ? (
               <div className="relative aspect-video rounded-lg overflow-hidden mb-4 group">
                 <Image
                   src={data.coverImage}
-                  alt="Cover"
+                  alt={ta("coverImage")}
                   fill
                   className="object-cover"
                 />
@@ -313,7 +317,7 @@ export default function AdminBlogEditPage() {
 
           {/* Category */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2 block">Category</Label>
+            <Label className="mb-2 block">{tc("category")}</Label>
             <Select
               value={data.category}
               onValueChange={(value) => setData({ ...data, category: value })}
@@ -322,14 +326,14 @@ export default function AdminBlogEditPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NEWS">News</SelectItem>
-                <SelectItem value="TUTORIALS">Tutorials</SelectItem>
+                <SelectItem value="NEWS">{tb("NEWS")}</SelectItem>
+                <SelectItem value="TUTORIALS">{tb("TUTORIALS")}</SelectItem>
                 <SelectItem value="BEHIND_THE_SCENES">
-                  Behind the Scenes
+                  {tb("BEHIND_THE_SCENES")}
                 </SelectItem>
-                <SelectItem value="CASE_STUDIES">Case Studies</SelectItem>
+                <SelectItem value="CASE_STUDIES">{tb("CASE_STUDIES")}</SelectItem>
                 <SelectItem value="INDUSTRY_INSIGHTS">
-                  Industry Insights
+                  {tb("INDUSTRY_INSIGHTS")}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -337,12 +341,12 @@ export default function AdminBlogEditPage() {
 
           {/* Tags */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2 block">Tags</Label>
+            <Label className="mb-2 block">{tc("tags")}</Label>
             <div className="flex gap-2 mb-3">
               <Input
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Add a tag"
+                placeholder={ta("addTag")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -351,7 +355,7 @@ export default function AdminBlogEditPage() {
                 }}
               />
               <Button size="sm" onClick={addTag}>
-                Add
+                {tc("add")}
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">

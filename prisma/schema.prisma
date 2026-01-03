@@ -96,13 +96,21 @@ enum Role {
 // ==================== TEAM ====================
 model TeamMember {
   id        String   @id @default(cuid())
-  name      String
-  role      String
-  bio       String?  @db.Text
+  nameEn    String
+  nameAr    String
+  nameHe    String
+  roleEn    String
+  roleAr    String
+  roleHe    String
+  bioEn     String?  @db.Text
+  bioAr     String?  @db.Text
+  bioHe     String?  @db.Text
   image     String?
   team      TeamType @default(PRODUCTION)
   order     Int      @default(0)
-  skills    String[] @default([])
+  skillsEn  String[] @default([])
+  skillsAr  String[] @default([])
+  skillsHe  String[] @default([])
   social    Json?    // { instagram, linkedin, etc. }
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -117,39 +125,53 @@ enum TeamType {
 
 // ==================== SERVICES ====================
 model Service {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  description String    @db.Text
-  icon        String?
-  image       String?
-  features    String[]  @default([])
-  order       Int       @default(0)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  projects    Project[]
+  id             String    @id @default(cuid())
+  nameEn         String
+  nameAr         String
+  nameHe         String
+  slug           String    @unique
+  descriptionEn  String    @db.Text
+  descriptionAr  String    @db.Text
+  descriptionHe  String    @db.Text
+  icon           String?
+  image          String?
+  featuresEn     String[]  @default([])
+  featuresAr     String[]  @default([])
+  featuresHe     String[]  @default([])
+  order          Int       @default(0)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  projects       Project[]
 }
 
 // ==================== PORTFOLIO ====================
 model Portfolio {
-  id          String            @id @default(cuid())
-  title       String
-  slug        String            @unique
-  description String            @db.Text
-  content     String?           @db.Text
-  thumbnail   String?
-  images      String[]          @default([])
-  videoUrl    String?
-  category    PortfolioCategory
-  tags        String[]          @default([])
-  clientName  String?
-  featured    Boolean           @default(false)
-  published   Boolean           @default(false)
-  publishedAt DateTime?
-  order       Int               @default(0)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  titleEn        String
+  titleAr        String
+  titleHe        String
+  slug           String            @unique
+  descriptionEn  String            @db.Text
+  descriptionAr  String            @db.Text
+  descriptionHe  String            @db.Text
+  contentEn      String?           @db.Text
+  contentAr      String?           @db.Text
+  contentHe      String?           @db.Text
+  thumbnail      String?
+  images         String[]          @default([])
+  videoUrl       String?
+  category       PortfolioCategory
+  tagsEn         String[]          @default([])
+  tagsAr         String[]          @default([])
+  tagsHe         String[]          @default([])
+  clientName     String?
+  featured       Boolean           @default(false)
+  published      Boolean           @default(false)
+  publishedAt    DateTime?
+  order          Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 enum PortfolioCategory {
@@ -260,20 +282,28 @@ enum BookingStatus {
 
 // ==================== BLOG ====================
 model BlogPost {
-  id          String      @id @default(cuid())
-  title       String
-  slug        String      @unique
-  excerpt     String      @db.Text
-  content     String      @db.Text
+  id          String       @id @default(cuid())
+  titleEn     String
+  titleAr     String
+  titleHe     String
+  slug        String       @unique
+  excerptEn   String       @db.Text
+  excerptAr   String       @db.Text
+  excerptHe   String       @db.Text
+  contentEn   String       @db.Text
+  contentAr   String       @db.Text
+  contentHe   String       @db.Text
   coverImage  String?
   authorId    String
   category    BlogCategory
-  tags        String[]    @default([])
-  published   Boolean     @default(false)
+  tagsEn      String[]     @default([])
+  tagsAr      String[]     @default([])
+  tagsHe      String[]     @default([])
+  published   Boolean      @default(false)
   publishedAt DateTime?
-  views       Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  views       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 enum BlogCategory {
@@ -299,7 +329,9 @@ model Comment {
 // ==================== CLIENTS ====================
 model ClientLogo {
   id        String   @id @default(cuid())
-  name      String
+  nameEn    String
+  nameAr    String
+  nameHe    String
   logo      String
   website   String?
   order     Int      @default(0)
@@ -341,69 +373,157 @@ model HomePageContent {
   id String @id @default(cuid())
 
   // Hero Section
-  heroBadge     String @default("Creative Production Studio")
-  heroHeading   String @default("Paxala Media Production")
-  heroSlogan    String @default("From Vision to Visual")
-  heroSubtitle1 String @default("Bringing brands to life through impactful visual storytelling.")
-  heroSubtitle2 String @default("Video production, photography, design, and development under one roof.")
-  heroStats     Json   @default("[{\"value\":\"1000+\",\"label\":\"Projects Completed\"},{\"value\":\"200+\",\"label\":\"Happy Clients\"},{\"value\":\"8+\",\"label\":\"Services Offered\"},{\"value\":\"10+\",\"label\":\"Years Experience\"}]")
+  heroBadgeEn     String @default("Creative Production Studio")
+  heroBadgeAr     String @default("Creative Production Studio")
+  heroBadgeHe     String @default("Creative Production Studio")
+  heroHeadingEn   String @default("Paxala Media Production")
+  heroHeadingAr   String @default("Paxala Media Production")
+  heroHeadingHe   String @default("Paxala Media Production")
+  heroSloganEn    String @default("From Vision to Visual")
+  heroSloganAr    String @default("From Vision to Visual")
+  heroSloganHe    String @default("From Vision to Visual")
+  heroSubtitle1En String @default("Bringing brands to life through impactful visual storytelling.")
+  heroSubtitle1Ar String @default("Bringing brands to life through impactful visual storytelling.")
+  heroSubtitle1He String @default("Bringing brands to life through impactful visual storytelling.")
+  heroSubtitle2En String @default("Video production, photography, design, and development under one roof.")
+  heroSubtitle2Ar String @default("Video production, photography, design, and development under one roof.")
+  heroSubtitle2He String @default("Video production, photography, design, and development under one roof.")
+  heroStatsEn     Json   @default("[{\"value\":\"1000+\",\"label\":\"Projects Completed\"},{\"value\":\"200+\",\"label\":\"Happy Clients\"},{\"value\":\"8+\",\"label\":\"Services Offered\"},{\"value\":\"10+\",\"label\":\"Years Experience\"}]")
+  heroStatsAr     Json   @default("[{\"value\":\"1000+\",\"label\":\"Projects Completed\"},{\"value\":\"200+\",\"label\":\"Happy Clients\"},{\"value\":\"8+\",\"label\":\"Services Offered\"},{\"value\":\"10+\",\"label\":\"Years Experience\"}]")
+  heroStatsHe     Json   @default("[{\"value\":\"1000+\",\"label\":\"Projects Completed\"},{\"value\":\"200+\",\"label\":\"Happy Clients\"},{\"value\":\"8+\",\"label\":\"Services Offered\"},{\"value\":\"10+\",\"label\":\"Years Experience\"}]")
 
   // About Section
-  aboutBadge       String  @default("About Us")
-  aboutHeading     String  @default("About Paxala Media")
-  aboutImage       String? // Upload path
-  aboutParagraph1  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
-  aboutParagraph2  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
-  aboutParagraph3  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
-  aboutParagraph4  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
-  aboutParagraph5  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
-  aboutHighlights  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
-  aboutYearsText   String  @default("10+")
-  aboutYearsLabel  String  @default("Years of Excellence")
+  aboutBadgeEn       String  @default("About Us")
+  aboutBadgeAr       String  @default("About Us")
+  aboutBadgeHe       String  @default("About Us")
+  aboutHeadingEn     String  @default("About Paxala Media")
+  aboutHeadingAr     String  @default("About Paxala Media")
+  aboutHeadingHe     String  @default("About Paxala Media")
+  aboutImage         String? // Upload path
+  aboutParagraph1En  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph1Ar  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph1He  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph2En  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph2Ar  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph2He  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph3En  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph3Ar  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph3He  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph4En  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph4Ar  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph4He  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph5En  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutParagraph5Ar  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutParagraph5He  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutHighlightsEn  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutHighlightsAr  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutHighlightsHe  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutYearsTextEn   String  @default("10+")
+  aboutYearsTextAr   String  @default("10+")
+  aboutYearsTextHe   String  @default("10+")
+  aboutYearsLabelEn  String  @default("Years of Excellence")
+  aboutYearsLabelAr  String  @default("Years of Excellence")
+  aboutYearsLabelHe  String  @default("Years of Excellence")
 
   // Team Section
-  teamSubtitle    String @default("Our Team")
-  teamTitle       String @default("PMP Crew")
-  teamDescription String @default("Meet the talented professionals behind our creative productions.")
-  teamTab1Label   String @default("Production Team")
-  teamTab2Label   String @default("IT & Dev Team")
-  teamTab3Label   String @default("Creative Team")
+  teamSubtitleEn    String @default("Our Team")
+  teamSubtitleAr    String @default("Our Team")
+  teamSubtitleHe    String @default("Our Team")
+  teamTitleEn       String @default("PMP Crew")
+  teamTitleAr       String @default("PMP Crew")
+  teamTitleHe       String @default("PMP Crew")
+  teamDescriptionEn String @default("Meet the talented professionals behind our creative productions.")
+  teamDescriptionAr String @default("Meet the talented professionals behind our creative productions.")
+  teamDescriptionHe String @default("Meet the talented professionals behind our creative productions.")
+  teamTab1LabelEn   String @default("Production Team")
+  teamTab1LabelAr   String @default("Production Team")
+  teamTab1LabelHe   String @default("Production Team")
+  teamTab2LabelEn   String @default("IT & Dev Team")
+  teamTab2LabelAr   String @default("IT & Dev Team")
+  teamTab2LabelHe   String @default("IT & Dev Team")
+  teamTab3LabelEn   String @default("Creative Team")
+  teamTab3LabelAr   String @default("Creative Team")
+  teamTab3LabelHe   String @default("Creative Team")
 
   // Clients Section
-  clientsSubtitle    String @default("Trusted By")
-  clientsTitle       String @default("Our Clients")
-  clientsDescription String @default("We've had the privilege of working with amazing brands and businesses.")
-  clientsWhatTheySay String @default("What They Say")
+  clientsSubtitleEn    String @default("Trusted By")
+  clientsSubtitleAr    String @default("Trusted By")
+  clientsSubtitleHe    String @default("Trusted By")
+  clientsTitleEn       String @default("Our Clients")
+  clientsTitleAr       String @default("Our Clients")
+  clientsTitleHe       String @default("Our Clients")
+  clientsDescriptionEn String @default("We've had the privilege of working with amazing brands and businesses.")
+  clientsDescriptionAr String @default("We've had the privilege of working with amazing brands and businesses.")
+  clientsDescriptionHe String @default("We've had the privilege of working with amazing brands and businesses.")
+  clientsWhatTheySayEn String @default("What They Say")
+  clientsWhatTheySayAr String @default("What They Say")
+  clientsWhatTheySayHe String @default("What They Say")
 
   // CTA Section
-  ctaBadge    String @default("Let's Create Together")
-  ctaHeading  String @default("Ready to Bring Your Vision to Life?")
-  ctaSubtitle String @default("Let's create something amazing together. Book a consultation or get in touch to discuss your next project.")
+  ctaBadgeEn    String @default("Let's Create Together")
+  ctaBadgeAr    String @default("Let's Create Together")
+  ctaBadgeHe    String @default("Let's Create Together")
+  ctaHeadingEn  String @default("Ready to Bring Your Vision to Life?")
+  ctaHeadingAr  String @default("Ready to Bring Your Vision to Life?")
+  ctaHeadingHe  String @default("Ready to Bring Your Vision to Life?")
+  ctaSubtitleEn String @default("Let's create something amazing together. Book a consultation or get in touch to discuss your next project.")
+  ctaSubtitleAr String @default("Let's create something amazing together. Book a consultation or get in touch to discuss your next project.")
+  ctaSubtitleHe String @default("Let's create something amazing together. Book a consultation or get in touch to discuss your next project.")
 
   // About Page Specific Content
-  aboutPageHeroBadge    String @default("About Us")
-  aboutPageHeroHeading  String @default("About Paxala Media")
+  aboutPageHeroBadgeEn    String @default("About Us")
+  aboutPageHeroBadgeAr    String @default("About Us")
+  aboutPageHeroBadgeHe    String @default("About Us")
+  aboutPageHeroHeadingEn  String @default("About Paxala Media")
+  aboutPageHeroHeadingAr  String @default("About Paxala Media")
+  aboutPageHeroHeadingHe  String @default("About Paxala Media")
 
   // About Page Values Section
-  aboutValuesSubtitle    String @default("What Drives Us")
-  aboutValuesTitle       String @default("Our Values")
-  aboutValuesDescription String @default("The principles that guide everything we do at Paxala Media.")
-  aboutValues            Json   @default("[{\"icon\":\"Target\",\"title\":\"Excellence\",\"description\":\"We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results.\"},{\"icon\":\"Users\",\"title\":\"Collaboration\",\"description\":\"We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable.\"},{\"icon\":\"Heart\",\"title\":\"Passion\",\"description\":\"Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities.\"},{\"icon\":\"Award\",\"title\":\"Innovation\",\"description\":\"We embrace new technologies and techniques to stay at the forefront of the creative industry.\"}]")
+  aboutValuesSubtitleEn    String @default("What Drives Us")
+  aboutValuesSubtitleAr    String @default("What Drives Us")
+  aboutValuesSubtitleHe    String @default("What Drives Us")
+  aboutValuesTitleEn       String @default("Our Values")
+  aboutValuesTitleAr       String @default("Our Values")
+  aboutValuesTitleHe       String @default("Our Values")
+  aboutValuesDescriptionEn String @default("The principles that guide everything we do at Paxala Media.")
+  aboutValuesDescriptionAr String @default("The principles that guide everything we do at Paxala Media.")
+  aboutValuesDescriptionHe String @default("The principles that guide everything we do at Paxala Media.")
+  aboutValuesEn            Json   @default("[{\"icon\":\"Target\",\"title\":\"Excellence\",\"description\":\"We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results.\"},{\"icon\":\"Users\",\"title\":\"Collaboration\",\"description\":\"We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable.\"},{\"icon\":\"Heart\",\"title\":\"Passion\",\"description\":\"Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities.\"},{\"icon\":\"Award\",\"title\":\"Innovation\",\"description\":\"We embrace new technologies and techniques to stay at the forefront of the creative industry.\"}]")
+  aboutValuesAr            Json   @default("[{\"icon\":\"Target\",\"title\":\"Excellence\",\"description\":\"We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results.\"},{\"icon\":\"Users\",\"title\":\"Collaboration\",\"description\":\"We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable.\"},{\"icon\":\"Heart\",\"title\":\"Passion\",\"description\":\"Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities.\"},{\"icon\":\"Award\",\"title\":\"Innovation\",\"description\":\"We embrace new technologies and techniques to stay at the forefront of the creative industry.\"}]")
+  aboutValuesHe            Json   @default("[{\"icon\":\"Target\",\"title\":\"Excellence\",\"description\":\"We strive for excellence in every project, paying attention to the smallest details to deliver outstanding results.\"},{\"icon\":\"Users\",\"title\":\"Collaboration\",\"description\":\"We believe in the power of teamwork, both within our crew and with our clients, to create something truly remarkable.\"},{\"icon\":\"Heart\",\"title\":\"Passion\",\"description\":\"Our passion for visual storytelling drives us to push creative boundaries and explore new possibilities.\"},{\"icon\":\"Award\",\"title\":\"Innovation\",\"description\":\"We embrace new technologies and techniques to stay at the forefront of the creative industry.\"}]")
 
   // About Page Milestones Section
-  aboutMilestonesSubtitle    String @default("Our Journey")
-  aboutMilestonesTitle       String @default("Milestones")
-  aboutMilestonesDescription String @default("Key moments in our growth as a creative studio.")
-  aboutMilestones            Json   @default("[{\"year\":\"2014\",\"title\":\"Founded\",\"description\":\"Paxala Media was born from a passion for visual storytelling\"},{\"year\":\"2016\",\"title\":\"First Major Client\",\"description\":\"Completed our first major commercial project\"},{\"year\":\"2018\",\"title\":\"Team Expansion\",\"description\":\"Grew our team of creative professionals\"},{\"year\":\"2020\",\"title\":\"Studio Launch\",\"description\":\"Opened our dedicated production studio\"},{\"year\":\"2022\",\"title\":\"Digital Services\",\"description\":\"Expanded into web and app development\"},{\"year\":\"2024\",\"title\":\"1000+ Projects\",\"description\":\"Celebrated completing over 1000 client projects\"}]")
+  aboutMilestonesSubtitleEn    String @default("Our Journey")
+  aboutMilestonesSubtitleAr    String @default("Our Journey")
+  aboutMilestonesSubtitleHe    String @default("Our Journey")
+  aboutMilestonesTitleEn       String @default("Milestones")
+  aboutMilestonesTitleAr       String @default("Milestones")
+  aboutMilestonesTitleHe       String @default("Milestones")
+  aboutMilestonesDescriptionEn String @default("Key moments in our growth as a creative studio.")
+  aboutMilestonesDescriptionAr String @default("Key moments in our growth as a creative studio.")
+  aboutMilestonesDescriptionHe String @default("Key moments in our growth as a creative studio.")
+  aboutMilestonesEn            Json   @default("[{\"year\":\"2014\",\"title\":\"Founded\",\"description\":\"Paxala Media was born from a passion for visual storytelling\"},{\"year\":\"2016\",\"title\":\"First Major Client\",\"description\":\"Completed our first major commercial project\"},{\"year\":\"2018\",\"title\":\"Team Expansion\",\"description\":\"Grew our team of creative professionals\"},{\"year\":\"2020\",\"title\":\"Studio Launch\",\"description\":\"Opened our dedicated production studio\"},{\"year\":\"2022\",\"title\":\"Digital Services\",\"description\":\"Expanded into web and app development\"},{\"year\":\"2024\",\"title\":\"1000+ Projects\",\"description\":\"Celebrated completing over 1000 client projects\"}]")
+  aboutMilestonesAr            Json   @default("[{\"year\":\"2014\",\"title\":\"Founded\",\"description\":\"Paxala Media was born from a passion for visual storytelling\"},{\"year\":\"2016\",\"title\":\"First Major Client\",\"description\":\"Completed our first major commercial project\"},{\"year\":\"2018\",\"title\":\"Team Expansion\",\"description\":\"Grew our team of creative professionals\"},{\"year\":\"2020\",\"title\":\"Studio Launch\",\"description\":\"Opened our dedicated production studio\"},{\"year\":\"2022\",\"title\":\"Digital Services\",\"description\":\"Expanded into web and app development\"},{\"year\":\"2024\",\"title\":\"1000+ Projects\",\"description\":\"Celebrated completing over 1000 client projects\"}]")
+  aboutMilestonesHe            Json   @default("[{\"year\":\"2014\",\"title\":\"Founded\",\"description\":\"Paxala Media was born from a passion for visual storytelling\"},{\"year\":\"2016\",\"title\":\"First Major Client\",\"description\":\"Completed our first major commercial project\"},{\"year\":\"2018\",\"title\":\"Team Expansion\",\"description\":\"Grew our team of creative professionals\"},{\"year\":\"2020\",\"title\":\"Studio Launch\",\"description\":\"Opened our dedicated production studio\"},{\"year\":\"2022\",\"title\":\"Digital Services\",\"description\":\"Expanded into web and app development\"},{\"year\":\"2024\",\"title\":\"1000+ Projects\",\"description\":\"Celebrated completing over 1000 client projects\"}]")
 
   // About Page Team Section
-  aboutTeamSubtitle    String @default("Our Crew")
-  aboutTeamTitle       String @default("Meet the Team")
-  aboutTeamDescription String @default("The talented professionals behind our creative productions.")
+  aboutTeamSubtitleEn    String @default("Our Crew")
+  aboutTeamSubtitleAr    String @default("Our Crew")
+  aboutTeamSubtitleHe    String @default("Our Crew")
+  aboutTeamTitleEn       String @default("Meet the Team")
+  aboutTeamTitleAr       String @default("Meet the Team")
+  aboutTeamTitleHe       String @default("Meet the Team")
+  aboutTeamDescriptionEn String @default("The talented professionals behind our creative productions.")
+  aboutTeamDescriptionAr String @default("The talented professionals behind our creative productions.")
+  aboutTeamDescriptionHe String @default("The talented professionals behind our creative productions.")
 
   // About Page CTA Section
-  aboutCtaHeading    String @default("Ready to Start Your Project?")
-  aboutCtaSubtitle   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaHeadingEn    String @default("Ready to Start Your Project?")
+  aboutCtaHeadingAr    String @default("Ready to Start Your Project?")
+  aboutCtaHeadingHe    String @default("Ready to Start Your Project?")
+  aboutCtaSubtitleEn   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaSubtitleAr   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaSubtitleHe   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -412,10 +532,18 @@ model HomePageContent {
 // ==================== TESTIMONIALS ====================
 model Testimonial {
   id        String   @id @default(cuid())
-  quote     String   @db.Text
-  author    String
-  role      String
-  company   String
+  quoteEn   String   @db.Text
+  quoteAr   String   @db.Text
+  quoteHe   String   @db.Text
+  authorEn  String
+  authorAr  String
+  authorHe  String
+  roleEn    String
+  roleAr    String
+  roleHe    String
+  companyEn String
+  companyAr String
+  companyHe String
   image     String?
   order     Int      @default(0)
   isActive  Boolean  @default(true)

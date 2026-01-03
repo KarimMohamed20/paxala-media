@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   User,
   Mail,
@@ -17,6 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SettingsPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
+  const tf = useTranslations('form');
   const { data: session, update } = useSession();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -141,7 +145,7 @@ export default function SettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('settings')}</h1>
         <p className="text-white/60">Manage your account settings and profile.</p>
       </motion.div>
 
@@ -156,7 +160,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User size={20} className="text-red-500" />
-              Profile Information
+              {t('profileInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -172,14 +176,14 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2 p-3 bg-green-600/10 border border-green-600/20 rounded-lg">
                   <CheckCircle2 size={16} className="text-green-500" />
                   <p className="text-green-500 text-sm">
-                    Profile updated successfully!
+                    {t('profileUpdated')}
                   </p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Full Name
+                  {tf('fullName')}
                 </label>
                 <div className="relative">
                   <User
@@ -199,7 +203,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Email Address
+                  {tf('email')}
                 </label>
                 <div className="relative">
                   <Mail
@@ -222,12 +226,12 @@ export default function SettingsPage() {
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    Saving...
+                    {tc('saving')}
                   </>
                 ) : (
                   <>
                     <Save size={16} className="mr-2" />
-                    Save Changes
+                    {tc('save')} {tc('update')}
                   </>
                 )}
               </Button>
@@ -246,7 +250,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock size={20} className="text-red-500" />
-              Change Password
+              {t('changePassword')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -262,14 +266,14 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2 p-3 bg-green-600/10 border border-green-600/20 rounded-lg">
                   <CheckCircle2 size={16} className="text-green-500" />
                   <p className="text-green-500 text-sm">
-                    Password changed successfully!
+                    {t('passwordChanged')}
                   </p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  New Password
+                  {t('newPassword')}
                 </label>
                 <div className="relative">
                   <Lock
@@ -294,7 +298,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Confirm New Password
+                  {t('confirmPassword')}
                 </label>
                 <div className="relative">
                   <Lock
@@ -320,12 +324,12 @@ export default function SettingsPage() {
                 {passwordLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={16} />
-                    Updating...
+                    {tc('loading')}
                   </>
                 ) : (
                   <>
                     <Lock size={16} className="mr-2" />
-                    Change Password
+                    {t('changePassword')}
                   </>
                 )}
               </Button>
@@ -343,18 +347,18 @@ export default function SettingsPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
+            <CardTitle>{t('accountInformation')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-white/60">Account Type</span>
+                <span className="text-white/60">{t('accountType')}</span>
                 <span className="text-white font-medium">
-                  {session?.user?.role || "Client"}
+                  {session?.user?.role || tc('client')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/60">User ID</span>
+                <span className="text-white/60">{t('userId')}</span>
                 <span className="text-white/40 font-mono text-xs">
                   {session?.user?.id}
                 </span>

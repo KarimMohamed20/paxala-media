@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeTeamMember } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch single team member (public)
 export async function GET(
@@ -10,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const allLocales = searchParams.get('allLocales') === 'true';
 
     const teamMember = await db.teamMember.findUnique({
       where: { id },
@@ -22,7 +26,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(teamMember);
+    // If admin request, return all localized fields
+    if (allLocales) {
+      return NextResponse.json(teamMember);
+    }
+
+    // Otherwise, localize for public use
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+    const localizedTeamMember = localizeTeamMember(teamMember, locale);
+
+    return NextResponse.json(localizedTeamMember);
   } catch (error) {
     console.error("Error fetching team member:", error);
     return NextResponse.json(
@@ -50,13 +63,21 @@ export async function PUT(
     const teamMember = await db.teamMember.update({
       where: { id },
       data: {
-        name: data.name,
-        role: data.role,
-        bio: data.bio,
+        nameEn: data.nameEn,
+        nameAr: data.nameAr,
+        nameHe: data.nameHe,
+        roleEn: data.roleEn,
+        roleAr: data.roleAr,
+        roleHe: data.roleHe,
+        bioEn: data.bioEn,
+        bioAr: data.bioAr,
+        bioHe: data.bioHe,
         image: data.image,
         team: data.team,
         order: data.order,
-        skills: data.skills,
+        skillsEn: data.skillsEn,
+        skillsAr: data.skillsAr,
+        skillsHe: data.skillsHe,
         social: data.social,
         isActive: data.isActive,
       },

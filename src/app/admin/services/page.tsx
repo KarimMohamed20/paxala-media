@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Plus, Briefcase, Edit, Trash2, Loader2, Eye, EyeOff, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,9 @@ interface Service {
 
 export default function AdminServicesPage() {
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
+  const t = useTranslations('admin');
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
 
@@ -105,7 +109,7 @@ export default function AdminServicesPage() {
         </div>
         <Button onClick={() => router.push("/admin/services/new")} size="lg">
           <Plus size={18} className="mr-2" />
-          Add Service
+          {ta('addService')}
         </Button>
       </div>
 
@@ -143,9 +147,9 @@ export default function AdminServicesPage() {
                         {service.name}
                       </h3>
                       {service.isActive ? (
-                        <Badge className="bg-green-600">Active</Badge>
+                        <Badge className="bg-green-600">{tc('active')}</Badge>
                       ) : (
-                        <Badge variant="secondary">Inactive</Badge>
+                        <Badge variant="secondary">{tc('inactive')}</Badge>
                       )}
                     </div>
                     <p className="text-white/60 text-sm mb-3">
@@ -178,7 +182,7 @@ export default function AdminServicesPage() {
                       onClick={() => router.push(`/admin/services/${service.id}`)}
                     >
                       <Edit size={16} className="mr-1" />
-                      Edit
+                      {tc('edit')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -220,7 +224,7 @@ export default function AdminServicesPage() {
           </p>
           <Button onClick={() => router.push("/admin/services/new")}>
             <Plus size={18} className="mr-2" />
-            Add Service
+            {ta('addService')}
           </Button>
         </div>
       )}

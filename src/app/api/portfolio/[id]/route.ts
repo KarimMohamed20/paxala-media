@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { localizePortfolio } from '@/lib/localization-utils'
+import { defaultLocale, type Locale } from '@/i18n/config'
 
 // GET /api/portfolio/[id] - Get single portfolio item
 export async function GET(
@@ -10,6 +12,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const allLocales = searchParams.get('allLocales') === 'true'
+
     const portfolio = await db.portfolio.findUnique({
       where: { id },
     })
@@ -32,7 +37,16 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(portfolio)
+    // If admin request, return all localized fields
+    if (allLocales) {
+      return NextResponse.json(portfolio)
+    }
+
+    // Otherwise, localize for public use
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale
+    const localizedPortfolio = localizePortfolio(portfolio, locale)
+
+    return NextResponse.json(localizedPortfolio)
   } catch (error) {
     console.error('Portfolio fetch error:', error)
     return NextResponse.json(
@@ -60,15 +74,23 @@ export async function PUT(
     const portfolio = await db.portfolio.update({
       where: { id },
       data: {
-        title: body.title,
+        titleEn: body.titleEn,
+        titleAr: body.titleAr,
+        titleHe: body.titleHe,
         slug: body.slug,
-        description: body.description,
-        content: body.content || null,
+        descriptionEn: body.descriptionEn,
+        descriptionAr: body.descriptionAr,
+        descriptionHe: body.descriptionHe,
+        contentEn: body.contentEn || null,
+        contentAr: body.contentAr || null,
+        contentHe: body.contentHe || null,
         thumbnail: body.thumbnail || null,
         images: body.images || [],
         videoUrl: body.videoUrl || null,
         category: body.category,
-        tags: body.tags || [],
+        tagsEn: body.tagsEn || [],
+        tagsAr: body.tagsAr || [],
+        tagsHe: body.tagsHe || [],
         clientName: body.clientName || null,
         featured: body.featured || false,
         published: body.published || false,

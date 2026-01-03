@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Folder,
@@ -162,6 +163,8 @@ function formatFileSize(bytes: number): string {
 }
 
 export default function ProjectDetailPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const { slug } = useParams();
   const router = useRouter();
   const { data: session } = useSession();
@@ -258,13 +261,13 @@ export default function ProjectDetailPage() {
       <div className="text-center py-16">
         <Folder size={64} className="text-white/20 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-white mb-2">
-          {error || "Project not found"}
+          {error || tc('noResults')}
         </h3>
         <p className="text-white/60 mb-6">
           The project you're looking for doesn't exist or you don't have access.
         </p>
         <Link href="/portal/projects">
-          <Button>Back to Projects</Button>
+          <Button>{tc('back')} to {t('projects')}</Button>
         </Link>
       </div>
     );
@@ -286,7 +289,7 @@ export default function ProjectDetailPage() {
           className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors"
         >
           <ArrowLeft size={16} />
-          Back to Projects
+          {tc('back')} to {t('projects')}
         </Link>
       </motion.div>
 
@@ -314,7 +317,7 @@ export default function ProjectDetailPage() {
                 )}
                 <span className="flex items-center gap-1">
                   <Clock size={14} />
-                  Updated{" "}
+                  {t('lastUpdated')}{" "}
                   {formatDistanceToNow(new Date(project.updatedAt), {
                     addSuffix: true,
                   })}
@@ -344,7 +347,7 @@ export default function ProjectDetailPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-medium">Project Progress</h3>
+              <h3 className="text-white font-medium">{tc('project')} {t('progress')}</h3>
               <span className="text-white/60">{progress}%</span>
             </div>
             <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden mb-4">
@@ -401,15 +404,15 @@ export default function ProjectDetailPage() {
       >
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="overview">{t('overview')}</TabsTrigger>
             <TabsTrigger value="milestones">
-              Milestones ({milestonesData?.milestones.length || 0})
+              {t('milestones')} ({milestonesData?.milestones.length || 0})
             </TabsTrigger>
             <TabsTrigger value="files">
-              Files ({project.files.length})
+              {tc('files')} ({project.files.length})
             </TabsTrigger>
             <TabsTrigger value="comments">
-              Comments ({project.comments.length})
+              {t('comments')} ({project.comments.length})
             </TabsTrigger>
           </TabsList>
 
@@ -419,7 +422,7 @@ export default function ProjectDetailPage() {
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Description</CardTitle>
+                    <CardTitle>{tc('description')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-white/80 whitespace-pre-wrap">
@@ -445,14 +448,14 @@ export default function ProjectDetailPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="text-white/40 text-xs mb-1">Category</p>
+                      <p className="text-white/40 text-xs mb-1">{tc('category')}</p>
                       <p className="text-white">
                         {project.category.replace("_", " ")}
                       </p>
                     </div>
                     {project.startDate && (
                       <div>
-                        <p className="text-white/40 text-xs mb-1">Start Date</p>
+                        <p className="text-white/40 text-xs mb-1">Start {tc('date')}</p>
                         <p className="text-white">
                           {format(new Date(project.startDate), "MMMM d, yyyy")}
                         </p>
@@ -460,7 +463,7 @@ export default function ProjectDetailPage() {
                     )}
                     {project.endDate && (
                       <div>
-                        <p className="text-white/40 text-xs mb-1">End Date</p>
+                        <p className="text-white/40 text-xs mb-1">End {tc('date')}</p>
                         <p className="text-white">
                           {format(new Date(project.endDate), "MMMM d, yyyy")}
                         </p>
@@ -484,7 +487,7 @@ export default function ProjectDetailPage() {
                         <p className="text-2xl font-bold text-white">
                           {project.files.length}
                         </p>
-                        <p className="text-white/40 text-xs">Files</p>
+                        <p className="text-white/40 text-xs">{tc('files')}</p>
                       </div>
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <MessageSquare
@@ -494,7 +497,7 @@ export default function ProjectDetailPage() {
                         <p className="text-2xl font-bold text-white">
                           {project.comments.length}
                         </p>
-                        <p className="text-white/40 text-xs">Comments</p>
+                        <p className="text-white/40 text-xs">{t('comments')}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -512,7 +515,7 @@ export default function ProjectDetailPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Target size={48} className="text-white/20 mx-auto mb-4" />
-                  <p className="text-white/60">No milestones available yet</p>
+                  <p className="text-white/60">{t('nothingHere')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -526,28 +529,28 @@ export default function ProjectDetailPage() {
                         <p className="text-2xl font-bold text-white">
                           {milestonesData.summary.overallProgress}%
                         </p>
-                        <p className="text-white/40 text-xs">Progress</p>
+                        <p className="text-white/40 text-xs">{t('progress')}</p>
                       </div>
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <CheckCircle size={24} className="mx-auto mb-2 text-green-500" />
                         <p className="text-2xl font-bold text-white">
                           {milestonesData.summary.completedTasks}/{milestonesData.summary.totalTasks}
                         </p>
-                        <p className="text-white/40 text-xs">Tasks Complete</p>
+                        <p className="text-white/40 text-xs">{t('tasks')} {tc('completed')}</p>
                       </div>
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <DollarSign size={24} className="mx-auto mb-2 text-blue-500" />
                         <p className="text-2xl font-bold text-white">
                           ₪{milestonesData.summary.totalPrice.toLocaleString()}
                         </p>
-                        <p className="text-white/40 text-xs">Total Value</p>
+                        <p className="text-white/40 text-xs">{t('totalValue')}</p>
                       </div>
                       <div className="text-center p-4 bg-white/5 rounded-lg">
                         <DollarSign size={24} className="mx-auto mb-2 text-emerald-500" />
                         <p className="text-2xl font-bold text-white">
                           ₪{milestonesData.summary.paidAmount.toLocaleString()}
                         </p>
-                        <p className="text-white/40 text-xs">Paid</p>
+                        <p className="text-white/40 text-xs">{t('paid')}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -645,7 +648,7 @@ export default function ProjectDetailPage() {
 
                       {milestone.tasks.length === 0 && (
                         <p className="text-white/40 text-sm text-center py-4">
-                          No tasks in this milestone
+                          {t('nothingHere')}
                         </p>
                       )}
                     </CardContent>
@@ -658,13 +661,13 @@ export default function ProjectDetailPage() {
           <TabsContent value="files">
             <Card>
               <CardHeader>
-                <CardTitle>Project Files</CardTitle>
+                <CardTitle>{tc('project')} {tc('files')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {project.files.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText size={48} className="text-white/20 mx-auto mb-4" />
-                    <p className="text-white/60">No files uploaded yet</p>
+                    <p className="text-white/60">{t('noFilesYet')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -690,7 +693,7 @@ export default function ProjectDetailPage() {
                           <a href={file.url} download target="_blank">
                             <Button variant="ghost" size="sm">
                               <Download size={16} className="mr-2" />
-                              Download
+                              {tc('download')}
                             </Button>
                           </a>
                         </div>
@@ -705,7 +708,7 @@ export default function ProjectDetailPage() {
           <TabsContent value="comments">
             <Card>
               <CardHeader>
-                <CardTitle>Comments & Updates</CardTitle>
+                <CardTitle>{t('comments')} & Updates</CardTitle>
               </CardHeader>
               <CardContent>
                 {/* Add Comment Form */}
@@ -718,7 +721,7 @@ export default function ProjectDetailPage() {
                       <Textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a comment or update..."
+                        placeholder={t('addComment')}
                         className="mb-3"
                       />
                       <Button
@@ -729,12 +732,12 @@ export default function ProjectDetailPage() {
                         {submittingComment ? (
                           <>
                             <Loader2 className="animate-spin mr-2" size={14} />
-                            Posting...
+                            {tc('loading')}
                           </>
                         ) : (
                           <>
                             <Send size={14} className="mr-2" />
-                            Post Comment
+                            {t('postComment')}
                           </>
                         )}
                       </Button>
@@ -749,7 +752,7 @@ export default function ProjectDetailPage() {
                       size={48}
                       className="text-white/20 mx-auto mb-4"
                     />
-                    <p className="text-white/60">No comments yet</p>
+                    <p className="text-white/60">{t('nothingHere')}</p>
                     <p className="text-white/40 text-sm">
                       Be the first to add a comment
                     </p>

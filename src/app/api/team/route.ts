@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeTeamMember } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch all team members (public)
 export async function GET(request: Request) {
   try {
+    // Get locale from headers
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+
     const { searchParams } = new URL(request.url);
     const team = searchParams.get("team"); // "PRODUCTION" or "IT_DEV"
     const activeOnly = searchParams.get("activeOnly") === "true";
@@ -19,7 +24,10 @@ export async function GET(request: Request) {
       orderBy: { order: "asc" },
     });
 
-    return NextResponse.json(teamMembers);
+    // Localize each team member
+    const localizedTeamMembers = teamMembers.map(member => localizeTeamMember(member, locale));
+
+    return NextResponse.json(localizedTeamMembers);
   } catch (error) {
     console.error("Error fetching team members:", error);
     return NextResponse.json(
@@ -42,13 +50,21 @@ export async function POST(request: Request) {
 
     const teamMember = await db.teamMember.create({
       data: {
-        name: data.name,
-        role: data.role,
-        bio: data.bio || null,
+        nameEn: data.nameEn,
+        nameAr: data.nameAr,
+        nameHe: data.nameHe,
+        roleEn: data.roleEn,
+        roleAr: data.roleAr,
+        roleHe: data.roleHe,
+        bioEn: data.bioEn || null,
+        bioAr: data.bioAr || null,
+        bioHe: data.bioHe || null,
         image: data.image || null,
         team: data.team || "PRODUCTION",
         order: data.order || 0,
-        skills: data.skills || [],
+        skillsEn: data.skillsEn || [],
+        skillsAr: data.skillsAr || [],
+        skillsHe: data.skillsHe || [],
         social: data.social || null,
         isActive: data.isActive !== undefined ? data.isActive : true,
       },

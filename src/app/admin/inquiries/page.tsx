@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from 'next-intl';
 
 interface Inquiry {
   id: string;
@@ -49,6 +50,8 @@ const statusColors = {
 } as const;
 
 export default function InquiriesPage() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -91,12 +94,12 @@ export default function InquiriesPage() {
 
       fetchInquiries();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update status");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
   const handleDeleteInquiry = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this inquiry?")) return;
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/admin/inquiries?id=${id}`, {
@@ -109,7 +112,7 @@ export default function InquiriesPage() {
 
       fetchInquiries();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete inquiry");
+      alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
 
@@ -130,9 +133,9 @@ export default function InquiriesPage() {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Inquiries</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{ta('inquiries')}</h1>
           <p className="text-white/60">
-            Manage contact form submissions and inquiries.
+            {ta('manageInquiries')}
           </p>
         </div>
       </motion.div>
@@ -152,7 +155,7 @@ export default function InquiriesPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search inquiries..."
+            placeholder={tc('search')}
             className="pl-10"
           />
         </div>
@@ -190,23 +193,23 @@ export default function InquiriesPage() {
                   size={48}
                   className="text-white/20 mx-auto mb-4"
                 />
-                <p className="text-white/40">No inquiries found</p>
+                <p className="text-white/40">{tc('noResults')}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left p-4 text-white/60 font-medium">
-                      From
+                      {ta('from')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Subject
+                      {ta('subject')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Status
+                      {tc('status')}
                     </th>
                     <th className="text-left p-4 text-white/60 font-medium">
-                      Date
+                      {tc('date')}
                     </th>
                     <th className="w-10"></th>
                   </tr>
@@ -287,7 +290,7 @@ export default function InquiriesPage() {
                               }}
                             >
                               <Eye size={16} className="mr-2" />
-                              View Details
+                              {ta('viewDetails')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -296,7 +299,7 @@ export default function InquiriesPage() {
                               }}
                             >
                               <Check size={16} className="mr-2" />
-                              Mark Responded
+                              {ta('markResponded')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -304,7 +307,7 @@ export default function InquiriesPage() {
                                 handleStatusChange(inquiry.id, "ARCHIVED");
                               }}
                             >
-                              Archive
+                              {ta('archive')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -314,7 +317,7 @@ export default function InquiriesPage() {
                               className="text-red-500"
                             >
                               <Trash2 size={16} className="mr-2" />
-                              Delete
+                              {tc('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -335,7 +338,7 @@ export default function InquiriesPage() {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Inquiry Details</DialogTitle>
+            <DialogTitle>{ta('inquiryDetails')}</DialogTitle>
           </DialogHeader>
           {selectedInquiry && (
             <div className="space-y-4">
@@ -353,12 +356,12 @@ export default function InquiriesPage() {
               </div>
 
               <div>
-                <p className="text-white/60 text-sm mb-1">Subject</p>
+                <p className="text-white/60 text-sm mb-1">{ta('subject')}</p>
                 <p className="text-white font-medium">{selectedInquiry.subject}</p>
               </div>
 
               <div>
-                <p className="text-white/60 text-sm mb-1">Message</p>
+                <p className="text-white/60 text-sm mb-1">{ta('message')}</p>
                 <p className="text-white/80 whitespace-pre-wrap">
                   {selectedInquiry.message}
                 </p>
@@ -367,7 +370,7 @@ export default function InquiriesPage() {
               <div className="flex items-center justify-between pt-4 border-t border-white/10">
                 <div>
                   <p className="text-white/40 text-xs">
-                    Received{" "}
+                    {ta('received')}{" "}
                     {format(
                       new Date(selectedInquiry.createdAt),
                       "MMM d, yyyy 'at' h:mm a"
@@ -384,7 +387,7 @@ export default function InquiriesPage() {
                     }}
                   >
                     <Mail size={16} className="mr-2" />
-                    Reply
+                    {ta('reply')}
                   </Button>
                   {selectedInquiry.status !== "RESPONDED" && (
                     <Button
@@ -395,7 +398,7 @@ export default function InquiriesPage() {
                       }}
                     >
                       <Check size={16} className="mr-2" />
-                      Mark Responded
+                      {ta('markResponded')}
                     </Button>
                   )}
                 </div>

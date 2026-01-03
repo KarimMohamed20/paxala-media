@@ -7,6 +7,7 @@ import { Plus, Users, Edit, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface TeamMember {
   id: string;
@@ -23,6 +24,8 @@ interface TeamMember {
 
 export default function AdminTeamPage() {
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [loading, setLoading] = useState(true);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [filter, setFilter] = useState<"ALL" | "PRODUCTION" | "IT_DEV" | "CREATIVE">("ALL");
@@ -45,7 +48,7 @@ export default function AdminTeamPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/team/${id}`, {
@@ -57,7 +60,7 @@ export default function AdminTeamPage() {
       fetchTeamMembers();
     } catch (error) {
       console.error("Error deleting team member:", error);
-      alert("Failed to delete team member");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -77,7 +80,7 @@ export default function AdminTeamPage() {
       fetchTeamMembers();
     } catch (error) {
       console.error("Error updating team member:", error);
-      alert("Failed to update team member");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -104,7 +107,7 @@ export default function AdminTeamPage() {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              Team Members
+              {ta('team')}
             </h1>
             <p className="text-white/60 text-sm">
               Manage your team members and their profiles
@@ -113,7 +116,7 @@ export default function AdminTeamPage() {
         </div>
         <Button onClick={() => router.push("/admin/team/new")} size="lg">
           <Plus size={18} className="mr-2" />
-          Add Team Member
+          {ta('addTeamMember')}
         </Button>
       </div>
 
@@ -129,7 +132,7 @@ export default function AdminTeamPage() {
                 : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
             }`}
           >
-            {f === "ALL" ? "All Teams" : f === "PRODUCTION" ? "Production" : f === "IT_DEV" ? "IT & Dev" : "Creative"}
+            {f === "ALL" ? ta('allTeams') : f === "PRODUCTION" ? ta('production') : f === "IT_DEV" ? ta('itDev') : ta('creative')}
           </button>
         ))}
       </div>
@@ -164,16 +167,16 @@ export default function AdminTeamPage() {
               {/* Active badge */}
               <div className="absolute top-3 right-3">
                 {member.isActive ? (
-                  <Badge className="bg-green-600">Active</Badge>
+                  <Badge className="bg-green-600">{tc('active')}</Badge>
                 ) : (
-                  <Badge variant="secondary">Inactive</Badge>
+                  <Badge variant="secondary">{tc('inactive')}</Badge>
                 )}
               </div>
 
               {/* Team badge */}
               <div className="absolute top-3 left-3">
                 <Badge variant="secondary">
-                  {member.team === "PRODUCTION" ? "Production" : member.team === "IT_DEV" ? "IT & Dev" : "Creative"}
+                  {member.team === "PRODUCTION" ? ta('production') : member.team === "IT_DEV" ? ta('itDev') : ta('creative')}
                 </Badge>
               </div>
 
@@ -185,7 +188,7 @@ export default function AdminTeamPage() {
                   onClick={() => router.push(`/admin/team/${member.id}`)}
                 >
                   <Edit size={16} className="mr-1" />
-                  Edit
+                  {tc('edit')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -245,16 +248,16 @@ export default function AdminTeamPage() {
         <div className="text-center py-20">
           <Users className="mx-auto text-white/20 mb-4" size={64} />
           <h3 className="text-xl font-semibold text-white mb-2">
-            No team members found
+            {tc('noResults')}
           </h3>
           <p className="text-white/60 mb-6">
             {filter === "ALL"
               ? "Add your first team member to get started."
-              : `No team members in the ${filter === "PRODUCTION" ? "Production" : filter === "IT_DEV" ? "IT & Dev" : "Creative"} team.`}
+              : `No team members in the ${filter === "PRODUCTION" ? ta('production') : filter === "IT_DEV" ? ta('itDev') : ta('creative')} team.`}
           </p>
           <Button onClick={() => router.push("/admin/team/new")}>
             <Plus size={18} className="mr-2" />
-            Add Team Member
+            {ta('addTeamMember')}
           </Button>
         </div>
       )}

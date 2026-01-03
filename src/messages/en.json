@@ -1,0 +1,552 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "packages": "Packages",
+    "portfolio": "Portfolio",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "common": {
+    "getStarted": "Get Started",
+    "bookNow": "Book Now",
+    "bookConsultation": "Book a Consultation",
+    "contactUs": "Contact Us",
+    "sendMessage": "Send Message",
+    "viewProjects": "View Projects",
+    "readMore": "Read More",
+    "learnMore": "Learn More",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "remove": "Remove",
+    "view": "View",
+    "download": "Download",
+    "upload": "Upload",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confirm": "Confirm",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "published": "Published",
+    "draft": "Draft",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "name": "Name",
+    "description": "Description",
+    "title": "Title",
+    "date": "Date",
+    "time": "Time",
+    "category": "Category",
+    "tags": "Tags",
+    "image": "Image",
+    "images": "Images",
+    "file": "File",
+    "files": "Files",
+    "client": "Client",
+    "project": "Project",
+    "noResults": "No results found",
+    "noData": "No data available",
+    "searchPlaceholder": "Search...",
+    "selectOption": "Select an option",
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "more": "more"
+  },
+  "form": {
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "subject": "Subject",
+    "message": "Message",
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidPhone": "Please enter a valid phone number",
+    "successMessage": "Your message has been sent successfully!",
+    "errorMessage": "An error occurred. Please try again."
+  },
+  "pages": {
+    "services": {
+      "hero": {
+        "badge": "What We Do",
+        "title": "Our Services",
+        "description": "Comprehensive creative solutions tailored for today's fast-paced, digital-first world. From concept to delivery, we bring your vision to life."
+      },
+      "cta": {
+        "heading": "Ready to Start Your Project?",
+        "description": "Let's discuss your needs and create something amazing together. Our team is ready to help bring your vision to life."
+      }
+    },
+    "packages": {
+      "hero": {
+        "badge": "Pricing",
+        "title": "Brand 360 Packages",
+        "description": "Choose the perfect package for your business growth"
+      },
+      "comparison": {
+        "title": "Feature Comparison",
+        "notes": "General Notes"
+      },
+      "cta": {
+        "heading": "Ready to Elevate Your Brand?",
+        "description": "Choose the package that fits your needs or contact us for a custom solution"
+      }
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "subtitle": "Let's discuss your project",
+      "send": "Send us a Message",
+      "info": "Contact Information",
+      "businessHours": "Business Hours",
+      "location": "Location",
+      "social": "Follow Us"
+    },
+    "portfolio": {
+      "hero": {
+        "badge": "Our Work",
+        "title": "Portfolio",
+        "description": "Explore our latest projects and creative work"
+      }
+    },
+    "blog": {
+      "hero": {
+        "badge": "Blog",
+        "title": "Insights & Stories",
+        "description": "Latest news, tutorials, and industry insights"
+      },
+      "featured": "Featured Articles",
+      "recent": "Recent Articles"
+    },
+    "about": {
+      "hero": {
+        "badge": "About Us",
+        "title": "About Paxala Media"
+      },
+      "values": {
+        "subtitle": "What Drives Us",
+        "title": "Our Values",
+        "description": "The principles that guide everything we do at Paxala Media."
+      },
+      "milestones": {
+        "subtitle": "Our Journey",
+        "title": "Milestones",
+        "description": "Key moments in our growth as a creative studio."
+      },
+      "team": {
+        "subtitle": "Our Crew",
+        "title": "Meet the Team",
+        "description": "The talented professionals behind our creative productions."
+      },
+      "cta": {
+        "heading": "Ready to Start Your Project?",
+        "subtitle": "Let's collaborate and create something extraordinary together. Our team is excited to hear about your project."
+      }
+    }
+  },
+  "packages": {
+    "package-01": {
+      "name": "Brand 360°",
+      "subtitle": "Visual & Digital Marketing Retainer",
+      "price": "10,000",
+      "currency": "NIS",
+      "period": "per month",
+      "minimumCommitment": "Minimum 3 months",
+      "description": "Perfect for restaurants and businesses that want strong brand presence, consistent content, and measurable marketing results.",
+      "note": "Ad budget is not included",
+      "idealFor": "Ideal For:",
+      "idealForItems": [
+        "Restaurants",
+        "Businesses wanting strong brand presence",
+        "Consistent content needs",
+        "Measurable marketing results"
+      ],
+      "features": {
+        "videoProduction": {
+          "category": "Video Production",
+          "items": ["3 professional Reels videos per month"]
+        },
+        "photography": {
+          "category": "Photography",
+          "items": ["Monthly professional photography session"]
+        },
+        "drone": {
+          "category": "Drone",
+          "items": ["Drone footage (exterior shots - based on creative needs)"]
+        },
+        "graphicDesign": {
+          "category": "Graphic Design",
+          "items": ["Social media posts", "Stories design"]
+        },
+        "paidAds": {
+          "category": "Paid Ads Management",
+          "items": [
+            "Meta platforms (Instagram & Facebook)",
+            "Audience targeting & ad copywriting",
+            "Performance optimization & summary reports"
+          ]
+        },
+        "fullProduction": {
+          "category": "Full Production Services",
+          "items": [
+            "Professional production team",
+            "Lighting & equipment",
+            "Creative direction, editing, and color grading"
+          ]
+        }
+      }
+    },
+    "package-02": {
+      "name": "Brand 360°+ PLUS",
+      "subtitle": "Visual, Marketing & Web Development",
+      "price": "Custom",
+      "currency": "",
+      "period": "based on website scope",
+      "minimumCommitment": null,
+      "description": "Ideal for businesses that need a complete digital identity with a strong website that supports advertising and a professional online presence.",
+      "note": null,
+      "idealFor": "Ideal For:",
+      "idealForItems": [
+        "Complete digital identity",
+        "Strong website that supports advertising",
+        "Professional online presence"
+      ],
+      "features": {
+        "package01": {
+          "category": "Everything in Package 01",
+          "items": ["All visual & digital marketing services included"]
+        },
+        "website": {
+          "category": "Professional Website Development",
+          "items": [
+            "Custom UI/UX design",
+            "Mobile responsive",
+            "Services / Menu / Contact pages",
+            "Social media integration"
+          ]
+        },
+        "technical": {
+          "category": "Technical Setup",
+          "items": [
+            "Speed optimization",
+            "Basic SEO",
+            "Google Analytics integration"
+          ]
+        }
+      }
+    },
+    "package-03": {
+      "name": "Brand 360° infinite",
+      "subtitle": "Full Digital Ecosystem (Web + Management + App)",
+      "price": "Custom",
+      "currency": "",
+      "period": "fully customized project",
+      "minimumCommitment": null,
+      "description": "The complete digital ecosystem for enterprise-level businesses, chains, and digital platforms requiring full integration across all channels.",
+      "note": null,
+      "idealFor": "Ideal For:",
+      "idealForItems": [
+        "Enterprise-level businesses",
+        "Restaurant & retail chains",
+        "Digital platforms",
+        "Full integration requirements"
+      ],
+      "features": {
+        "previous": {
+          "category": "Everything in Package 01 & 02",
+          "items": ["All visual, marketing & web development services included"]
+        },
+        "management": {
+          "category": "Full Digital Management",
+          "items": [
+            "Website management",
+            "Content updates",
+            "Technical maintenance"
+          ]
+        },
+        "app": {
+          "category": "Mobile App Development",
+          "items": [
+            "iOS & Android development",
+            "App UI/UX design",
+            "Website/system integration",
+            "Booking, ordering, or service-based functionality"
+          ]
+        },
+        "ecosystem": {
+          "category": "Complete Ecosystem Integration",
+          "items": [
+            "Website",
+            "Mobile app",
+            "Social media",
+            "Paid advertising"
+          ]
+        }
+      }
+    }
+  },
+  "siteConfig": {
+    "name": "Paxala Media Production",
+    "shortName": "PMP",
+    "description": "Full-service creative production studio specializing in video production, photography, graphic design, 3D modeling, web development, and more.",
+    "address": "Sakhnin, Palestine",
+    "businessHours": {
+      "weekdays": "Mon-Thu: 08:00 - 17:00",
+      "sunday": "Sunday: 09:00 - 17:00",
+      "friday": "Friday: Closed",
+      "saturday": "Saturday: Closed"
+    }
+  },
+  "categories": {
+    "all": "All Projects",
+    "VIDEO_PRODUCTION": "Video Production",
+    "PHOTOGRAPHY": "Photography",
+    "GRAPHIC_DESIGN": "Graphic Design",
+    "WEB_DEVELOPMENT": "Web Development",
+    "APP_DEVELOPMENT": "App Development",
+    "THREE_D_MODELING": "3D Modeling",
+    "ANIMATION": "Animation",
+    "SOCIAL_MEDIA": "Social Media"
+  },
+  "blogCategories": {
+    "NEWS": "News",
+    "TUTORIALS": "Tutorials",
+    "BEHIND_THE_SCENES": "Behind the Scenes",
+    "CASE_STUDIES": "Case Studies",
+    "INDUSTRY_INSIGHTS": "Industry Insights"
+  },
+  "admin": {
+    "panel": "Admin Panel",
+    "dashboard": "Dashboard",
+    "homepage": "Homepage",
+    "services": "Services",
+    "team": "Team",
+    "users": "Users",
+    "projects": "Projects",
+    "paymentReports": "Payment Reports",
+    "portfolio": "Portfolio",
+    "blog": "Blog",
+    "approvals": "Approvals",
+    "bookings": "Bookings",
+    "inquiries": "Inquiries",
+    "backToPortal": "Back to Portal"
+  },
+  "portal": {
+    "panel": "Client Portal",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "bookings": "Bookings",
+    "files": "Files",
+    "settings": "Settings",
+    "adminPanel": "Admin Panel",
+    "signOut": "Sign Out",
+    "welcome": "Welcome back",
+    "activeProjects": "Active Projects",
+    "upcomingBookings": "Upcoming Bookings",
+    "filesAvailable": "Files Available",
+    "notifications": "Notifications",
+    "recentProjects": "Recent Projects",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "viewAll": "View All",
+    "progress": "Progress",
+    "lastUpdated": "Last updated",
+    "dueDate": "Due Date",
+    "newBooking": "New Booking",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "serviceType": "Service Type",
+    "timeSlot": "Time Slot",
+    "notes": "Notes",
+    "totalFiles": "Total Files",
+    "totalSize": "Total Size",
+    "fileType": "File Type",
+    "profileInformation": "Profile Information",
+    "changePassword": "Change Password",
+    "accountInformation": "Account Information",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "accountType": "Account Type",
+    "userId": "User ID",
+    "passwordChanged": "Password changed successfully",
+    "profileUpdated": "Profile updated successfully",
+    "overview": "Overview",
+    "milestones": "Milestones",
+    "comments": "Comments",
+    "addComment": "Add a comment...",
+    "postComment": "Post Comment",
+    "milestone": "Milestone",
+    "tasks": "Tasks",
+    "totalValue": "Total Value",
+    "paid": "Paid",
+    "nothingHere": "Nothing here yet",
+    "noProjectsYet": "No projects yet",
+    "noBookingsYet": "No bookings yet",
+    "noFilesYet": "No files available yet"
+  },
+  "adminUI": {
+    "addNew": "Add New",
+    "addService": "Add Service",
+    "addTeamMember": "Add Team Member",
+    "addUser": "Add User",
+    "newProject": "New Project",
+    "newPost": "New Post",
+    "newPortfolioItem": "New Portfolio Item",
+    "saveChanges": "Save Changes",
+    "saveDraft": "Save Draft",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "viewDetails": "View Details",
+    "editRole": "Edit Role",
+    "markResponded": "Mark as Responded",
+    "archive": "Archive",
+    "toggleActive": "Toggle Active",
+    "togglePublish": "Toggle Publish",
+    "basicInfo": "Basic Information",
+    "detailedContent": "Detailed Content",
+    "media": "Media",
+    "profileImage": "Profile Image",
+    "coverImage": "Cover Image",
+    "thumbnail": "Thumbnail",
+    "gallery": "Gallery",
+    "videoUrl": "Video URL",
+    "slug": "Slug",
+    "generateSlug": "Generate from title",
+    "excerpt": "Excerpt",
+    "content": "Content",
+    "features": "Features",
+    "skills": "Skills & Expertise",
+    "socialMedia": "Social Media Links",
+    "order": "Order",
+    "team": "Team",
+    "allTeams": "All Teams",
+    "production": "Production",
+    "itDev": "IT & Dev",
+    "creative": "Creative",
+    "role": "Role",
+    "username": "Username",
+    "password": "Password",
+    "industry": "Industry",
+    "joined": "Joined",
+    "deadline": "Deadline",
+    "clientName": "Client Name",
+    "featured": "Featured",
+    "addTag": "Add Tag",
+    "upcomingOnly": "Upcoming Only",
+    "markComplete": "Mark as Complete",
+    "rejectionReason": "Rejection Reason",
+    "enterReason": "Enter rejection reason",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "submitted": "Submitted",
+    "monthly": "Monthly",
+    "year": "Year",
+    "month": "Month",
+    "totalRevenue": "Total Revenue",
+    "paidMilestones": "Paid Milestones",
+    "activeClients": "Active Clients",
+    "inactiveClients": "Inactive Clients",
+    "monthlyBreakdown": "Monthly Breakdown",
+    "paymentDate": "Payment Date",
+    "amount": "Amount",
+    "lastProject": "Last Project",
+    "totalUsers": "Total Users",
+    "totalProjects": "Total Projects",
+    "totalBookings": "Total Bookings",
+    "totalInquiries": "Total Inquiries",
+    "pendingApprovals": "Pending Approvals",
+    "activeCount": "Active",
+    "inactiveCount": "Inactive",
+    "newCount": "New",
+    "adminCount": "Admins",
+    "staffCount": "Staff",
+    "clientCount": "Clients",
+    "viewProject": "View Project",
+    "viewFile": "View File",
+    "deleteConfirm": "Are you sure you want to delete this?",
+    "deleteSuccess": "Deleted successfully",
+    "saveSuccess": "Saved successfully",
+    "updateSuccess": "Updated successfully",
+    "createSuccess": "Created successfully",
+    "errorOccurred": "An error occurred",
+    "uploadImage": "Upload Image",
+    "uploadVideo": "Upload Video",
+    "dragDropImage": "Drag and drop an image, or click to select",
+    "dragDropVideo": "Drag and drop a video, or click to select",
+    "removeImage": "Remove Image",
+    "chooseFile": "Choose File",
+    "max10Images": "Maximum 10 images",
+    "heroSection": "Hero Section",
+    "aboutSection": "About Section",
+    "teamSection": "Team Section",
+    "clientsSection": "Clients Section",
+    "ctaSection": "CTA Section",
+    "badge": "Badge",
+    "heading": "Heading",
+    "slogan": "Slogan",
+    "subtitle": "Subtitle",
+    "paragraph": "Paragraph",
+    "highlights": "Highlights",
+    "statistics": "Statistics",
+    "addStat": "Add Statistic",
+    "addHighlight": "Add Highlight",
+    "value": "Value",
+    "label": "Label",
+    "backgroundImage": "Background Image",
+    "yearsText": "Years Text",
+    "yearsLabel": "Years Label",
+    "tabLabel": "Tab Label",
+    "testimonialsHeading": "Testimonials Heading",
+    "paymentReports": "Payment Reports",
+    "trackPayments": "Track project and client payments",
+    "allMonths": "All Months",
+    "completedPayments": "Completed Payments",
+    "clientsWhoPaid": "Clients who paid",
+    "noPayments": "No payments",
+    "milestones": "Milestones",
+    "paidOn": "Paid on",
+    "inactiveClientsDesc": "Clients inactive for more than 90 days",
+    "updated": "Updated",
+    "noPaymentsFound": "No payments found for selected period",
+    "tryAgain": "Try Again",
+    "portfolio": "Portfolio",
+    "managePortfolio": "Manage your portfolio",
+    "blog": "Blog",
+    "bookings": "Bookings",
+    "manageBookings": "Manage bookings",
+    "service": "Service",
+    "inquiries": "Inquiries",
+    "manageInquiries": "Manage inquiries",
+    "from": "From",
+    "subject": "Subject",
+    "message": "Message",
+    "inquiryDetails": "Inquiry Details",
+    "received": "Received",
+    "reply": "Reply",
+    "createFirstBlogPost": "Create your first blog post to get started",
+    "noDraftPosts": "No draft posts yet",
+    "noPublishedPosts": "No published posts yet"
+  }
+}

@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from 'next-intl';
 
 interface PortfolioItem {
   id: string;
@@ -51,6 +52,8 @@ const categories = [
 
 export default function AdminPortfolioPage() {
   const router = useRouter();
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,7 +81,7 @@ export default function AdminPortfolioPage() {
   }, [search, categoryFilter]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this portfolio item?"))
+    if (!confirm(ta('deleteConfirm')))
       return;
 
     try {
@@ -89,7 +92,7 @@ export default function AdminPortfolioPage() {
       if (!response.ok) throw new Error("Failed to delete");
       fetchPortfolio();
     } catch (err) {
-      alert("Failed to delete portfolio item");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -107,7 +110,7 @@ export default function AdminPortfolioPage() {
       if (!response.ok) throw new Error("Failed to update");
       fetchPortfolio();
     } catch (err) {
-      alert("Failed to update portfolio item");
+      alert(ta('errorOccurred'));
     }
   };
 
@@ -119,12 +122,12 @@ export default function AdminPortfolioPage() {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Portfolio</h1>
-          <p className="text-white/60">Manage your public portfolio showcase.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{ta('portfolio')}</h1>
+          <p className="text-white/60">{ta('managePortfolio')}</p>
         </div>
         <Button onClick={() => router.push("/admin/portfolio/new")}>
           <Plus size={18} className="mr-2" />
-          New Portfolio Item
+          {ta('newPortfolioItem')}
         </Button>
       </motion.div>
 
@@ -143,7 +146,7 @@ export default function AdminPortfolioPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search portfolio..."
+            placeholder={tc('search')}
             className="pl-10"
           />
         </div>
@@ -177,12 +180,12 @@ export default function AdminPortfolioPage() {
           <Card>
             <CardContent className="p-12 text-center">
               <ImageIcon size={48} className="text-white/20 mx-auto mb-4" />
-              <p className="text-white/40">No portfolio items found</p>
+              <p className="text-white/40">{tc('noResults')}</p>
               <Button
                 className="mt-4"
                 onClick={() => router.push("/admin/portfolio/new")}
               >
-                Create Your First Portfolio Item
+                {ta('newPortfolioItem')}
               </Button>
             </CardContent>
           </Card>
@@ -204,10 +207,10 @@ export default function AdminPortfolioPage() {
                   )}
                   <div className="absolute top-2 right-2 flex gap-2">
                     {item.featured && (
-                      <Badge variant="warning">Featured</Badge>
+                      <Badge variant="warning">{tc('featured')}</Badge>
                     )}
                     <Badge variant={item.published ? "success" : "secondary"}>
-                      {item.published ? "Published" : "Draft"}
+                      {item.published ? tc('published') : tc('draft')}
                     </Badge>
                   </div>
                 </div>
@@ -238,20 +241,20 @@ export default function AdminPortfolioPage() {
                           }
                         >
                           <Edit size={16} className="mr-2" />
-                          Edit
+                          {tc('edit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleTogglePublish(item)}
                         >
                           <Eye size={16} className="mr-2" />
-                          {item.published ? "Unpublish" : "Publish"}
+                          {item.published ? ta('unpublish') : ta('publish')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(item.id)}
                           className="text-red-500"
                         >
                           <Trash2 size={16} className="mr-2" />
-                          Delete
+                          {tc('delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

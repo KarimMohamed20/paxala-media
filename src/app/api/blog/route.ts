@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { localizeBlogPost } from "@/lib/localization-utils";
+import { defaultLocale, type Locale } from "@/i18n/config";
 
 // GET - Fetch all blog posts (public for published, admin/staff see all)
 export async function GET(request: NextRequest) {
   try {
+    // Get locale from headers
+    const locale = (request.headers.get('x-locale') || defaultLocale) as Locale;
+
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const publishedOnly = searchParams.get("published") === "true";
@@ -24,12 +29,18 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        title: true,
+        titleEn: true,
+        titleAr: true,
+        titleHe: true,
         slug: true,
-        excerpt: true,
+        excerptEn: true,
+        excerptAr: true,
+        excerptHe: true,
         coverImage: true,
         category: true,
-        tags: true,
+        tagsEn: true,
+        tagsAr: true,
+        tagsHe: true,
         published: true,
         publishedAt: true,
         views: true,
@@ -38,7 +49,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(posts);
+    // Localize each blog post
+    const localizedPosts = posts.map(post => localizeBlogPost(post, locale));
+
+    return NextResponse.json(localizedPosts);
   } catch (error) {
     console.error("Error fetching blog posts:", error);
     return NextResponse.json(
@@ -59,22 +73,30 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json();
 
-    // Generate slug from title if not provided
-    const slug = data.slug || data.title
+    // Generate slug from English title if not provided
+    const slug = data.slug || data.titleEn
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
     const post = await db.blogPost.create({
       data: {
-        title: data.title,
+        titleEn: data.titleEn,
+        titleAr: data.titleAr,
+        titleHe: data.titleHe,
         slug,
-        excerpt: data.excerpt,
-        content: data.content,
+        excerptEn: data.excerptEn,
+        excerptAr: data.excerptAr,
+        excerptHe: data.excerptHe,
+        contentEn: data.contentEn,
+        contentAr: data.contentAr,
+        contentHe: data.contentHe,
         coverImage: data.coverImage || null,
         authorId: session.user.id,
         category: data.category,
-        tags: data.tags || [],
+        tagsEn: data.tagsEn || [],
+        tagsAr: data.tagsAr || [],
+        tagsHe: data.tagsHe || [],
         published: data.published || false,
         publishedAt: data.published ? new Date() : null,
       },

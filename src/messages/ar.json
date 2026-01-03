@@ -1,0 +1,552 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "services": "الخدمات",
+    "packages": "الباقات",
+    "portfolio": "معرض الأعمال",
+    "about": "من نحن",
+    "blog": "المدونة",
+    "contact": "اتصل بنا"
+  },
+  "common": {
+    "getStarted": "ابدأ الآن",
+    "bookNow": "احجز الآن",
+    "bookConsultation": "احجز استشارة",
+    "contactUs": "اتصل بنا",
+    "sendMessage": "إرسال رسالة",
+    "viewProjects": "عرض المشاريع",
+    "readMore": "اقرأ المزيد",
+    "learnMore": "تعلم المزيد",
+    "loading": "جاري التحميل...",
+    "saving": "جاري الحفظ...",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "close": "إغلاق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "all": "الكل",
+    "add": "إضافة",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "remove": "إزالة",
+    "view": "عرض",
+    "download": "تحميل",
+    "upload": "رفع",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "confirm": "تأكيد",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "published": "منشور",
+    "draft": "مسودة",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "cancelled": "ملغى",
+    "completed": "مكتمل",
+    "inProgress": "قيد التنفيذ",
+    "review": "مراجعة",
+    "name": "الاسم",
+    "description": "الوصف",
+    "title": "العنوان",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "category": "الفئة",
+    "tags": "الوسوم",
+    "image": "صورة",
+    "images": "صور",
+    "file": "ملف",
+    "files": "ملفات",
+    "client": "العميل",
+    "project": "المشروع",
+    "noResults": "لا توجد نتائج",
+    "noData": "لا توجد بيانات",
+    "searchPlaceholder": "بحث...",
+    "selectOption": "اختر خياراً",
+    "required": "مطلوب",
+    "optional": "اختياري",
+    "yes": "نعم",
+    "no": "لا",
+    "more": "المزيد"
+  },
+  "form": {
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "subject": "الموضوع",
+    "message": "الرسالة",
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "يرجى إدخال بريد إلكتروني صحيح",
+    "invalidPhone": "يرجى إدخال رقم هاتف صحيح",
+    "successMessage": "تم إرسال رسالتك بنجاح!",
+    "errorMessage": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
+  "pages": {
+    "services": {
+      "hero": {
+        "badge": "ما نقدمه",
+        "title": "خدماتنا",
+        "description": "حلول إبداعية شاملة مصممة خصيصاً لعالم اليوم الرقمي السريع. من الفكرة إلى التنفيذ، نحن نحقق رؤيتك."
+      },
+      "cta": {
+        "heading": "هل أنت مستعد لبدء مشروعك؟",
+        "description": "لنناقش احتياجاتك ونبتكر شيئاً رائعاً معاً. فريقنا جاهز لمساعدتك في تحقيق رؤيتك."
+      }
+    },
+    "packages": {
+      "hero": {
+        "badge": "الأسعار",
+        "title": "باقات براند 360",
+        "description": "اختر الباقة المثالية لنمو عملك"
+      },
+      "comparison": {
+        "title": "مقارنة الميزات",
+        "notes": "ملاحظات عامة"
+      },
+      "cta": {
+        "heading": "هل أنت مستعد للارتقاء بعلامتك التجارية؟",
+        "description": "اختر الباقة التي تناسب احتياجاتك أو اتصل بنا للحصول على حل مخصص"
+      }
+    },
+    "contact": {
+      "title": "تواصل معنا",
+      "subtitle": "لنناقش مشروعك",
+      "send": "أرسل لنا رسالة",
+      "info": "معلومات الاتصال",
+      "businessHours": "ساعات العمل",
+      "location": "الموقع",
+      "social": "تابعنا"
+    },
+    "portfolio": {
+      "hero": {
+        "badge": "أعمالنا",
+        "title": "معرض الأعمال",
+        "description": "استكشف أحدث مشاريعنا وأعمالنا الإبداعية"
+      }
+    },
+    "blog": {
+      "hero": {
+        "badge": "المدونة",
+        "title": "رؤى وقصص",
+        "description": "آخر الأخبار والدروس ورؤى الصناعة"
+      },
+      "featured": "مقالات مميزة",
+      "recent": "مقالات حديثة"
+    },
+    "about": {
+      "hero": {
+        "badge": "من نحن",
+        "title": "عن باكسالا ميديا"
+      },
+      "values": {
+        "subtitle": "ما يحركنا",
+        "title": "قيمنا",
+        "description": "المبادئ التي توجه كل ما نقوم به في باكسالا ميديا."
+      },
+      "milestones": {
+        "subtitle": "رحلتنا",
+        "title": "معالم",
+        "description": "اللحظات الرئيسية في نمونا كاستوديو إبداعي."
+      },
+      "team": {
+        "subtitle": "فريقنا",
+        "title": "تعرف على الفريق",
+        "description": "المحترفون الموهوبون وراء إنتاجاتنا الإبداعية."
+      },
+      "cta": {
+        "heading": "هل أنت مستعد لبدء مشروعك؟",
+        "subtitle": "لنتعاون ونبتكر شيئاً استثنائياً معاً. فريقنا متحمس لسماع مشروعك."
+      }
+    }
+  },
+  "packages": {
+    "package-01": {
+      "name": "براند 360°",
+      "subtitle": "عقد تسويق بصري ورقمي",
+      "price": "10,000",
+      "currency": "شيكل",
+      "period": "شهرياً",
+      "minimumCommitment": "حد أدنى 3 أشهر",
+      "description": "مثالي للمطاعم والشركات التي تريد حضوراً قوياً للعلامة التجارية ومحتوى متسقاً ونتائج تسويقية قابلة للقياس.",
+      "note": "ميزانية الإعلانات غير مشمولة",
+      "idealFor": "مثالي لـ:",
+      "idealForItems": [
+        "المطاعم",
+        "الشركات التي تريد حضوراً قوياً للعلامة التجارية",
+        "احتياجات المحتوى المستمر",
+        "نتائج تسويقية قابلة للقياس"
+      ],
+      "features": {
+        "videoProduction": {
+          "category": "إنتاج الفيديو",
+          "items": ["3 فيديوهات ريلز احترافية شهرياً"]
+        },
+        "photography": {
+          "category": "التصوير الفوتوغرافي",
+          "items": ["جلسة تصوير احترافية شهرية"]
+        },
+        "drone": {
+          "category": "الطائرة بدون طيار",
+          "items": ["لقطات طائرة (لقطات خارجية - حسب الاحتياجات الإبداعية)"]
+        },
+        "graphicDesign": {
+          "category": "التصميم الجرافيكي",
+          "items": ["منشورات وسائل التواصل الاجتماعي", "تصميم القصص"]
+        },
+        "paidAds": {
+          "category": "إدارة الإعلانات المدفوعة",
+          "items": [
+            "منصات ميتا (إنستغرام وفيسبوك)",
+            "استهداف الجمهور وكتابة نصوص الإعلانات",
+            "تحسين الأداء وتقارير ملخصة"
+          ]
+        },
+        "fullProduction": {
+          "category": "خدمات الإنتاج الكاملة",
+          "items": [
+            "فريق إنتاج محترف",
+            "الإضاءة والمعدات",
+            "التوجيه الإبداعي والمونتاج وتدريج الألوان"
+          ]
+        }
+      }
+    },
+    "package-02": {
+      "name": "براند 360°+ بلس",
+      "subtitle": "التسويق البصري وتطوير الويب",
+      "price": "حسب الطلب",
+      "currency": "",
+      "period": "بناءً على نطاق الموقع",
+      "minimumCommitment": null,
+      "description": "مثالي للشركات التي تحتاج إلى هوية رقمية كاملة مع موقع ويب قوي يدعم الإعلانات ووجود احترافي عبر الإنترنت.",
+      "note": null,
+      "idealFor": "مثالي لـ:",
+      "idealForItems": [
+        "هوية رقمية كاملة",
+        "موقع ويب قوي يدعم الإعلانات",
+        "وجود احترافي عبر الإنترنت"
+      ],
+      "features": {
+        "package01": {
+          "category": "كل ما في الباقة 01",
+          "items": ["جميع خدمات التسويق البصري والرقمي المدرجة"]
+        },
+        "website": {
+          "category": "تطوير موقع ويب احترافي",
+          "items": [
+            "تصميم UI/UX مخصص",
+            "متجاوب مع الهاتف المحمول",
+            "صفحات الخدمات / القائمة / الاتصال",
+            "تكامل وسائل التواصل الاجتماعي"
+          ]
+        },
+        "technical": {
+          "category": "الإعداد التقني",
+          "items": [
+            "تحسين السرعة",
+            "تحسين محركات البحث الأساسي",
+            "تكامل Google Analytics"
+          ]
+        }
+      }
+    },
+    "package-03": {
+      "name": "براند 360° إنفنت",
+      "subtitle": "النظام البيئي الرقمي الكامل (ويب + إدارة + تطبيق)",
+      "price": "حسب الطلب",
+      "currency": "",
+      "period": "مشروع مخصص بالكامل",
+      "minimumCommitment": null,
+      "description": "النظام البيئي الرقمي الكامل للشركات على مستوى المؤسسة والسلاسل والمنصات الرقمية التي تتطلب تكاملاً كاملاً عبر جميع القنوات.",
+      "note": null,
+      "idealFor": "مثالي لـ:",
+      "idealForItems": [
+        "الشركات على مستوى المؤسسة",
+        "سلاسل المطاعم والتجزئة",
+        "المنصات الرقمية",
+        "متطلبات التكامل الكامل"
+      ],
+      "features": {
+        "previous": {
+          "category": "كل ما في الباقة 01 و 02",
+          "items": ["جميع خدمات التسويق البصري وتطوير الويب المدرجة"]
+        },
+        "management": {
+          "category": "الإدارة الرقمية الكاملة",
+          "items": [
+            "إدارة الموقع",
+            "تحديثات المحتوى",
+            "الصيانة التقنية"
+          ]
+        },
+        "app": {
+          "category": "تطوير تطبيقات الهاتف المحمول",
+          "items": [
+            "تطوير iOS و Android",
+            "تصميم UI/UX للتطبيق",
+            "تكامل الموقع/النظام",
+            "وظيفة الحجز أو الطلب أو الخدمة"
+          ]
+        },
+        "ecosystem": {
+          "category": "تكامل النظام البيئي الكامل",
+          "items": [
+            "الموقع الإلكتروني",
+            "تطبيق الهاتف المحمول",
+            "وسائل التواصل الاجتماعي",
+            "الإعلانات المدفوعة"
+          ]
+        }
+      }
+    }
+  },
+  "siteConfig": {
+    "name": "باكسالا ميديا للإنتاج",
+    "shortName": "PMP",
+    "description": "استوديو إنتاج إبداعي متكامل متخصص في إنتاج الفيديو والتصوير الفوتوغرافي والتصميم الجرافيكي والنمذجة ثلاثية الأبعاد وتطوير الويب وأكثر.",
+    "address": "سخنين، فلسطين",
+    "businessHours": {
+      "weekdays": "الإثنين-الخميس: 08:00 - 17:00",
+      "sunday": "الأحد: 09:00 - 17:00",
+      "friday": "الجمعة: مغلق",
+      "saturday": "السبت: مغلق"
+    }
+  },
+  "categories": {
+    "all": "جميع المشاريع",
+    "VIDEO_PRODUCTION": "إنتاج الفيديو",
+    "PHOTOGRAPHY": "التصوير الفوتوغرافي",
+    "GRAPHIC_DESIGN": "التصميم الجرافيكي",
+    "WEB_DEVELOPMENT": "تطوير الويب",
+    "APP_DEVELOPMENT": "تطوير التطبيقات",
+    "THREE_D_MODELING": "النمذجة ثلاثية الأبعاد",
+    "ANIMATION": "الرسوم المتحركة",
+    "SOCIAL_MEDIA": "وسائل التواصل الاجتماعي"
+  },
+  "blogCategories": {
+    "NEWS": "أخبار",
+    "TUTORIALS": "دروس",
+    "BEHIND_THE_SCENES": "خلف الكواليس",
+    "CASE_STUDIES": "دراسات الحالة",
+    "INDUSTRY_INSIGHTS": "رؤى الصناعة"
+  },
+  "admin": {
+    "panel": "لوحة الإدارة",
+    "dashboard": "لوحة القيادة",
+    "homepage": "الصفحة الرئيسية",
+    "services": "الخدمات",
+    "team": "الفريق",
+    "users": "المستخدمون",
+    "projects": "المشاريع",
+    "paymentReports": "تقارير المدفوعات",
+    "portfolio": "معرض الأعمال",
+    "blog": "المدونة",
+    "approvals": "الموافقات",
+    "bookings": "الحجوزات",
+    "inquiries": "الاستفسارات",
+    "backToPortal": "العودة إلى البوابة"
+  },
+  "portal": {
+    "panel": "بوابة العميل",
+    "dashboard": "لوحة القيادة",
+    "projects": "المشاريع",
+    "bookings": "الحجوزات",
+    "files": "الملفات",
+    "settings": "الإعدادات",
+    "adminPanel": "لوحة الإدارة",
+    "signOut": "تسجيل الخروج",
+    "welcome": "مرحباً بعودتك",
+    "activeProjects": "المشاريع النشطة",
+    "upcomingBookings": "الحجوزات القادمة",
+    "filesAvailable": "الملفات المتاحة",
+    "notifications": "الإشعارات",
+    "recentProjects": "المشاريع الأخيرة",
+    "recentActivity": "النشاط الأخير",
+    "quickActions": "إجراءات سريعة",
+    "viewAll": "عرض الكل",
+    "progress": "التقدم",
+    "lastUpdated": "آخر تحديث",
+    "dueDate": "تاريخ الاستحقاق",
+    "newBooking": "حجز جديد",
+    "upcoming": "قادمة",
+    "past": "سابقة",
+    "serviceType": "نوع الخدمة",
+    "timeSlot": "الفترة الزمنية",
+    "notes": "ملاحظات",
+    "totalFiles": "إجمالي الملفات",
+    "totalSize": "الحجم الإجمالي",
+    "fileType": "نوع الملف",
+    "profileInformation": "معلومات الملف الشخصي",
+    "changePassword": "تغيير كلمة المرور",
+    "accountInformation": "معلومات الحساب",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "accountType": "نوع الحساب",
+    "userId": "معرف المستخدم",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "overview": "نظرة عامة",
+    "milestones": "المعالم",
+    "comments": "التعليقات",
+    "addComment": "أضف تعليقاً...",
+    "postComment": "نشر التعليق",
+    "milestone": "معلم",
+    "tasks": "المهام",
+    "totalValue": "القيمة الإجمالية",
+    "paid": "مدفوع",
+    "nothingHere": "لا يوجد شيء هنا بعد",
+    "noProjectsYet": "لا توجد مشاريع بعد",
+    "noBookingsYet": "لا توجد حجوزات بعد",
+    "noFilesYet": "لا توجد ملفات متاحة بعد"
+  },
+  "adminUI": {
+    "addNew": "إضافة جديد",
+    "addService": "إضافة خدمة",
+    "addTeamMember": "إضافة عضو فريق",
+    "addUser": "إضافة مستخدم",
+    "newProject": "مشروع جديد",
+    "newPost": "منشور جديد",
+    "newPortfolioItem": "عنصر جديد في المعرض",
+    "saveChanges": "حفظ التغييرات",
+    "saveDraft": "حفظ كمسودة",
+    "publish": "نشر",
+    "unpublish": "إلغاء النشر",
+    "viewDetails": "عرض التفاصيل",
+    "editRole": "تعديل الدور",
+    "markResponded": "وضع علامة كمجاب",
+    "archive": "أرشفة",
+    "toggleActive": "تبديل النشط",
+    "togglePublish": "تبديل النشر",
+    "basicInfo": "المعلومات الأساسية",
+    "detailedContent": "المحتوى التفصيلي",
+    "media": "الوسائط",
+    "profileImage": "صورة الملف الشخصي",
+    "coverImage": "صورة الغلاف",
+    "thumbnail": "صورة مصغرة",
+    "gallery": "المعرض",
+    "videoUrl": "رابط الفيديو",
+    "slug": "الرابط المختصر",
+    "generateSlug": "توليد من العنوان",
+    "excerpt": "مقتطف",
+    "content": "المحتوى",
+    "features": "الميزات",
+    "skills": "المهارات والخبرات",
+    "socialMedia": "روابط وسائل التواصل",
+    "order": "الترتيب",
+    "team": "الفريق",
+    "allTeams": "جميع الفرق",
+    "production": "الإنتاج",
+    "itDev": "تقنية المعلومات والتطوير",
+    "creative": "الإبداعي",
+    "role": "الدور",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "industry": "الصناعة",
+    "joined": "انضم",
+    "deadline": "الموعد النهائي",
+    "clientName": "اسم العميل",
+    "featured": "مميز",
+    "addTag": "إضافة وسم",
+    "upcomingOnly": "القادمة فقط",
+    "markComplete": "وضع علامة كمكتمل",
+    "rejectionReason": "سبب الرفض",
+    "enterReason": "أدخل سبب الرفض",
+    "priority": "الأولوية",
+    "assignee": "المكلف",
+    "submitted": "مقدم",
+    "monthly": "شهرياً",
+    "year": "السنة",
+    "month": "الشهر",
+    "totalRevenue": "إجمالي الإيرادات",
+    "paidMilestones": "المعالم المدفوعة",
+    "activeClients": "العملاء النشطون",
+    "inactiveClients": "العملاء غير النشطين",
+    "monthlyBreakdown": "التوزيع الشهري",
+    "paymentDate": "تاريخ الدفع",
+    "amount": "المبلغ",
+    "lastProject": "آخر مشروع",
+    "totalUsers": "إجمالي المستخدمين",
+    "totalProjects": "إجمالي المشاريع",
+    "totalBookings": "إجمالي الحجوزات",
+    "totalInquiries": "إجمالي الاستفسارات",
+    "pendingApprovals": "الموافقات المعلقة",
+    "activeCount": "نشط",
+    "inactiveCount": "غير نشط",
+    "newCount": "جديد",
+    "adminCount": "المسؤولون",
+    "staffCount": "الموظفون",
+    "clientCount": "العملاء",
+    "viewProject": "عرض المشروع",
+    "viewFile": "عرض الملف",
+    "deleteConfirm": "هل أنت متأكد من الحذف؟",
+    "deleteSuccess": "تم الحذف بنجاح",
+    "saveSuccess": "تم الحفظ بنجاح",
+    "updateSuccess": "تم التحديث بنجاح",
+    "createSuccess": "تم الإنشاء بنجاح",
+    "errorOccurred": "حدث خطأ",
+    "uploadImage": "رفع صورة",
+    "uploadVideo": "رفع فيديو",
+    "dragDropImage": "اسحب وأفلت صورة، أو انقر للاختيار",
+    "dragDropVideo": "اسحب وأفلت فيديو، أو انقر للاختيار",
+    "removeImage": "إزالة الصورة",
+    "chooseFile": "اختر ملف",
+    "max10Images": "حد أقصى 10 صور",
+    "heroSection": "قسم البطل",
+    "aboutSection": "قسم من نحن",
+    "teamSection": "قسم الفريق",
+    "clientsSection": "قسم العملاء",
+    "ctaSection": "قسم الدعوة للعمل",
+    "badge": "الشارة",
+    "heading": "العنوان الرئيسي",
+    "slogan": "الشعار",
+    "subtitle": "العنوان الفرعي",
+    "paragraph": "فقرة",
+    "highlights": "النقاط البارزة",
+    "statistics": "الإحصائيات",
+    "addStat": "إضافة إحصائية",
+    "addHighlight": "إضافة نقطة بارزة",
+    "value": "القيمة",
+    "label": "التسمية",
+    "backgroundImage": "صورة الخلفية",
+    "yearsText": "نص السنوات",
+    "yearsLabel": "تسمية السنوات",
+    "tabLabel": "تسمية التبويب",
+    "testimonialsHeading": "عنوان الشهادات",
+    "paymentReports": "تقارير المدفوعات",
+    "trackPayments": "تتبع مدفوعات المشاريع والعملاء",
+    "allMonths": "جميع الأشهر",
+    "completedPayments": "المدفوعات المكتملة",
+    "clientsWhoPaid": "العملاء الذين دفعوا",
+    "noPayments": "لا توجد مدفوعات",
+    "milestones": "المعالم",
+    "paidOn": "مدفوع في",
+    "inactiveClientsDesc": "العملاء غير النشطين منذ أكثر من 90 يوماً",
+    "updated": "محدث",
+    "noPaymentsFound": "لا توجد مدفوعات للفترة المحددة",
+    "tryAgain": "حاول مرة أخرى",
+    "portfolio": "معرض الأعمال",
+    "managePortfolio": "إدارة معرض الأعمال",
+    "blog": "المدونة",
+    "bookings": "الحجوزات",
+    "manageBookings": "إدارة الحجوزات",
+    "service": "الخدمة",
+    "inquiries": "الاستفسارات",
+    "manageInquiries": "إدارة الاستفسارات",
+    "from": "من",
+    "subject": "الموضوع",
+    "message": "الرسالة",
+    "inquiryDetails": "تفاصيل الاستفسار",
+    "received": "تم الاستلام",
+    "reply": "رد",
+    "createFirstBlogPost": "أنشئ أول منشور في المدونة للبدء",
+    "noDraftPosts": "لا توجد مسودات بعد",
+    "noPublishedPosts": "لا توجد منشورات منشورة بعد"
+  }
+}

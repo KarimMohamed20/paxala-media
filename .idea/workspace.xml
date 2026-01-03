@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4deaf30e-42a7-4d26-8f9e-924b58f7a0fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/prisma/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/approvals/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/approvals/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/blog/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/blog/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/blog/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/blog/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/bookings/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/bookings/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/homepage/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/homepage/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/inquiries/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/inquiries/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/portfolio/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/portfolio/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/portfolio/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/portfolio/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/projects/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/projects/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/reports/payments/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/reports/payments/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/services/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/services/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/services/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/services/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/team/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/team/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/team/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/team/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/users/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/blog/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/blog/[id]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/blog/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/blog/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/blog/slug/[slug]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/blog/slug/[slug]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/homepage/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/homepage/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/portfolio/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/portfolio/[id]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/portfolio/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/portfolio/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/portfolio/slug/[slug]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/portfolio/slug/[slug]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/services/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/services/[id]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/services/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/services/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/team/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/team/[id]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/team/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/team/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/bookings/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/bookings/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/files/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/files/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/projects/[slug]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/projects/[slug]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/projects/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/projects/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/portal/settings/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/portal/settings/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/navbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/navbar.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="37lPInqsVavWCN4Q9CfqxXE43tr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/karim/pmp/paxala-media",
+    "show.migrate.to.gradle.popup": "false"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4deaf30e-42a7-4d26-8f9e-924b58f7a0fa" name="Changes" comment="" />
+      <created>1767474606739</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1767474606739</updated>
+    </task>
+    <servers />
+  </component>
+</project>

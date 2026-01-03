@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from 'next-intl';
 
 interface TaskForApproval {
   id: string;
@@ -57,6 +58,8 @@ const priorityColors = {
 } as const;
 
 export default function ApprovalsPage() {
+  const ta = useTranslations('adminUI');
+  const tc = useTranslations('common');
   const [tasks, setTasks] = useState<TaskForApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -114,7 +117,7 @@ export default function ApprovalsPage() {
 
   const handleReject = async () => {
     if (!selectedTask || !rejectionReason.trim()) {
-      alert("Please provide a reason for rejection");
+      alert(ta('requiredFields'));
       return;
     }
 
@@ -151,9 +154,9 @@ export default function ApprovalsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">Pending Approvals</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{ta('pendingApprovals')}</h1>
         <p className="text-white/60">
-          Review and approve tasks submitted by your team members.
+          {ta('reviewApprovals')}
         </p>
       </motion.div>
 
@@ -169,10 +172,10 @@ export default function ApprovalsPage() {
         >
           <CheckCircle size={64} className="text-green-500/40 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            All caught up!
+            {ta('allCaughtUp')}
           </h3>
           <p className="text-white/60">
-            No tasks pending your approval at the moment.
+            {ta('noApprovals')}
           </p>
         </motion.div>
       ) : (
@@ -236,13 +239,13 @@ export default function ApprovalsPage() {
                         {task.dueDate && (
                           <span className="flex items-center gap-1">
                             <Calendar size={14} />
-                            Due {format(new Date(task.dueDate), "MMM d, yyyy")}
+                            {ta('due')} {format(new Date(task.dueDate), "MMM d, yyyy")}
                           </span>
                         )}
                         {task.submittedAt && (
                           <span className="flex items-center gap-1">
                             <AlertCircle size={14} />
-                            Submitted{" "}
+                            {ta('submitted')}{" "}
                             {format(new Date(task.submittedAt), "MMM d, h:mm a")}
                           </span>
                         )}
@@ -259,7 +262,7 @@ export default function ApprovalsPage() {
                         disabled={submitting}
                       >
                         <XCircle size={18} className="mr-1" />
-                        Reject
+                        {tc('reject')}
                       </Button>
                       <Button
                         size="sm"
@@ -272,7 +275,7 @@ export default function ApprovalsPage() {
                         ) : (
                           <CheckCircle size={18} className="mr-1" />
                         )}
-                        Approve
+                        {tc('approve')}
                       </Button>
                     </div>
                   </div>
@@ -287,24 +290,23 @@ export default function ApprovalsPage() {
       <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Task</DialogTitle>
+            <DialogTitle>{ta('rejectTask')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-white/60">
-              Please provide feedback for{" "}
+              {ta('rejectFeedback')}{" "}
               <span className="text-white font-medium">
                 {selectedTask?.assignee?.name || selectedTask?.assignee?.email}
-              </span>{" "}
-              explaining why this task is being rejected.
+              </span>
             </p>
             <div>
               <label className="block text-sm text-white/70 mb-2">
-                Rejection Reason <span className="text-red-500">*</span>
+                {ta('rejectionReason')} <span className="text-red-500">*</span>
               </label>
               <Textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Please explain what needs to be fixed or improved..."
+                placeholder={ta('rejectionReason')}
                 rows={4}
               />
             </div>
@@ -313,7 +315,7 @@ export default function ApprovalsPage() {
                 variant="ghost"
                 onClick={() => setRejectModalOpen(false)}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -323,7 +325,7 @@ export default function ApprovalsPage() {
                 {submitting ? (
                   <Loader2 className="animate-spin mr-2" size={16} />
                 ) : null}
-                Reject Task
+                {ta('rejectTask')}
               </Button>
             </div>
           </div>

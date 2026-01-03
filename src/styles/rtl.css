@@ -1,0 +1,100 @@
+/* RTL-specific styles for Arabic and Hebrew */
+
+/* Text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Margins */
+[dir="rtl"] .ml-auto {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Padding and spacing - use logical properties */
+.ps-2 { padding-inline-start: 0.5rem; }
+.ps-3 { padding-inline-start: 0.75rem; }
+.ps-4 { padding-inline-start: 1rem; }
+.ps-6 { padding-inline-start: 1.5rem; }
+.ps-8 { padding-inline-start: 2rem; }
+
+.pe-2 { padding-inline-end: 0.5rem; }
+.pe-3 { padding-inline-end: 0.75rem; }
+.pe-4 { padding-inline-end: 1rem; }
+.pe-6 { padding-inline-end: 1.5rem; }
+.pe-8 { padding-inline-end: 2rem; }
+
+.ms-2 { margin-inline-start: 0.5rem; }
+.ms-3 { margin-inline-start: 0.75rem; }
+.ms-4 { margin-inline-start: 1rem; }
+.ms-6 { margin-inline-start: 1.5rem; }
+.ms-auto { margin-inline-start: auto; }
+
+.me-2 { margin-inline-end: 0.5rem; }
+.me-3 { margin-inline-end: 0.75rem; }
+.me-4 { margin-inline-end: 1rem; }
+.me-6 { margin-inline-end: 1.5rem; }
+.me-auto { margin-inline-end: auto; }
+
+/* Flex direction */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Transform icons that should flip in RTL */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Animations */
+[dir="rtl"] .animate-slide-in-left {
+  animation: slideInRight 0.3s ease-out;
+}
+
+[dir="rtl"] .animate-slide-in-right {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Navigation and menus */
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Forms */
+[dir="rtl"] input[type="search"]::-webkit-search-cancel-button {
+  margin-left: 0;
+  margin-right: 0.25rem;
+}
+
+/* Tooltips and popovers */
+[dir="rtl"] .tooltip {
+  text-align: right;
+}

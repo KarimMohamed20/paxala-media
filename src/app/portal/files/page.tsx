@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import {
   Download,
   FileText,
@@ -57,6 +58,8 @@ function formatFileSize(bytes: number): string {
 }
 
 export default function FilesPage() {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -139,7 +142,7 @@ export default function FilesPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">My Files</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('files')}</h1>
         <p className="text-white/60">
           Access and download files from your projects.
         </p>
@@ -160,7 +163,7 @@ export default function FilesPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-white">{files.length}</p>
-                <p className="text-sm text-white/60">Total Files</p>
+                <p className="text-sm text-white/60">{t('totalFiles')}</p>
               </div>
             </div>
           </CardContent>
@@ -175,7 +178,7 @@ export default function FilesPage() {
                 <p className="text-3xl font-bold text-white">
                   {Object.keys(filesByProject).length}
                 </p>
-                <p className="text-sm text-white/60">Projects</p>
+                <p className="text-sm text-white/60">{t('projects')}</p>
               </div>
             </div>
           </CardContent>
@@ -190,7 +193,7 @@ export default function FilesPage() {
                 <p className="text-3xl font-bold text-white">
                   {formatFileSize(totalSize)}
                 </p>
-                <p className="text-sm text-white/60">Total Size</p>
+                <p className="text-sm text-white/60">{t('totalSize')}</p>
               </div>
             </div>
           </CardContent>
@@ -212,7 +215,7 @@ export default function FilesPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search files..."
+            placeholder={`${tc('search')} ${tc('files').toLowerCase()}...`}
             className="pl-10"
           />
         </div>
@@ -222,7 +225,7 @@ export default function FilesPage() {
             size="sm"
             onClick={() => setTypeFilter(null)}
           >
-            All
+            {tc('all')}
           </Button>
           {fileTypes.map((type) => (
             <Button
@@ -250,15 +253,15 @@ export default function FilesPage() {
         >
           <FileText size={64} className="text-white/20 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            No files found
+            {t('noFilesYet')}
           </h3>
           <p className="text-white/60 mb-6">
             {search || typeFilter
-              ? "No files match your filters."
+              ? tc('noResults')
               : "Files from your projects will appear here."}
           </p>
           <Link href="/portal/projects">
-            <Button variant="secondary">View Projects</Button>
+            <Button variant="secondary">{tc('view')} {t('projects')}</Button>
           </Link>
         </motion.div>
       ) : (
@@ -286,7 +289,7 @@ export default function FilesPage() {
                   </div>
                   <Link href={`/portal/projects/${project.slug}`}>
                     <Button variant="ghost" size="sm">
-                      View Project
+                      {tc('view')} {tc('project')}
                     </Button>
                   </Link>
                 </div>
@@ -322,7 +325,7 @@ export default function FilesPage() {
                         <a href={file.url} download target="_blank">
                           <Button variant="ghost" size="sm">
                             <Download size={16} className="mr-2" />
-                            Download
+                            {tc('download')}
                           </Button>
                         </a>
                       </div>
