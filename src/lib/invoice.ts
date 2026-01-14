@@ -111,7 +111,7 @@ export async function generateInvoiceForMilestone(milestoneId: string) {
         stream.pipe(writeStream);
 
         await new Promise((resolve, reject) => {
-            writeStream.on("finish", resolve);
+            writeStream.on("finish", () => resolve(null));
             writeStream.on("error", reject);
         });
 
