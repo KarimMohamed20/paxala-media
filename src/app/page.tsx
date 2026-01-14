@@ -8,7 +8,7 @@ import { CTASection } from "@/components/sections/cta";
 
 async function getHomePageContent() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/homepage`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/homepage?allLocales=true`, {
       cache: 'no-store',
     });
 

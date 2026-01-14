@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { emailService } from "@/lib/email/service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +26,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: Send email notification
+    // Send email notification
+    await emailService.sendContactInquiry({
+      name,
+      email,
+      phone,
+      subject,
+      message,
+    });
 
     return NextResponse.json(
       { message: "Inquiry submitted successfully", id: inquiry.id },

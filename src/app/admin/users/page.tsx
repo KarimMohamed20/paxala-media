@@ -101,6 +101,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
+    email: "",
     role: "CLIENT",
     industry: "",
     socialMedia: {
@@ -211,6 +212,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setEditForm({
       name: user.name || "",
+      email: user.email || "",
       role: user.role,
       industry: user.industry || "",
       socialMedia: {
@@ -653,6 +655,17 @@ export default function UsersPage() {
                   setEditForm({ ...editForm, name: e.target.value })
                 }
                 placeholder="Full name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Email</label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
+                placeholder="email@example.com"
               />
             </div>
             <div>

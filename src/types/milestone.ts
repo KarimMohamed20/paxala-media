@@ -1,4 +1,4 @@
-export type PaymentStatus = "UNPAID" | "PARTIAL" | "PAID";
+export type PaymentStatus = "UNPAID" | "PAYABLE" | "PARTIAL" | "PAID";
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "SUBMITTED" | "APPROVED" | "REJECTED";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 

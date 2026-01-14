@@ -236,13 +236,28 @@ function TeamMemberCard({
   );
 }
 
+import { useLocale } from "next-intl";
+
 interface TeamContent {
-  teamSubtitle?: string;
-  teamTitle?: string;
-  teamDescription?: string;
-  teamTab1Label?: string;
-  teamTab2Label?: string;
-  teamTab3Label?: string;
+  [key: string]: any;
+  teamSubtitleEn?: string;
+  teamSubtitleAr?: string;
+  teamSubtitleHe?: string;
+  teamTitleEn?: string;
+  teamTitleAr?: string;
+  teamTitleHe?: string;
+  teamDescriptionEn?: string;
+  teamDescriptionAr?: string;
+  teamDescriptionHe?: string;
+  teamTab1LabelEn?: string;
+  teamTab1LabelAr?: string;
+  teamTab1LabelHe?: string;
+  teamTab2LabelEn?: string;
+  teamTab2LabelAr?: string;
+  teamTab2LabelHe?: string;
+  teamTab3LabelEn?: string;
+  teamTab3LabelAr?: string;
+  teamTab3LabelHe?: string;
 }
 
 interface TeamMembers {
@@ -255,14 +270,22 @@ export function TeamSection({ content, teamMembers }: { content?: TeamContent | 
   const [activeTab, setActiveTab] = useState<TeamTab>("production");
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const locale = useLocale();
+
+  // Helper to get localized content
+  const getLocalized = (key: string, defaultValue: string) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    return content[localeKey] || content[`${key}En`] || defaultValue;
+  };
 
   // Default values
-  const subtitle = content?.teamSubtitle || "Our Team";
-  const title = content?.teamTitle || "PMP Crew";
-  const description = content?.teamDescription || "Meet the talented professionals behind our creative productions.";
-  const tab1Label = content?.teamTab1Label || "Production Team";
-  const tab2Label = content?.teamTab2Label || "IT & Dev Team";
-  const tab3Label = content?.teamTab3Label || "Creative Team";
+  const subtitle = getLocalized("teamSubtitle", "Our Team");
+  const title = getLocalized("teamTitle", "PMP Crew");
+  const description = getLocalized("teamDescription", "Meet the talented professionals behind our creative productions.");
+  const tab1Label = getLocalized("teamTab1Label", "Production Team");
+  const tab2Label = getLocalized("teamTab2Label", "IT & Dev Team");
+  const tab3Label = getLocalized("teamTab3Label", "Creative Team");
 
   const tabs = [
     { id: "production" as TeamTab, label: tab1Label },
@@ -273,8 +296,8 @@ export function TeamSection({ content, teamMembers }: { content?: TeamContent | 
   const currentTeam = activeTab === "production"
     ? (teamMembers?.production || [])
     : activeTab === "itDev"
-    ? (teamMembers?.itDev || [])
-    : (teamMembers?.creative || []);
+      ? (teamMembers?.itDev || [])
+      : (teamMembers?.creative || []);
 
   return (
     <Section className="bg-black relative overflow-hidden">

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
@@ -9,11 +9,20 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { getUserLocale } from '@/lib/locale-actions';
 import { rtlLocales } from '@/i18n/config';
+import { PwaRegistry } from "@/components/pwa-registry";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Prevent zooming on mobile for app-like feel
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getUserLocale();
@@ -43,6 +52,12 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | Paxala Media`,
     },
     description: t.description,
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Paxala Media",
+    },
     keywords: [
       "video production",
       "photography",
@@ -90,6 +105,10 @@ export async function generateMetadata(): Promise<Metadata> {
         "max-snippet": -1,
       },
     },
+    icons: {
+      icon: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
+    }
   };
 }
 
@@ -108,6 +127,7 @@ export default async function RootLayout({
         <AuthProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ScrollProvider>
+              <PwaRegistry />
               <ScrollProgress />
               <Navbar />
               <main className="min-h-screen">{children}</main>

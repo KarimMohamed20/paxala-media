@@ -7,39 +7,57 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Section } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
 
+import { useLocale } from "next-intl";
+
 interface AboutContent {
-  aboutBadge?: string;
-  aboutHeading?: string;
+  [key: string]: any;
+  aboutBadgeEn?: string;
+  aboutBadgeAr?: string;
+  aboutBadgeHe?: string;
+  aboutHeadingEn?: string;
+  aboutHeadingAr?: string;
+  aboutHeadingHe?: string;
   aboutImage?: string | null;
-  aboutParagraph1?: string;
-  aboutParagraph2?: string;
-  aboutParagraph3?: string;
-  aboutParagraph4?: string;
-  aboutParagraph5?: string;
-  aboutHighlights?: string[];
-  aboutYearsText?: string;
-  aboutYearsLabel?: string;
+  // ... other keys
 }
 
 export function AboutSection({ content }: { content?: AboutContent | null }) {
-  // Default values
-  const badge = content?.aboutBadge || "About Us";
-  const heading = content?.aboutHeading || "About Paxala Media";
+  const locale = useLocale();
+
+  // Helper to get localized content
+  const getLocalized = (key: string, defaultValue: string) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    return content[localeKey] || content[`${key}En`] || defaultValue;
+  };
+
+  // Helper to get localized array content
+  const getLocalizedArray = (key: string, defaultValue: string[]) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    const val = content[localeKey];
+    return Array.isArray(val) && val.length > 0 ? val : (content[`${key}En`] || defaultValue);
+  };
+
+  const badge = getLocalized("aboutBadge", "About Us");
+  const heading = getLocalized("aboutHeading", "About Paxala Media");
   const image = content?.aboutImage || "/images/studio.jpg";
-  const paragraph1 = content?.aboutParagraph1 || "Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.";
-  const paragraph2 = content?.aboutParagraph2 || "What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.";
-  const paragraph3 = content?.aboutParagraph3 || "Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.";
-  const paragraph4 = content?.aboutParagraph4 || "We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.";
-  const paragraph5 = content?.aboutParagraph5 || "At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.";
-  const highlights = content?.aboutHighlights || [
+  const paragraph1 = getLocalized("aboutParagraph1", "Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.");
+  const paragraph2 = getLocalized("aboutParagraph2", "What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.");
+  const paragraph3 = getLocalized("aboutParagraph3", "Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.");
+  const paragraph4 = getLocalized("aboutParagraph4", "We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.");
+  const paragraph5 = getLocalized("aboutParagraph5", "At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.");
+
+  const highlights = getLocalizedArray("aboutHighlights", [
     "Full-service creative agency",
     "Expert team of filmmakers & designers",
     "Cutting-edge equipment & technology",
     "End-to-end project management",
     "Dedicated to client success",
-  ];
-  const yearsText = content?.aboutYearsText || "10+";
-  const yearsLabel = content?.aboutYearsLabel || "Years of Excellence";
+  ]);
+
+  const yearsText = getLocalized("aboutYearsText", "10+");
+  const yearsLabel = getLocalized("aboutYearsLabel", "Years of Excellence");
   return (
     <Section className="bg-gradient-to-b from-black via-neutral-950 to-black">
       <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
@@ -90,12 +108,11 @@ export function AboutSection({ content }: { content?: AboutContent | null }) {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <span className="inline-block text-red-500 font-medium mb-3 md:mb-4 tracking-wider uppercase text-sm">
+          <span className="inline-block text-red-500 font-medium mb-3 md:mb-4 tracking-wider uppercase text-sm whitespace-nowrap">
             {badge}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">
-            <span className="text-red-500">{heading.charAt(0)}</span>
-            <span className="text-white">{heading.slice(1)}</span>
+            <span className="text-red-500">{heading.charAt(0)}</span><span className="text-white">{heading.slice(1)}</span>
           </h2>
           <div className="space-y-3 md:space-y-4 text-white/70 leading-relaxed mb-6 md:mb-8">
             <p>{paragraph1}</p>
@@ -107,7 +124,7 @@ export function AboutSection({ content }: { content?: AboutContent | null }) {
 
           {/* Highlights */}
           <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8">
-            {highlights.map((item, index) => (
+            {highlights.map((item: string, index: number) => (
               <motion.li
                 key={item}
                 initial={{ opacity: 0, x: 20 }}

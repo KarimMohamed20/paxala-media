@@ -70,7 +70,13 @@ interface MilestoneData {
   paymentStatus: string;
   paymentDate: string | null;
   paymentAmount: number | null;
-  isVisible: boolean;
+  visible: boolean;
+  invoice?: {
+    id: string;
+    number: string;
+    status: string;
+    pdfUrl: string | null;
+  } | null;
   tasks: MilestoneTask[];
   totalTasks: number;
   completedTasks: number;
@@ -367,22 +373,20 @@ export default function ProjectDetailPage() {
                   return (
                     <div
                       key={status}
-                      className={`text-center ${
-                        isActive
-                          ? "text-red-500"
-                          : isPast
+                      className={`text-center ${isActive
+                        ? "text-red-500"
+                        : isPast
                           ? "text-green-500"
                           : "text-white/40"
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${
-                          isActive
-                            ? "bg-red-600"
-                            : isPast
+                        className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${isActive
+                          ? "bg-red-600"
+                          : isPast
                             ? "bg-green-600"
                             : "bg-white/10"
-                        }`}
+                          }`}
                       >
                         <span className="text-xs text-white">{i + 1}</span>
                       </div>
@@ -585,10 +589,22 @@ export default function ProjectDetailPage() {
                               )}
                             </div>
                           )}
+
+                          {milestone.invoice && milestone.invoice.pdfUrl && (
+                            <a
+                              href={`/api/invoices/${milestone.invoice.id}/download`}
+                              target="_blank"
+                              className="text-white/60 hover:text-white transition-colors"
+                              title="Download Invoice"
+                            >
+                              <FileText size={20} />
+                            </a>
+                          )}
+
                           <Badge
                             variant={
                               paymentStatusColors[
-                                milestone.paymentStatus as keyof typeof paymentStatusColors
+                              milestone.paymentStatus as keyof typeof paymentStatusColors
                               ] || "secondary"
                             }
                           >
@@ -635,7 +651,7 @@ export default function ProjectDetailPage() {
                               <Badge
                                 variant={
                                   taskStatusColors[
-                                    task.status as keyof typeof taskStatusColors
+                                  task.status as keyof typeof taskStatusColors
                                   ] || "secondary"
                                 }
                               >

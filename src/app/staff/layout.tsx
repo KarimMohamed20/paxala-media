@@ -3,21 +3,9 @@
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import Link from "next/link";
-import {
-  LayoutDashboard,
-  Folder,
-  CheckSquare,
-  ArrowLeft,
-  Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/staff", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/staff/projects", icon: Folder, label: "My Projects" },
-  { href: "/staff/tasks", icon: CheckSquare, label: "My Tasks" },
-];
+import { Loader2 } from "lucide-react";
+import { StaffSidebar } from "@/components/staff/sidebar";
+import { StaffMobileNav } from "@/components/staff/mobile-nav";
 
 export default function StaffLayout({
   children,
@@ -26,7 +14,6 @@ export default function StaffLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -57,47 +44,13 @@ export default function StaffLayout({
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-neutral-950 border-r border-white/10 pt-20">
-        <div className="p-6">
-          <Link
-            href="/portal/dashboard"
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeft size={16} />
-            <span className="text-sm">Back to Portal</span>
-          </Link>
-
-          <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
-            Staff Panel
-          </h2>
-
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </aside>
+      <StaffMobileNav />
+      {/* Desktop Sidebar */}
+      <StaffSidebar className="hidden md:block fixed left-0 top-0 h-screen w-64 z-40" />
 
       {/* Main content */}
-      <main className="ml-64 pt-20 min-h-screen">
-        <div className="p-8">{children}</div>
+      <main className="md:ml-64 pt-24 md:pt-8 min-h-screen transition-all duration-300">
+        <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>
   );

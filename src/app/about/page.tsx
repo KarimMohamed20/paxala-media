@@ -447,7 +447,7 @@ export default function AboutPage() {
               transition={{ duration: 0.8 }}
             >
               <motion.span
-                className="inline-block text-red-500 font-medium mb-4 tracking-wider uppercase text-sm"
+                className="inline-block text-red-500 font-medium mb-4 tracking-wider uppercase text-sm whitespace-nowrap"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -456,21 +456,16 @@ export default function AboutPage() {
               </motion.span>
               <motion.h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
                 <motion.span
-                  className="inline-block text-red-500"
+                  className="text-red-500"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  {heroHeading.charAt(0)}
-                </motion.span>
-                <motion.span
-                  className="inline-block text-white"
+                >{heroHeading.charAt(0)}</motion.span><motion.span
+                  className="text-white"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  {heroHeading.slice(1)}
-                </motion.span>
+                >{heroHeading.slice(1)}</motion.span>
               </motion.h1>
               <motion.p
                 className="text-xl text-white/60 leading-relaxed mb-8"

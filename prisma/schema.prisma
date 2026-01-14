@@ -215,6 +215,7 @@ model Project {
   files      ProjectFile[]
   comments   Comment[]
   milestones Milestone[]
+  invoices   Invoice[]
   contacts   ClientContact[] @relation("ProjectContacts")
 }
 
@@ -554,6 +555,7 @@ model Testimonial {
 // ==================== MILESTONES & TASKS ====================
 enum PaymentStatus {
   UNPAID
+  PAYABLE
   PARTIAL
   PAID
 }
@@ -587,10 +589,50 @@ model Milestone {
   projectId     String
   project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks         Task[]
+  invoice       Invoice?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([projectId])
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  number        String    @unique // e.g., INV-2024-001
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime  @default(now())
+  dueDate       DateTime?
+  currency      String    @default("USD") // or SAR, ILS
+  language      String    @default("en") // en, ar, he
+
+  // Amounts
+  subtotal      Decimal   @db.Decimal(10, 2)
+  taxRate       Decimal   @default(0) @db.Decimal(5, 2)
+  taxAmount     Decimal   @default(0) @db.Decimal(10, 2)
+  total         Decimal   @db.Decimal(10, 2)
+  
+  // Relations
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id])
+  milestoneId   String?   @unique
+  milestone     Milestone? @relation(fields: [milestoneId], references: [id])
+  
+  // Content
+  items         Json      // Array of { description, quantity, price, total }
+  notes         String?   @db.Text
+  pdfUrl        String?   // Path to stored PDF
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([projectId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  VOID
 }
 
 model Task {

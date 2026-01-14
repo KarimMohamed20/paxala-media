@@ -213,23 +213,42 @@ function TestimonialCard({
   );
 }
 
+import { useLocale } from "next-intl";
+
 interface ClientsContent {
-  clientsSubtitle?: string;
-  clientsTitle?: string;
-  clientsDescription?: string;
-  clientsWhatTheySay?: string;
+  [key: string]: any;
+  clientsSubtitleEn?: string;
+  clientsSubtitleAr?: string;
+  clientsSubtitleHe?: string;
+  clientsTitleEn?: string;
+  clientsTitleAr?: string;
+  clientsTitleHe?: string;
+  clientsDescriptionEn?: string;
+  clientsDescriptionAr?: string;
+  clientsDescriptionHe?: string;
+  clientsWhatTheySayEn?: string;
+  clientsWhatTheySayAr?: string;
+  clientsWhatTheySayHe?: string;
 }
 
 export function ClientsSection({ content }: { content?: ClientsContent | null }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const locale = useLocale();
+
+  // Helper to get localized content
+  const getLocalized = (key: string, defaultValue: string) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    return content[localeKey] || content[`${key}En`] || defaultValue;
+  };
 
   // Default values
-  const subtitle = content?.clientsSubtitle || "Trusted By";
-  const title = content?.clientsTitle || "Our Clients";
-  const description = content?.clientsDescription || "We've had the privilege of working with amazing brands and businesses.";
-  const whatTheySay = content?.clientsWhatTheySay || "What They Say";
+  const subtitle = getLocalized("clientsSubtitle", "Trusted By");
+  const title = getLocalized("clientsTitle", "Our Clients");
+  const description = getLocalized("clientsDescription", "We've had the privilege of working with amazing brands and businesses.");
+  const whatTheySay = getLocalized("clientsWhatTheySay", "What They Say");
 
   // Auto-rotate testimonials
   useState(() => {

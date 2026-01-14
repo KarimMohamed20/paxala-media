@@ -24,6 +24,14 @@ import { Button } from "@/components/ui/button";
 import { packages } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
+// Map packages to their included services for the booking form
+const packageServices: Record<string, string> = {
+  "package-01": "video-production,photography,graphic-design,social-media",
+  "package-02": "video-production,photography,graphic-design,social-media,web-development",
+  "package-03": "video-production,photography,graphic-design,social-media,web-development,app-development",
+};
+
+
 const tierIcons: Record<string, React.ElementType> = {
   base: Zap,
   plus: Star,
@@ -123,9 +131,9 @@ function PackageDetailCard({
 
             {/* Price */}
             <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10">
-              {pkg.price === "Custom" ? (
+              {pkg.price.startsWith("Custom") ? (
                 <div>
-                  <span className="text-5xl font-bold text-white">Custom</span>
+                  <span className="text-5xl font-bold text-white">{pkg.price}</span>
                   <p className="text-white/60 mt-2">{pkg.period}</p>
                 </div>
               ) : (
@@ -167,7 +175,7 @@ function PackageDetailCard({
 
             {/* CTA */}
             <div className="flex flex-wrap gap-4">
-              <Link href="/booking">
+              <Link href={`/booking?package=${pkg.id}&service=${packageServices[pkg.id] || "concept-strategy"}`}>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}

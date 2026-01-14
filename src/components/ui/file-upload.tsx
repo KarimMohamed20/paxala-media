@@ -10,6 +10,7 @@ interface FileUploadProps {
   disabled?: boolean
   multiple?: boolean
   className?: string
+  capture?: boolean | 'user' | 'environment'
 }
 
 export function FileUpload({
@@ -17,7 +18,8 @@ export function FileUpload({
   accept = "image/*,video/*,application/*",
   disabled = false,
   multiple = false,
-  className
+  className,
+  capture
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -40,6 +42,7 @@ export function FileUpload({
         type="file"
         accept={accept}
         multiple={multiple}
+        capture={capture}
         onChange={handleFileChange}
         disabled={disabled}
         className="hidden"

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { emailService } from "@/lib/email/service";
 
 // PUT update task status (with workflow validation)
 export async function PUT(
@@ -180,14 +181,30 @@ export async function PUT(
             title: true,
             projectId: true,
             project: {
-              select: { id: true, title: true },
+              select: {
+                id: true,
+                title: true,
+                client: { select: { email: true, name: true } }
+              },
             },
           },
         },
       },
     });
 
-    // If task was approved, check if all tasks in the project are now approved
+    // Notify Assignee of status changes (if they didn't do it themselves)
+    if (updatedTask.assignee?.email && updatedTask.assignee.id !== session.user.id) {
+      await emailService.sendTaskStatusUpdate(updatedTask.assignee.email, {
+        taskTitle: updatedTask.title,
+        projectName: updatedTask.milestone.project.title,
+        oldStatus: currentStatus,
+        newStatus: status,
+        updatedBy: session.user.name || 'Admin',
+        link: `https://paxaland.com/staff/tasks?id=${updatedTask.id}`
+      });
+    }
+
+    // If task was approved, check if all tasks in the project/milestone are now approved
     if (status === "APPROVED" && updatedTask.milestone?.projectId) {
       const projectId = updatedTask.milestone.projectId;
 
@@ -200,6 +217,22 @@ export async function PUT(
           },
         },
       });
+
+      // Check if CURRENT milestone is complete
+      const currentMilestoneId = updatedTask.milestone.id;
+      const currentMilestone = milestones.find(m => m.id === currentMilestoneId);
+      const isMilestoneComplete = currentMilestone?.tasks.every(t => t.status === "APPROVED");
+
+      if (isMilestoneComplete && updatedTask.milestone.project.client?.email) {
+        await emailService.sendMilestoneCompleted(
+          updatedTask.milestone.project.client.email,
+          {
+            milestoneTitle: updatedTask.milestone.title,
+            projectName: updatedTask.milestone.project.title,
+            link: `https://paxaland.com/portal/projects/${updatedTask.milestone.project.id}`
+          }
+        );
+      }
 
       // Check if all milestones have all tasks approved
       const allMilestonesComplete = milestones.every((milestone) => {
@@ -220,6 +253,8 @@ export async function PUT(
             publishedAt: new Date(), // Also publish the project
           },
         });
+
+        // Could also send Project Completed email here
       }
     }
 

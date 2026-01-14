@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, isSameDay, isAfter, startOfToday } from "date-fns";
 import {
@@ -44,11 +45,25 @@ const timeSlots = [
 type BookingStep = "service" | "datetime" | "details" | "confirm";
 
 export function BookingForm() {
-  const [step, setStep] = useState<BookingStep>("service");
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingFormContent />
+    </Suspense>
+  );
+}
+
+function BookingFormContent() {
+  const searchParams = useSearchParams();
+  const initialPackage = searchParams.get("package");
+  const initialService = searchParams.get("service");
+
+  const initialServiceParams = initialService ? initialService.split(",") : [];
+
+  const [step, setStep] = useState<BookingStep>(initialServiceParams.length > 0 ? "datetime" : "service");
   const [services, setServices] = useState<Service[]>([]);
   const [servicesLoading, setServicesLoading] = useState(true);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceParams);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(initialPackage);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -95,7 +110,10 @@ export function BookingForm() {
     setError(null);
 
     try {
-      const selectedServiceData = services.find((s) => s.id === selectedService);
+      const selectedServiceNames = services
+        .filter((s) => selectedServices.includes(s.id))
+        .map((s) => s.name)
+        .join(", ");
 
       const response = await fetch("/api/bookings", {
         method: "POST",
@@ -106,7 +124,7 @@ export function BookingForm() {
           name: formData.name,
           email: formData.email,
           phone: formData.phone || null,
-          serviceType: selectedServiceData?.name || selectedService,
+          serviceType: selectedServiceNames || "Custom Selection",
           packageId: selectedPackage || null,
           date: selectedDate?.toISOString(),
           timeSlot: selectedTime,
@@ -147,7 +165,7 @@ export function BookingForm() {
   const canProceed = () => {
     switch (step) {
       case "service":
-        return selectedService !== null;
+        return selectedServices.length > 0;
       case "datetime":
         return selectedDate !== null && selectedTime !== null;
       case "details":
@@ -183,10 +201,14 @@ export function BookingForm() {
         <div className="bg-white/5 rounded-xl p-6 max-w-md mx-auto text-left">
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-white/60">Service</span>
-              <span className="text-white font-medium">
-                {services.find((s) => s.id === selectedService)?.name}
-              </span>
+              <span className="text-white/60">Services</span>
+              <div className="text-white font-medium text-right">
+                {services
+                  .filter((s) => selectedServices.includes(s.id))
+                  .map((s) => (
+                    <div key={s.id}>{s.name}</div>
+                  ))}
+              </div>
             </div>
             <div className="flex justify-between">
               <span className="text-white/60">Date</span>
@@ -236,8 +258,8 @@ export function BookingForm() {
                     isActive
                       ? "bg-red-600 text-white"
                       : isPast
-                      ? "bg-green-600 text-white"
-                      : "bg-white/10 text-white/40"
+                        ? "bg-green-600 text-white"
+                        : "bg-white/10 text-white/40"
                   )}
                 >
                   {isPast ? <Check size={18} /> : i + 1}
@@ -276,38 +298,48 @@ export function BookingForm() {
           {step === "service" && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">
-                Select a Service
+                Select Service(s)
               </h2>
               <p className="text-white/60 mb-8">
-                Choose the type of consultation you&apos;d like to book.
+                Choose one or more services you&apos;d like to book.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {services.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => setSelectedService(service.id)}
-                    className={cn(
-                      "p-6 rounded-xl text-left transition-all",
-                      selectedService === service.id
-                        ? "bg-red-600 border-red-600"
-                        : "bg-white/5 border border-white/10 hover:border-white/20"
-                    )}
-                  >
-                    <h3 className="font-semibold text-white mb-2">
-                      {service.name}
-                    </h3>
-                    <p
+                {services.map((service) => {
+                  const isSelected = selectedServices.includes(service.id);
+                  return (
+                    <button
+                      key={service.id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedServices(selectedServices.filter((id) => id !== service.id));
+                        } else {
+                          setSelectedServices([...selectedServices, service.id]);
+                        }
+                      }}
                       className={cn(
-                        "text-sm",
-                        selectedService === service.id
-                          ? "text-white/80"
-                          : "text-white/60"
+                        "p-6 rounded-xl text-left transition-all",
+                        isSelected
+                          ? "bg-red-600 border-red-600"
+                          : "bg-white/5 border border-white/10 hover:border-white/20"
                       )}
                     >
-                      {service.description.slice(0, 80)}...
-                    </p>
-                  </button>
-                ))}
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-white">
+                          {service.name}
+                        </h3>
+                        {isSelected && <Check size={16} className="text-white" />}
+                      </div>
+                      <p
+                        className={cn(
+                          "text-sm",
+                          isSelected ? "text-white/80" : "text-white/60"
+                        )}
+                      >
+                        {service.description.slice(0, 80)}...
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -586,10 +618,13 @@ export function BookingForm() {
                   <div className="flex items-start gap-4 pb-4 border-b border-white/10">
                     <Calendar size={20} className="text-red-500 mt-0.5" />
                     <div>
-                      <p className="text-white/60 text-sm">Service</p>
-                      <p className="text-white font-medium">
-                        {services.find((s) => s.id === selectedService)?.name}
-                      </p>
+                      <p className="text-white/60 text-sm">Services</p>
+                      <div className="text-white font-medium">
+                        {services
+                          .filter((s) => selectedServices.includes(s.id))
+                          .map((s) => s.name)
+                          .join(", ")}
+                      </div>
                     </div>
                   </div>
 

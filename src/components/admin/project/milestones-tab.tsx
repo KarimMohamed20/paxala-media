@@ -38,7 +38,7 @@ interface Milestone {
   description: string | null;
   order: number;
   price: number | null;
-  paymentStatus: "UNPAID" | "PARTIAL" | "PAID";
+  paymentStatus: "UNPAID" | "PARTIAL" | "PAID" | "PAYABLE";
   paymentDate: string | null;
   paymentAmount: number | null;
   deadline: string | null;
@@ -81,7 +81,7 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
     deadline: "",
   });
   const [showNewTask, setShowNewTask] = useState<string | null>(null);
-  const [showPaymentDialog, setShowPaymentDialog] = useState<{milestoneId: string, status: "PARTIAL" | "PAID"} | null>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState<{ milestoneId: string, status: "PARTIAL" | "PAID" | "PAYABLE" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [newTaskData, setNewTaskData] = useState({
     title: "",
@@ -202,7 +202,7 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
 
   const handleUpdatePaymentStatus = async (
     milestoneId: string,
-    paymentStatus: "UNPAID" | "PARTIAL" | "PAID"
+    paymentStatus: "UNPAID" | "PARTIAL" | "PAID" | "PAYABLE"
   ) => {
     // If changing to PARTIAL, show dialog to enter payment amount
     if (paymentStatus === "PARTIAL") {
@@ -507,7 +507,7 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
                         onValueChange={(value) =>
                           handleUpdatePaymentStatus(
                             milestone.id,
-                            value as "UNPAID" | "PARTIAL" | "PAID"
+                            value as "UNPAID" | "PARTIAL" | "PAID" | "PAYABLE"
                           )
                         }
                       >
@@ -517,8 +517,10 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
                             milestone.paymentStatus === "PAID"
                               ? "bg-green-600 hover:bg-green-700"
                               : milestone.paymentStatus === "PARTIAL"
-                              ? "bg-yellow-600 hover:bg-yellow-700"
-                              : "bg-gray-600 hover:bg-gray-700"
+                                ? "bg-yellow-600 hover:bg-yellow-700"
+                                : milestone.paymentStatus === "PAYABLE"
+                                  ? "bg-blue-600 hover:bg-blue-700"
+                                  : "bg-gray-600 hover:bg-gray-700"
                           )}
                         >
                           <SelectValue />
@@ -528,6 +530,12 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
                             <span className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-gray-500" />
                               Unpaid
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="PAYABLE">
+                            <span className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              Payable
                             </span>
                           </SelectItem>
                           <SelectItem value="PARTIAL">

@@ -71,20 +71,37 @@ function AnimatedHeading({ text }: { text: string }) {
   );
 }
 
+import { useLocale } from "next-intl";
+
 interface CTAContent {
-  ctaBadge?: string;
-  ctaHeading?: string;
-  ctaSubtitle?: string;
+  [key: string]: any;
+  ctaBadgeEn?: string;
+  ctaBadgeAr?: string;
+  ctaBadgeHe?: string;
+  ctaHeadingEn?: string;
+  ctaHeadingAr?: string;
+  ctaHeadingHe?: string;
+  ctaSubtitleEn?: string;
+  ctaSubtitleAr?: string;
+  ctaSubtitleHe?: string;
 }
 
 export function CTASection({ content }: { content?: CTAContent | null }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
+  const locale = useLocale();
+
+  // Helper to get localized content
+  const getLocalized = (key: string, defaultValue: string) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    return content[localeKey] || content[`${key}En`] || defaultValue;
+  };
 
   // Default values
-  const badge = content?.ctaBadge || "Let's Create Together";
-  const heading = content?.ctaHeading || "Ready to Bring Your Vision to Life?";
-  const subtitle = content?.ctaSubtitle || "Let's create something amazing together. Book a consultation or get in touch to discuss your next project.";
+  const badge = getLocalized("ctaBadge", "Let's Create Together");
+  const heading = getLocalized("ctaHeading", "Ready to Bring Your Vision to Life?");
+  const subtitle = getLocalized("ctaSubtitle", "Let's create something amazing together. Book a consultation or get in touch to discuss your next project.");
 
   // Mouse position for parallax effect
   const mouseX = useMotionValue(0);

@@ -93,28 +93,50 @@ function TextRevealHeading({ text }: { text: string }) {
   );
 }
 
+import { useLocale } from "next-intl";
+
+// ... existing imports ...
+
+// ... AnimatedCounter and TextRevealHeading components remain same ...
+
 interface HeroContent {
-  heroBadge?: string;
-  heroHeading?: string;
-  heroSlogan?: string;
-  heroSubtitle1?: string;
-  heroSubtitle2?: string;
-  heroStats?: Array<{ value: string; label: string }>;
+  [key: string]: any; // Allow indexing
+  heroBadgeEn?: string;
+  heroBadgeAr?: string;
+  heroBadgeHe?: string;
+  // ... add other specific keys if needed or rely on dynamic access
 }
 
 export function ScrollVideoHero({ content }: { content?: HeroContent | null }) {
-  // Default values if content is not provided
-  const badge = content?.heroBadge || "Creative Production Studio";
-  const heading = content?.heroHeading || "Paxala Media Production";
-  const slogan = content?.heroSlogan || "From Vision to Visual";
-  const subtitle1 = content?.heroSubtitle1 || "Bringing brands to life through impactful visual storytelling.";
-  const subtitle2 = content?.heroSubtitle2 || "Video production, photography, design, and development under one roof.";
-  const stats = content?.heroStats || [
+  const locale = useLocale();
+
+  // Helper to get localized content
+  const getLocalized = (key: string, defaultValue: string) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    return content[localeKey] || content[`${key}En`] || defaultValue;
+  };
+
+  // Helper for array content (stats)
+  const getLocalizedArray = (key: string, defaultValue: any[]) => {
+    if (!content) return defaultValue;
+    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    const val = content[localeKey];
+    return Array.isArray(val) && val.length > 0 ? val : (content[`${key}En`] || defaultValue);
+  };
+
+  const badge = getLocalized("heroBadge", "Creative Production Studio");
+  const heading = getLocalized("heroHeading", "Paxala Media Production");
+  const slogan = getLocalized("heroSlogan", "From Vision to Visual");
+  const subtitle1 = getLocalized("heroSubtitle1", "Bringing brands to life through impactful visual storytelling.");
+  const subtitle2 = getLocalized("heroSubtitle2", "Video production, photography, design, and development under one roof.");
+
+  const stats = getLocalizedArray("heroStats", [
     { value: "1000+", label: "Projects Completed" },
     { value: "200+", label: "Happy Clients" },
     { value: "8+", label: "Services Offered" },
     { value: "10+", label: "Years Experience" },
-  ];
+  ]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -242,7 +264,7 @@ export function ScrollVideoHero({ content }: { content?: HeroContent | null }) {
               transition={{ duration: 0.8, delay: 1.1, ease: [0.25, 0.1, 0.25, 1] }}
               className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mt-12 md:mt-20 pt-8 md:pt-12 border-t border-white/10"
             >
-              {stats.map((stat, index) => (
+              {stats.map((stat: { value: string, label: string }, index: number) => (
                 <motion.div
                   key={stat.label}
                   className="text-center"

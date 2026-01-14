@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { generateInvoiceForMilestone } from "@/lib/invoice";
 
 // PUT update payment status
 export async function PUT(
@@ -30,7 +31,7 @@ export async function PUT(
       );
     }
 
-    const validStatuses = ["UNPAID", "PARTIAL", "PAID"];
+    const validStatuses = ["UNPAID", "PAYABLE", "PARTIAL", "PAID"];
     if (!validStatuses.includes(paymentStatus)) {
       return NextResponse.json(
         { error: "Invalid payment status" },
@@ -50,7 +51,7 @@ export async function PUT(
     }
 
     const updateData: {
-      paymentStatus: "UNPAID" | "PARTIAL" | "PAID";
+      paymentStatus: "UNPAID" | "PAYABLE" | "PARTIAL" | "PAID";
       paymentDate?: Date | null;
       paymentAmount?: number | null;
     } = {
@@ -82,6 +83,21 @@ export async function PUT(
         tasks: true,
       },
     });
+
+    // Generate Invoice if marked PAYABLE
+    if (paymentStatus === "PAYABLE") {
+      // Check if invoice exists? define unique constraint on milestoneId in Schema handles it, 
+      // but we should catch error or check first.
+      // generateInvoiceForMilestone handles creation. 
+      // We run this async without awaiting to not block response? 
+      // Better to await to catch errors.
+      try {
+        await generateInvoiceForMilestone(id);
+      } catch (err) {
+        console.error("Failed to generate invoice:", err);
+        // Continue even if invoice fails?
+      }
+    }
 
     return NextResponse.json(updatedMilestone);
   } catch (error) {

@@ -130,14 +130,14 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black pt-24 pb-12">
-      <div className="mx-auto px-6 md:px-8 lg:px-12 max-w-7xl">
+      <div className="mx-auto px-4 md:px-8 lg:px-12 max-w-7xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
                 {t('welcome')}, {session.user?.name || tc('client')}
@@ -146,18 +146,18 @@ export default function DashboardPage() {
                 Here&apos;s an overview of your projects and upcoming activities.
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               {(session.user?.role === "STAFF" || session.user?.role === "ADMIN") && (
-                <Link href="/staff">
-                  <Button variant="secondary" className="gap-2">
+                <Link href="/staff" className="flex-1 md:flex-none">
+                  <Button variant="secondary" className="gap-2 w-full md:w-auto">
                     <Users size={16} />
                     Staff Panel
                   </Button>
                 </Link>
               )}
               {session.user?.role === "ADMIN" && (
-                <Link href="/admin">
-                  <Button variant="secondary" className="gap-2">
+                <Link href="/admin" className="flex-1 md:flex-none">
+                  <Button variant="secondary" className="gap-2 w-full md:w-auto">
                     <Settings size={16} />
                     {t('adminPanel')}
                   </Button>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Projects */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -233,14 +233,14 @@ export default function DashboardPage() {
                       <Link
                         key={project.id}
                         href={`/portal/projects/${project.slug}`}
-                        className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors block"
+                        className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors gap-4"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-red-600/20 flex items-center justify-center">
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                          <div className="w-12 h-12 rounded-xl bg-red-600/20 flex items-center justify-center shrink-0">
                             <Folder size={20} className="text-red-500" />
                           </div>
-                          <div>
-                            <h3 className="font-medium text-white">
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-white truncate">
                               {project.title}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
@@ -251,24 +251,29 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t border-white/5 md:border-0 pt-4 md:pt-0">
+                          <div className="flex-1 md:flex-none text-right">
+                            <div className="flex items-center justify-between md:justify-end gap-2 mb-1 md:hidden">
+                              <span className="text-xs text-white/40">Progress</span>
+                              <span className="text-xs text-white/40">{project.progress}%</span>
+                            </div>
+                            <div className="w-full md:w-24 h-2 bg-white/10 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-red-600 rounded-full transition-all"
                                 style={{ width: `${project.progress}%` }}
                               />
                             </div>
-                            <span className="text-xs text-white/40 mt-1">
+                            <span className="hidden md:inline-block text-xs text-white/40 mt-1">
                               {project.progress}%
                             </span>
                           </div>
                           <Badge
                             variant={
                               statusColors[
-                                project.status as keyof typeof statusColors
+                              project.status as keyof typeof statusColors
                               ] || "secondary"
                             }
+                            className="shrink-0"
                           >
                             {project.status.replace("_", " ")}
                           </Badge>
@@ -356,13 +361,12 @@ export default function DashboardPage() {
                         className="flex items-start gap-3"
                       >
                         <div
-                          className={`p-1.5 rounded-full ${
-                            notification.type === "success"
-                              ? "bg-green-600/20"
-                              : notification.type === "warning"
+                          className={`p-1.5 rounded-full ${notification.type === "success"
+                            ? "bg-green-600/20"
+                            : notification.type === "warning"
                               ? "bg-yellow-600/20"
                               : "bg-blue-600/20"
-                          }`}
+                            }`}
                         >
                           {notification.type === "success" ? (
                             <CheckCircle2

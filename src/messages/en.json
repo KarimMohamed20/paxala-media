@@ -186,19 +186,28 @@
       "features": {
         "videoProduction": {
           "category": "Video Production",
-          "items": ["3 professional Reels videos per month"]
+          "items": [
+            "3 professional Reels videos per month"
+          ]
         },
         "photography": {
           "category": "Photography",
-          "items": ["Monthly professional photography session"]
+          "items": [
+            "Monthly professional photography session"
+          ]
         },
         "drone": {
           "category": "Drone",
-          "items": ["Drone footage (exterior shots - based on creative needs)"]
+          "items": [
+            "Drone footage (exterior shots - based on creative needs)"
+          ]
         },
         "graphicDesign": {
           "category": "Graphic Design",
-          "items": ["Social media posts", "Stories design"]
+          "items": [
+            "Social media posts",
+            "Stories design"
+          ]
         },
         "paidAds": {
           "category": "Paid Ads Management",
@@ -236,7 +245,9 @@
       "features": {
         "package01": {
           "category": "Everything in Package 01",
-          "items": ["All visual & digital marketing services included"]
+          "items": [
+            "All visual & digital marketing services included"
+          ]
         },
         "website": {
           "category": "Professional Website Development",
@@ -276,7 +287,9 @@
       "features": {
         "previous": {
           "category": "Everything in Package 01 & 02",
-          "items": ["All visual, marketing & web development services included"]
+          "items": [
+            "All visual, marketing & web development services included"
+          ]
         },
         "management": {
           "category": "Full Digital Management",
@@ -412,6 +425,8 @@
     "addTeamMember": "Add Team Member",
     "addUser": "Add User",
     "newProject": "New Project",
+    "projects": "Projects",
+    "manageProjects": "Manage your projects",
     "newPost": "New Post",
     "newPortfolioItem": "New Portfolio Item",
     "saveChanges": "Save Changes",
@@ -477,6 +492,9 @@
     "totalBookings": "Total Bookings",
     "totalInquiries": "Total Inquiries",
     "pendingApprovals": "Pending Approvals",
+    "reviewApprovals": "Review Approvals",
+    "allCaughtUp": "You're all caught up!",
+    "noApprovals": "No pending approvals",
     "activeCount": "Active",
     "inactiveCount": "Inactive",
     "newCount": "New",

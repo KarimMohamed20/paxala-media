@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
+import { emailService } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 
 export async function GET(req: NextRequest) {
   try {
@@ -79,7 +81,30 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: Send confirmation email
+    // Send confirmation email
+    const locale = (req.cookies.get('NEXT_LOCALE')?.value || 'en') as EmailLocale;
+
+    await Promise.all([
+      emailService.sendBookingConfirmation(
+        email,
+        {
+          name,
+          serviceType,
+          date: new Date(date),
+          timeSlot,
+        },
+        locale
+      ),
+      emailService.sendNewBookingNotification({
+        name,
+        email,
+        phone,
+        serviceType,
+        date: new Date(date),
+        timeSlot,
+        notes,
+      })
+    ]);
 
     return NextResponse.json(
       { message: "Booking created successfully", id: booking.id },

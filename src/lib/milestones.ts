@@ -207,6 +207,8 @@ export function getPaymentStatusColor(
   switch (status) {
     case "UNPAID":
       return "destructive";
+    case "PAYABLE":
+      return "default"; // or "primary"
     case "PARTIAL":
       return "warning";
     case "PAID":

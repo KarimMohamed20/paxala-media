@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { emailService } from "@/lib/email/service";
 
 // GET - Fetch all tasks for a milestone
 export async function GET(
@@ -92,9 +93,31 @@ export async function POST(
             email: true,
           },
         },
+        milestone: {
+          select: {
+            title: true,
+            project: {
+              select: {
+                title: true
+              }
+            }
+          }
+        },
         files: true,
       },
     });
+
+    // Notify assignee
+    if (task.assignee?.email) {
+      await emailService.sendTaskAssigned(task.assignee.email, {
+        assigneeName: task.assignee.name || 'Staff Member',
+        taskTitle: task.title,
+        projectName: task.milestone.project.title,
+        milestoneTitle: task.milestone.title,
+        dueDate: task.dueDate,
+        link: `https://paxaland.com/staff/tasks?id=${task.id}`
+      });
+    }
 
     return NextResponse.json(task);
   } catch (error) {

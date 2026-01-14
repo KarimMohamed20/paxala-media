@@ -48,6 +48,14 @@ export async function GET(
       },
       orderBy: { order: "asc" },
       include: {
+        invoice: {
+          select: {
+            id: true,
+            number: true,
+            status: true,
+            pdfUrl: true,
+          },
+        },
         tasks: {
           where: {
             // Only show visible tasks to clients

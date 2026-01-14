@@ -46,6 +46,11 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Don't show navbar on portal, staff, or admin pages
+  if (pathname.startsWith('/portal') || pathname.startsWith('/staff') || pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <>
       <motion.header
