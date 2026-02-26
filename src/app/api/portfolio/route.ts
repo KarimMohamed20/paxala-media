@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Received portfolio creation request:', JSON.stringify(body, null, 2))
 
     const portfolio = await db.portfolio.create({
       data: {
@@ -119,8 +120,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(portfolio, { status: 201 })
   } catch (error) {
     console.error('Portfolio create error:', error)
+    // Detailed logging for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
     return NextResponse.json(
-      { error: 'Failed to create portfolio item' },
+      {
+        error: 'Failed to create portfolio item',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     )
   }

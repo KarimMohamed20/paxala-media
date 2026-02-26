@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useTranslations } from 'next-intl';
@@ -44,20 +45,37 @@ export default function PortfolioManagePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState("english");
+
   const [formData, setFormData] = useState({
-    title: "",
     slug: "",
-    description: "",
-    content: "",
     category: "VIDEO_PRODUCTION",
+    clientName: "",
+    order: 0,
     thumbnail: "",
     images: [] as string[],
     videoUrl: "",
     featured: false,
     published: false,
-    tags: "",
-    clientName: "",
-    order: 0,
+
+    // English
+    titleEn: "",
+    descriptionEn: "",
+    contentEn: "",
+    tagsEn: "",
+
+    // Arabic
+    titleAr: "",
+    descriptionAr: "",
+    contentAr: "",
+    tagsAr: "",
+
+    // Hebrew
+    titleHe: "",
+    descriptionHe: "",
+    contentHe: "",
+    tagsHe: "",
   });
 
   useEffect(() => {
@@ -68,24 +86,36 @@ export default function PortfolioManagePage() {
 
   const fetchPortfolio = async () => {
     try {
-      const response = await fetch(`/api/portfolio/${portfolioId}`);
+      // Fetch with allLocales=true
+      const response = await fetch(`/api/portfolio/${portfolioId}?allLocales=true`);
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
       setFormData({
-        title: data.title,
         slug: data.slug,
-        description: data.description,
-        content: data.content || "",
         category: data.category,
+        clientName: data.clientName || "",
+        order: data.order || 0,
         thumbnail: data.thumbnail || "",
         images: data.images || [],
         videoUrl: data.videoUrl || "",
         featured: data.featured,
         published: data.published,
-        tags: data.tags.join(", "),
-        clientName: data.clientName || "",
-        order: data.order || 0,
+
+        titleEn: data.titleEn || "",
+        descriptionEn: data.descriptionEn || "",
+        contentEn: data.contentEn || "",
+        tagsEn: Array.isArray(data.tagsEn) ? data.tagsEn.join(", ") : "",
+
+        titleAr: data.titleAr || "",
+        descriptionAr: data.descriptionAr || "",
+        contentAr: data.contentAr || "",
+        tagsAr: Array.isArray(data.tagsAr) ? data.tagsAr.join(", ") : "",
+
+        titleHe: data.titleHe || "",
+        descriptionHe: data.descriptionHe || "",
+        contentHe: data.contentHe || "",
+        tagsHe: Array.isArray(data.tagsHe) ? data.tagsHe.join(", ") : "",
       });
     } catch (err) {
       setError(ta('errorOccurred'));
@@ -179,8 +209,11 @@ export default function PortfolioManagePage() {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.slug || !formData.description) {
-      setError(ta('requiredFields'));
+    // Basic validation
+    if (!formData.titleEn || !formData.slug) {
+      setError(ta('requiredFields') + " (English Title & Slug)");
+      // Switch to English tab if validation fails there
+      if (!formData.titleEn) setActiveTab("english");
       return;
     }
 
@@ -189,20 +222,42 @@ export default function PortfolioManagePage() {
     setSuccess(false);
 
     try {
-      const tags = formData.tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
+      // Process tags
+      const processTags = (tagsStr: string) =>
+        tagsStr.split(",").map(t => t.trim()).filter(t => t.length > 0);
+
+      // Fallback Logic: Use English content if localized fields are empty
+      const titleAr = formData.titleAr || formData.titleEn;
+      const descriptionAr = formData.descriptionAr || formData.descriptionEn;
+      const contentAr = formData.contentAr || formData.contentEn;
+      const tagsAr = formData.tagsAr ? processTags(formData.tagsAr) : processTags(formData.tagsEn);
+
+      const titleHe = formData.titleHe || formData.titleEn;
+      const descriptionHe = formData.descriptionHe || formData.descriptionEn;
+      const contentHe = formData.contentHe || formData.contentEn;
+      const tagsHe = formData.tagsHe ? processTags(formData.tagsHe) : processTags(formData.tagsEn);
 
       const payload = {
         ...formData,
-        tags,
+        tagsEn: processTags(formData.tagsEn),
+        // Use processed fallback values
+        titleAr,
+        descriptionAr,
+        contentAr,
+        tagsAr,
+        titleHe,
+        descriptionHe,
+        contentHe,
+        tagsHe,
         videoUrl: formData.videoUrl || null,
         clientName: formData.clientName || null,
+        contentEn: formData.contentEn || null,
       };
 
       const url = isNew ? "/api/portfolio" : `/api/portfolio/${portfolioId}`;
       const method = isNew ? "POST" : "PUT";
+
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(url, {
         method,
@@ -212,18 +267,20 @@ export default function PortfolioManagePage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to save");
+        throw new Error(data.details || data.error || "Failed to save");
       }
 
       const data = await response.json();
       setSuccess(true);
 
       if (isNew) {
+        // Redirect to edit page
         router.push(`/admin/portfolio/${data.id}`);
       } else {
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) {
+      console.error(err);
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
@@ -231,11 +288,7 @@ export default function PortfolioManagePage() {
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(ta('deleteConfirm'))
-    ) {
-      return;
-    }
+    if (!confirm(ta('deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/portfolio/${portfolioId}`, {
@@ -258,7 +311,7 @@ export default function PortfolioManagePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -278,7 +331,7 @@ export default function PortfolioManagePage() {
               {isNew ? ta('newPortfolioItem') : ta('editPortfolioItem')}
             </h1>
             {!isNew && (
-              <p className="text-white/60 text-sm mt-1">{formData.title}</p>
+              <p className="text-white/60 text-sm mt-1">{formData.titleEn}</p>
             )}
           </div>
         </div>
@@ -311,7 +364,7 @@ export default function PortfolioManagePage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-red-600/10 border border-red-600/20 rounded-lg p-4 mb-6"
         >
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500 font-medium">Error: {error}</p>
         </motion.div>
       )}
 
@@ -327,38 +380,204 @@ export default function PortfolioManagePage() {
         </motion.div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="space-y-6"
-      >
-        {/* Basic Information */}
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              {ta('basicInfo')}
-            </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content Column */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full grid grid-cols-3 mb-4">
+              <TabsTrigger value="english">English (Default)</TabsTrigger>
+              <TabsTrigger value="arabic">Arabic</TabsTrigger>
+              <TabsTrigger value="hebrew">Hebrew</TabsTrigger>
+            </TabsList>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm text-white/70 mb-2">
-                  {tc('title')} *
-                </label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      title: e.target.value,
-                      slug: generateSlug(e.target.value),
-                    })
-                  }
-                  placeholder={tc('title')}
-                />
-              </div>
+            {/* English Content */}
+            <TabsContent value="english" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>English Content</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      Title (En) *
+                    </label>
+                    <Input
+                      value={formData.titleEn}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          titleEn: e.target.value,
+                          slug: isNew ? generateSlug(e.target.value) : formData.slug,
+                        })
+                      }
+                      placeholder="Project Title in English"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      Description (En)
+                    </label>
+                    <Textarea
+                      value={formData.descriptionEn}
+                      onChange={(e) =>
+                        setFormData({ ...formData, descriptionEn: e.target.value })
+                      }
+                      placeholder="Short description for cards and SEO"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      Tags (En, comma separated)
+                    </label>
+                    <Input
+                      value={formData.tagsEn}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tagsEn: e.target.value })
+                      }
+                      placeholder="branding, web design, etc."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      Detailed Content (En)
+                    </label>
+                    <RichTextEditor
+                      content={formData.contentEn}
+                      onChange={(content) => setFormData({ ...formData, contentEn: content })}
+                      placeholder="Detailed project case study..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              <div className="col-span-2">
+            {/* Arabic Content */}
+            <TabsContent value="arabic" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Arabic Content (العربية)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4" dir="rtl">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      العنوان (Ar)
+                    </label>
+                    <Input
+                      value={formData.titleAr}
+                      onChange={(e) =>
+                        setFormData({ ...formData, titleAr: e.target.value })
+                      }
+                      placeholder="اسم المشروع بالعربية"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      الوصف (Ar)
+                    </label>
+                    <Textarea
+                      value={formData.descriptionAr}
+                      onChange={(e) =>
+                        setFormData({ ...formData, descriptionAr: e.target.value })
+                      }
+                      placeholder="وصف قصير للمشروع..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      الوسوم (Ar, مفصولة بفاصلة)
+                    </label>
+                    <Input
+                      value={formData.tagsAr}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tagsAr: e.target.value })
+                      }
+                      placeholder="تصميم, برمجة, تسويق..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      المحتوى التفصيلي (Ar)
+                    </label>
+                    <RichTextEditor
+                      content={formData.contentAr}
+                      onChange={(content) => setFormData({ ...formData, contentAr: content })}
+                      placeholder="تفاصيل المشروع..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Hebrew Content */}
+            <TabsContent value="hebrew" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hebrew Content (עִברִית)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4" dir="rtl">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      כותרת (He)
+                    </label>
+                    <Input
+                      value={formData.titleHe}
+                      onChange={(e) =>
+                        setFormData({ ...formData, titleHe: e.target.value })
+                      }
+                      placeholder="שם הפרויקט בעברית"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      תיאור (He)
+                    </label>
+                    <Textarea
+                      value={formData.descriptionHe}
+                      onChange={(e) =>
+                        setFormData({ ...formData, descriptionHe: e.target.value })
+                      }
+                      placeholder="תיאור קצר..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      תגיות (He, מופרד בפסיקים)
+                    </label>
+                    <Input
+                      value={formData.tagsHe}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tagsHe: e.target.value })
+                      }
+                      placeholder="עיצוב, פיתוח, שיווק..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">
+                      תוכן מפורט (He)
+                    </label>
+                    <RichTextEditor
+                      content={formData.contentHe}
+                      onChange={(content) => setFormData({ ...formData, contentHe: content })}
+                      placeholder="פרטי הפרויקט..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
                 <label className="block text-sm text-white/70 mb-2">
                   {ta('slug')} *
                 </label>
@@ -367,21 +586,7 @@ export default function PortfolioManagePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, slug: e.target.value })
                   }
-                  placeholder={ta('slug')}
-                />
-              </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm text-white/70 mb-2">
-                  {tc('description')} *
-                </label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder={tc('description')}
-                  rows={3}
+                  placeholder="project-slug"
                 />
               </div>
 
@@ -417,24 +622,24 @@ export default function PortfolioManagePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, clientName: e.target.value })
                   }
-                  placeholder={ta('clientName')}
+                  placeholder="Client Name"
                 />
               </div>
 
-              <div className="col-span-2">
+              <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  {tc('tags')}
+                  Display Order
                 </label>
                 <Input
-                  value={formData.tags}
+                  type="number"
+                  value={formData.order}
                   onChange={(e) =>
-                    setFormData({ ...formData, tags: e.target.value })
+                    setFormData({ ...formData, order: parseInt(e.target.value) || 0 })
                   }
-                  placeholder={tc('tags')}
                 />
               </div>
 
-              <div className="col-span-2 space-y-2">
+              <div className="space-y-3 pt-2">
                 <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
                   <input
                     type="checkbox"
@@ -458,86 +663,102 @@ export default function PortfolioManagePage() {
                   {tc('published')}
                 </label>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Content */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              {ta('detailedContent')}
-            </h2>
-            <RichTextEditor
-              content={formData.content}
-              onChange={(content) => setFormData({ ...formData, content })}
-              placeholder={ta('detailedContent')}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Media */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <h2 className="text-xl font-semibold text-white mb-4">{ta('media')}</h2>
-
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
-                {tc('image')} *
-              </label>
-              {formData.thumbnail ? (
-                <div className="relative inline-block">
-                  <img
-                    src={formData.thumbnail}
-                    alt="Thumbnail"
-                    className="w-full h-48 object-cover rounded-lg"
+          <Card>
+            <CardHeader>
+              <CardTitle>{ta('media')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-2">
+                  Thumbnail
+                </label>
+                {formData.thumbnail ? (
+                  <div className="relative inline-block w-full">
+                    <img
+                      src={formData.thumbnail}
+                      alt="Thumbnail"
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, thumbnail: "" })}
+                      className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <FileUpload
+                    onChange={handleThumbnailUpload}
+                    accept="image/*"
+                    disabled={uploading}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFormData({ ...formData, thumbnail: "" })}
-                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              ) : (
-                <FileUpload
-                  onChange={handleThumbnailUpload}
-                  accept="image/*"
-                  disabled={uploading}
-                />
-              )}
-            </div>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
-                {ta('gallery')}
-              </label>
-              {formData.images.length > 0 && (
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  {formData.images.map((img, index) => (
-                    <div key={index} className="relative h-32 rounded-lg overflow-hidden group">
-                      <img src={img} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setFormData({
-                            ...formData,
-                            images: formData.images.filter((_, i) => i !== index),
-                          })
-                        }
-                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-2">
+                  Video URL / Upload
+                </label>
+                {formData.videoUrl ? (
+                  <div className="relative w-full">
+                    <video
+                      src={formData.videoUrl}
+                      controls
+                      className="w-full h-32 rounded-lg bg-black"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, videoUrl: "" })}
+                      className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <FileUpload
+                    onChange={handleVideoUpload}
+                    accept="video/*"
+                    disabled={uploading}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Gallery</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {formData.images.map((img, index) => (
+                  <div key={index} className="relative h-20 rounded-lg overflow-hidden group">
+                    <img src={img} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          images: formData.images.filter((_, i) => i !== index),
+                        })
+                      }
+                      className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6"
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
               {formData.images.length < 10 && (
                 <FileUpload
                   onChange={handleGalleryUpload}
@@ -546,62 +767,11 @@ export default function PortfolioManagePage() {
                   multiple
                 />
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
-                {tc('file')}
-              </label>
-              {formData.videoUrl ? (
-                <div className="relative">
-                  <video
-                    src={formData.videoUrl}
-                    controls
-                    className="w-full h-48 rounded-lg bg-black"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFormData({ ...formData, videoUrl: "" })}
-                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              ) : (
-                <FileUpload
-                  onChange={handleVideoUpload}
-                  accept="video/*"
-                  disabled={uploading}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-4 pb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/admin/portfolio")}
-          >
-            {tc('cancel')}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                {tc('saving')}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                {isNew ? ta('newPortfolioItem') : ta('saveChanges')}
-              </>
-            )}
-          </Button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

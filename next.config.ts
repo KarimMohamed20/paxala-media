@@ -14,7 +14,13 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
     ],
+    // Disable optimization for local development to avoid private IP error
+    unoptimized: process.env.NODE_ENV === 'development',
   },
 
   // Experimental features

@@ -11,6 +11,7 @@ import {
   Eye,
   Upload,
   X,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,15 +28,24 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface BlogPostData {
-  title: string;
+  titleEn: string;
+  titleAr: string;
+  titleHe: string;
   slug: string;
-  excerpt: string;
-  content: string;
+  excerptEn: string;
+  excerptAr: string;
+  excerptHe: string;
+  contentEn: string;
+  contentAr: string;
+  contentHe: string;
   coverImage: string | null;
   category: string;
-  tags: string[];
+  tagsEn: string[];
+  tagsAr: string[];
+  tagsHe: string[];
   published: boolean;
 }
 
@@ -51,15 +61,29 @@ export default function AdminBlogEditPage() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [tagInput, setTagInput] = useState("");
+  const [activeTab, setActiveTab] = useState("english");
+
+  // Tag inputs for each language
+  const [tagInputEn, setTagInputEn] = useState("");
+  const [tagInputAr, setTagInputAr] = useState("");
+  const [tagInputHe, setTagInputHe] = useState("");
+
   const [data, setData] = useState<BlogPostData>({
-    title: "",
+    titleEn: "",
+    titleAr: "",
+    titleHe: "",
     slug: "",
-    excerpt: "",
-    content: "",
+    excerptEn: "",
+    excerptAr: "",
+    excerptHe: "",
+    contentEn: "",
+    contentAr: "",
+    contentHe: "",
     coverImage: null,
     category: "NEWS",
-    tags: [],
+    tagsEn: [],
+    tagsAr: [],
+    tagsHe: [],
     published: false,
   });
 
@@ -71,18 +95,26 @@ export default function AdminBlogEditPage() {
 
   const fetchPost = async () => {
     try {
-      const response = await fetch(`/api/blog/${id}`);
+      const response = await fetch(`/api/blog/${id}?allLocales=true`);
       if (!response.ok) throw new Error("Failed to fetch");
       const post = await response.json();
 
       setData({
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt,
-        content: post.content,
+        titleEn: post.titleEn || "",
+        titleAr: post.titleAr || "",
+        titleHe: post.titleHe || "",
+        slug: post.slug || "",
+        excerptEn: post.excerptEn || "",
+        excerptAr: post.excerptAr || "",
+        excerptHe: post.excerptHe || "",
+        contentEn: post.contentEn || "",
+        contentAr: post.contentAr || "",
+        contentHe: post.contentHe || "",
         coverImage: post.coverImage,
         category: post.category,
-        tags: post.tags || [],
+        tagsEn: post.tagsEn || [],
+        tagsAr: post.tagsAr || [],
+        tagsHe: post.tagsHe || [],
         published: post.published,
       });
     } catch (error) {
@@ -95,23 +127,48 @@ export default function AdminBlogEditPage() {
   };
 
   const handleSave = async (publish?: boolean) => {
-    if (!data.title || !data.excerpt || !data.content) {
-      alert(ta("errorOccurred"));
+    // English title is required as base
+    if (!data.titleEn || !data.excerptEn || !data.contentEn) {
+      setActiveTab("english");
+      alert(ta("errorOccurred") + " (Missing English Content)");
       return;
     }
 
     setSaving(true);
     try {
+      // Fallback Logic: Use English content if localized fields are empty
+      const titleAr = data.titleAr || data.titleEn;
+      const titleHe = data.titleHe || data.titleEn;
+
+      const excerptAr = data.excerptAr || data.excerptEn;
+      const excerptHe = data.excerptHe || data.excerptEn;
+
+      const contentAr = data.contentAr || data.contentEn;
+      const contentHe = data.contentHe || data.contentEn;
+
+      const tagsAr = data.tagsAr.length > 0 ? data.tagsAr : data.tagsEn;
+      const tagsHe = data.tagsHe.length > 0 ? data.tagsHe : data.tagsEn;
+
+      const payload = {
+        ...data,
+        titleAr,
+        titleHe,
+        excerptAr,
+        excerptHe,
+        contentAr,
+        contentHe,
+        tagsAr,
+        tagsHe,
+        published: publish !== undefined ? publish : data.published,
+      };
+
       const url = isNew ? "/api/blog" : `/api/blog/${id}`;
       const method = isNew ? "POST" : "PUT";
 
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          published: publish !== undefined ? publish : data.published,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error("Failed to save");
@@ -152,22 +209,29 @@ export default function AdminBlogEditPage() {
   };
 
   const generateSlug = () => {
-    const slug = data.title
+    const slug = data.titleEn
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     setData({ ...data, slug });
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !data.tags.includes(tagInput.trim())) {
-      setData({ ...data, tags: [...data.tags, tagInput.trim()] });
-      setTagInput("");
+  const addTag = (lang: "En" | "Ar" | "He") => {
+    const input = lang === "En" ? tagInputEn : lang === "Ar" ? tagInputAr : tagInputHe;
+    const setInput = lang === "En" ? setTagInputEn : lang === "Ar" ? setTagInputAr : setTagInputHe;
+    const tagsKey = `tags${lang}` as keyof BlogPostData;
+    const currentTags = data[tagsKey] as string[];
+
+    if (input.trim() && !currentTags.includes(input.trim())) {
+      setData({ ...data, [tagsKey]: [...currentTags, input.trim()] });
+      setInput("");
     }
   };
 
-  const removeTag = (tag: string) => {
-    setData({ ...data, tags: data.tags.filter((t) => t !== tag) });
+  const removeTag = (tag: string, lang: "En" | "Ar" | "He") => {
+    const tagsKey = `tags${lang}` as keyof BlogPostData;
+    const currentTags = data[tagsKey] as string[];
+    setData({ ...data, [tagsKey]: currentTags.filter((t) => t !== tag) });
   };
 
   if (loading) {
@@ -228,65 +292,279 @@ export default function AdminBlogEditPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+        <TabsList className="bg-white/5 border border-white/10">
+          <TabsTrigger value="english" className="data-[state=active]:bg-red-600">
+            English
+          </TabsTrigger>
+          <TabsTrigger value="arabic" className="data-[state=active]:bg-red-600">
+            Arabic
+          </TabsTrigger>
+          <TabsTrigger value="hebrew" className="data-[state=active]:bg-red-600">
+            Hebrew
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Title */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2">{tc("title")} *</Label>
-            <Input
-              value={data.title}
-              onChange={(e) => setData({ ...data, title: e.target.value })}
-              placeholder={tc("title")}
-              className="text-lg"
-            />
-          </div>
 
-          {/* Slug */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Label>{ta("slug")}</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={generateSlug}
-                className="text-xs"
-              >
-                {ta("generateSlug")}
-              </Button>
+          {/* English Fields */}
+          <div className={activeTab === "english" ? "block" : "hidden"}>
+            <div className="space-y-6">
+              {/* Title En */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{tc("title")} (English) *</Label>
+                <Input
+                  value={data.titleEn}
+                  onChange={(e) => setData({ ...data, titleEn: e.target.value })}
+                  placeholder={tc("title")}
+                  className="text-lg"
+                />
+              </div>
+
+              {/* Slug (Only needed in English tab) */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Label>{ta("slug")}</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={generateSlug}
+                    className="text-xs"
+                  >
+                    {ta("generateSlug")}
+                  </Button>
+                </div>
+                <Input
+                  value={data.slug}
+                  onChange={(e) => setData({ ...data, slug: e.target.value })}
+                  placeholder={ta("slug")}
+                />
+                <p className="text-xs text-white/40 mt-2">
+                  URL: /blog/{data.slug || ta("slug")}
+                </p>
+              </div>
+
+              {/* Excerpt En */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{ta("excerpt")} (English) *</Label>
+                <Textarea
+                  value={data.excerptEn}
+                  onChange={(e) => setData({ ...data, excerptEn: e.target.value })}
+                  placeholder={ta("excerpt")}
+                  rows={3}
+                />
+              </div>
+
+              {/* Content En */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-4 block">{ta("content")} (English) *</Label>
+                <RichTextEditor
+                  content={data.contentEn}
+                  onChange={(value) => setData({ ...data, contentEn: value })}
+                />
+              </div>
+
+              {/* Tags En */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2 block">{tc("tags")} (English)</Label>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={tagInputEn}
+                    onChange={(e) => setTagInputEn(e.target.value)}
+                    placeholder={ta("addTag")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag("En");
+                      }
+                    }}
+                  />
+                  <Button size="sm" onClick={() => addTag("En")}>
+                    {tc("add")}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {data.tagsEn.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-white/10 px-2 py-1 rounded flex items-center gap-1"
+                    >
+                      #{tag}
+                      <button
+                        onClick={() => removeTag(tag, "En")}
+                        className="hover:text-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-            <Input
-              value={data.slug}
-              onChange={(e) => setData({ ...data, slug: e.target.value })}
-              placeholder={ta("slug")}
-            />
-            <p className="text-xs text-white/40 mt-2">
-              URL: /blog/{data.slug || ta("slug")}
-            </p>
           </div>
 
-          {/* Excerpt */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2">{ta("excerpt")} *</Label>
-            <Textarea
-              value={data.excerpt}
-              onChange={(e) => setData({ ...data, excerpt: e.target.value })}
-              placeholder={ta("excerpt")}
-              rows={3}
-            />
+          {/* Arabic Fields */}
+          <div className={activeTab === "arabic" ? "block" : "hidden"}>
+            <div className="space-y-6">
+              {/* Title Ar */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{tc("title")} (Arabic)</Label>
+                <Input
+                  value={data.titleAr}
+                  onChange={(e) => setData({ ...data, titleAr: e.target.value })}
+                  placeholder={tc("title")}
+                  className="text-lg text-right"
+                  dir="rtl"
+                />
+              </div>
+
+              {/* Excerpt Ar */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{ta("excerpt")} (Arabic)</Label>
+                <Textarea
+                  value={data.excerptAr}
+                  onChange={(e) => setData({ ...data, excerptAr: e.target.value })}
+                  placeholder={ta("excerpt")}
+                  rows={3}
+                  className="text-right"
+                  dir="rtl"
+                />
+              </div>
+
+              {/* Content Ar */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-4 block">{ta("content")} (Arabic)</Label>
+                <RichTextEditor
+                  content={data.contentAr}
+                  onChange={(value) => setData({ ...data, contentAr: value })}
+                />
+              </div>
+
+              {/* Tags Ar */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2 block">{tc("tags")} (Arabic)</Label>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={tagInputAr}
+                    onChange={(e) => setTagInputAr(e.target.value)}
+                    placeholder={ta("addTag")}
+                    className="text-right"
+                    dir="rtl"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag("Ar");
+                      }
+                    }}
+                  />
+                  <Button size="sm" onClick={() => addTag("Ar")}>
+                    {tc("add")}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {data.tagsAr.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-white/10 px-2 py-1 rounded flex items-center gap-1"
+                    >
+                      #{tag}
+                      <button
+                        onClick={() => removeTag(tag, "Ar")}
+                        className="hover:text-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-4 block">{ta("content")} *</Label>
-            <RichTextEditor
-              content={data.content}
-              onChange={(value) => setData({ ...data, content: value })}
-            />
+          {/* Hebrew Fields */}
+          <div className={activeTab === "hebrew" ? "block" : "hidden"}>
+            <div className="space-y-6">
+              {/* Title He */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{tc("title")} (Hebrew)</Label>
+                <Input
+                  value={data.titleHe}
+                  onChange={(e) => setData({ ...data, titleHe: e.target.value })}
+                  placeholder={tc("title")}
+                  className="text-lg text-right"
+                  dir="rtl"
+                />
+              </div>
+
+              {/* Excerpt He */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2">{ta("excerpt")} (Hebrew)</Label>
+                <Textarea
+                  value={data.excerptHe}
+                  onChange={(e) => setData({ ...data, excerptHe: e.target.value })}
+                  placeholder={ta("excerpt")}
+                  rows={3}
+                  className="text-right"
+                  dir="rtl"
+                />
+              </div>
+
+              {/* Content He */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-4 block">{ta("content")} (Hebrew)</Label>
+                <RichTextEditor
+                  content={data.contentHe}
+                  onChange={(value) => setData({ ...data, contentHe: value })}
+                />
+              </div>
+
+              {/* Tags He */}
+              <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                <Label className="mb-2 block">{tc("tags")} (Hebrew)</Label>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={tagInputHe}
+                    onChange={(e) => setTagInputHe(e.target.value)}
+                    placeholder={ta("addTag")}
+                    className="text-right"
+                    dir="rtl"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag("He");
+                      }
+                    }}
+                  />
+                  <Button size="sm" onClick={() => addTag("He")}>
+                    {tc("add")}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {data.tagsHe.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-white/10 px-2 py-1 rounded flex items-center gap-1"
+                    >
+                      #{tag}
+                      <button
+                        onClick={() => removeTag(tag, "He")}
+                        className="hover:text-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Common Fields */}
         <div className="space-y-6">
           {/* Cover Image */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
@@ -337,43 +615,6 @@ export default function AdminBlogEditPage() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Tags */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <Label className="mb-2 block">{tc("tags")}</Label>
-            <div className="flex gap-2 mb-3">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                placeholder={ta("addTag")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-              />
-              <Button size="sm" onClick={addTag}>
-                {tc("add")}
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {data.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs bg-white/10 px-2 py-1 rounded flex items-center gap-1"
-                >
-                  #{tag}
-                  <button
-                    onClick={() => removeTag(tag)}
-                    className="hover:text-red-500"
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>
