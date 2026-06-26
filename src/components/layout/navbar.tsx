@@ -10,7 +10,8 @@ import { Menu, X, ChevronDown, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/constants";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { isRTL, type Locale } from "@/i18n/config";
 import { LanguageSwitcher, LanguageSwitcherMobile } from "./language-switcher";
 
 export function Navbar() {
@@ -20,6 +21,7 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
+  const rtl = isRTL(useLocale() as Locale);
 
   const isAuthenticated = status === "authenticated";
 
@@ -150,11 +152,11 @@ export function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.nav
-              initial={{ x: "100%" }}
+              initial={{ x: rtl ? "-100%" : "100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              exit={{ x: rtl ? "-100%" : "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="absolute top-0 right-0 bottom-0 w-80 bg-black/95 backdrop-blur-lg border-l border-white/10 pt-24 px-6"
+              className="absolute top-0 end-0 bottom-0 w-80 bg-black/95 backdrop-blur-lg border-s border-white/10 pt-24 px-6"
             >
               <div className="flex flex-col gap-2">
                 {navLinks.map((link) => (
