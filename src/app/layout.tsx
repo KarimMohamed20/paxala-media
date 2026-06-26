@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { FloatingWhatsApp } from "@/components/layout/floating-whatsapp";
+import { OrganizationJsonLd } from "@/components/seo/json-ld";
+import { SITE_URL } from "@/lib/seo";
 import { AuthProvider } from "@/components/providers/session-provider";
 import { ScrollProvider, ScrollProgress } from "@/components/animations";
 import { NextIntlClientProvider } from 'next-intl';
@@ -47,6 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = metadataTranslations[locale] || metadataTranslations.en;
 
   return {
+    metadataBase: new URL(SITE_URL),
     title: {
       default: t.title,
       template: `%s | Paxala Media`,
@@ -75,7 +79,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: locale === 'ar' ? 'ar_AR' : locale === 'he' ? 'he_IL' : 'en_US',
-      url: "https://www.paxalamedia.com",
+      url: SITE_URL,
       siteName: "Paxala Media",
       title: t.title,
       description: t.description,
@@ -124,6 +128,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
+        <OrganizationJsonLd />
         <AuthProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ScrollProvider>
@@ -132,6 +137,7 @@ export default async function RootLayout({
               <Navbar />
               <main className="min-h-screen">{children}</main>
               <Footer />
+              <FloatingWhatsApp />
             </ScrollProvider>
           </NextIntlClientProvider>
         </AuthProvider>

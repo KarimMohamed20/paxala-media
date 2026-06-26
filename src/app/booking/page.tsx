@@ -1,10 +1,12 @@
 import { Metadata } from "next";
 import { BookingForm } from "@/components/forms/booking-form";
+import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Book a Consultation",
   description:
     "Schedule a consultation with Paxala Media Production. Let's discuss your creative project needs.",
+  alternates: { canonical: absoluteUrl("/booking") },
 };
 
 export default function BookingPage() {
