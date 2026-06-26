@@ -93,9 +93,12 @@ async function getTestimonials() {
 }
 
 export default async function HomePage() {
-  const content = await getHomePageContent();
-  const teamMembers = await getTeamMembers();
-  const testimonials = await getTestimonials();
+  // Fetch in parallel — these are independent (was 3 sequential awaits).
+  const [content, teamMembers, testimonials] = await Promise.all([
+    getHomePageContent(),
+    getTeamMembers(),
+    getTestimonials(),
+  ]);
 
   return (
     <>

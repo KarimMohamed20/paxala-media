@@ -109,6 +109,7 @@ export function PortfolioGrid({ projects }: PortfolioGridProps) {
                       src={project.thumbnail}
                       alt={project.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
@@ -238,6 +239,7 @@ export function PortfolioGrid({ projects }: PortfolioGridProps) {
                     src={lightboxProject.images[lightboxIndex]}
                     alt={lightboxProject.title}
                     fill
+                    sizes="100vw"
                     className="object-contain"
                   />
                 ) : (
@@ -285,6 +287,7 @@ export function PortfolioGrid({ projects }: PortfolioGridProps) {
                         src={img}
                         alt={`Thumbnail ${idx + 1}`}
                         fill
+                        sizes="80px"
                         className="object-cover"
                       />
                     </button>

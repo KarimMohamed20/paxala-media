@@ -23,8 +23,7 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // Prevent zooming on mobile for app-like feel
+  // Do NOT disable zoom — pinch-zoom must stay available for accessibility (WCAG 1.4.4).
 };
 
 export async function generateMetadata(): Promise<Metadata> {
