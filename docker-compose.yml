@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-paxala}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paxala_secure_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-paxala_media}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -34,14 +34,14 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost}
-        - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:-paxala_secure_password}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
+        - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
         - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost}
         - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     container_name: pmp_app
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:-paxala_secure_password}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost}
@@ -104,7 +104,7 @@ services:
       dockerfile: Dockerfile.migrate
     container_name: pmp_migrate
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:-paxala_secure_password}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
     depends_on:
       postgres:
         condition: service_healthy

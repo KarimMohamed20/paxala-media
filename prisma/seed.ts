@@ -9,9 +9,20 @@ async function main() {
   // ==================== USERS ====================
   console.log("👤 Creating users...");
 
-  const adminPassword = await bcrypt.hash("admin123", 12);
-  const staffPassword = await bcrypt.hash("staff123", 12);
-  const clientPassword = await bcrypt.hash("client123", 12);
+  // Seed passwords come from env so production never gets weak hardcoded creds (DEP-04).
+  const seedPw = (envVar: string, fallback: string) => {
+    const v = process.env[envVar];
+    if (!v) {
+      console.warn(
+        `⚠️  ${envVar} not set — using a default seed password. Set it (and change it) before seeding any shared/production database.`
+      );
+    }
+    return v || fallback;
+  };
+
+  const adminPassword = await bcrypt.hash(seedPw("SEED_ADMIN_PASSWORD", "ChangeMe!Admin2026"), 12);
+  const staffPassword = await bcrypt.hash(seedPw("SEED_STAFF_PASSWORD", "ChangeMe!Staff2026"), 12);
+  const clientPassword = await bcrypt.hash(seedPw("SEED_CLIENT_PASSWORD", "ChangeMe!Client2026"), 12);
 
   const admin = await prisma.user.upsert({
     where: { username: "admin" },
