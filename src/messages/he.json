@@ -1,4 +1,16 @@
 {
+  "whatsapp": {
+    "label": "צ'אט בוואטסאפ",
+    "aria": "דברו איתנו בוואטסאפ",
+    "messages": {
+      "default": "שלום Paxala Media 👋 אשמח לדעת עוד על השירותים שלכם.",
+      "home": "שלום Paxala Media 👋 אני מעוניין/ת לעבוד אתכם, אפשר לשמוע עוד?",
+      "services": "שלום Paxala Media 👋 אני מעוניין/ת בשירותים שלכם, אפשר לקבל פרטים ומחירים?",
+      "packages": "שלום Paxala Media 👋 אשמח לפרטים על החבילות החודשיות שלכם (Brand 360°).",
+      "portfolio": "שלום Paxala Media 👋 ראיתי את העבודות שלכם ואשמח להתייעץ על פרויקט.",
+      "contact": "שלום Paxala Media 👋 אשמח ליצור קשר בנוגע לפרויקט."
+    }
+  },
   "nav": {
     "home": "בית",
     "services": "שירותים",
@@ -368,6 +380,7 @@
     "approvals": "אישורים",
     "bookings": "הזמנות",
     "inquiries": "פניות",
+    "testimonials": "המלצות",
     "backToPortal": "חזרה לפורטל"
   },
   "portal": {

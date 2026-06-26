@@ -6,6 +6,7 @@ export const siteConfig = {
   url: "https://paxaland.com",
   email: "info@paxaland.com",
   phone: "+972 52-330-0119",
+  whatsapp: "972523300119", // digits-only, for wa.me click-to-chat links
   address: "Sakhnin, Palestine",
   social: {
     instagram: "https://instagram.com/paxalamedia",
@@ -20,6 +21,12 @@ export const siteConfig = {
     saturday: "Closed",
   },
 };
+
+/** Build a WhatsApp click-to-chat URL with an optional pre-filled message. */
+export function getWhatsAppUrl(message?: string): string {
+  const base = `https://wa.me/${siteConfig.whatsapp}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
 
 export const services = [
   {

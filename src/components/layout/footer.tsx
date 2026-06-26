@@ -9,9 +9,10 @@ import {
   Mail,
   Phone,
   MapPin,
+  MessageCircle,
   ArrowUpRight,
 } from "lucide-react";
-import { siteConfig, navLinks, services } from "@/lib/constants";
+import { siteConfig, navLinks, services, getWhatsAppUrl } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -118,6 +119,17 @@ export function Footer() {
                 >
                   <Phone size={18} className="text-red-500" />
                   {siteConfig.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={getWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-white/60 hover:text-white transition-colors"
+                >
+                  <MessageCircle size={18} className="text-red-500" />
+                  WhatsApp
                 </a>
               </li>
               <li>

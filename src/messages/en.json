@@ -1,4 +1,16 @@
 {
+  "whatsapp": {
+    "label": "Chat on WhatsApp",
+    "aria": "Chat with us on WhatsApp",
+    "messages": {
+      "default": "Hi Paxala Media 👋 I'd like to know more about your services.",
+      "home": "Hi Paxala Media 👋 I'm interested in working with you. Can you tell me more?",
+      "services": "Hi Paxala Media 👋 I'm interested in your services. Could you share details and pricing?",
+      "packages": "Hi Paxala Media 👋 I'd like more info about your monthly packages (Brand 360°).",
+      "portfolio": "Hi Paxala Media 👋 I saw your portfolio and I'd like to discuss a project.",
+      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project."
+    }
+  },
   "nav": {
     "home": "Home",
     "services": "Services",
@@ -365,6 +377,7 @@
     "approvals": "Approvals",
     "bookings": "Bookings",
     "inquiries": "Inquiries",
+    "testimonials": "Testimonials",
     "backToPortal": "Back to Portal"
   },
   "portal": {
