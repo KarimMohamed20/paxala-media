@@ -46,10 +46,10 @@ export default function StaffLayout({
     <div className="min-h-screen bg-black">
       <StaffMobileNav />
       {/* Desktop Sidebar */}
-      <StaffSidebar className="hidden md:block fixed left-0 top-0 h-screen w-64 z-40" />
+      <StaffSidebar className="hidden md:block fixed start-0 top-0 h-screen w-64 z-40" />
 
       {/* Main content */}
-      <main className="md:ml-64 pt-24 md:pt-8 min-h-screen transition-all duration-300">
+      <main className="md:ms-64 pt-24 md:pt-8 min-h-screen transition-all duration-300">
         <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>

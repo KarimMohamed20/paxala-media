@@ -77,7 +77,7 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: "Paxala Media Production",
     openGraph: {
       type: "website",
-      locale: locale === 'ar' ? 'ar_AR' : locale === 'he' ? 'he_IL' : 'en_US',
+      locale: locale === 'ar' ? 'ar_PS' : locale === 'he' ? 'he_IL' : 'en_US',
       url: SITE_URL,
       siteName: "Paxala Media",
       title: t.title,

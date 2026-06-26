@@ -573,6 +573,8 @@ admin analytics/MRR dashboard · client mobile app (Flutter/Expo over the existi
 
 | **Accessibility & UX polish** (audit A11Y-01/A11Y-04/STATE-01/PERF-02/PERF-03) | 🟡 Medium | Re-enabled pinch-zoom (removed `maximumScale`/`userScalable` — WCAG 1.4.4); associated all contact-form labels with inputs (`htmlFor`/`id`); added route-level `not-found.tsx` / `error.tsx` / `loading.tsx`; parallelized the homepage's 3 server fetches (`Promise.all`); added `sizes` to the 3 `next/image fill` usages in the portfolio grid (avoids oversized downloads, incl. an 80px thumb that was pulling full-res). | `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/contact/page.tsx`, `src/app/{not-found,error,loading}.tsx` (new), `src/components/sections/portfolio-grid.tsx` |
 
+| **RTL mirroring + dead-link fixes** (audit I18N-04/I18N-12/LINK-01) | 🟡 Medium | **I18N-04:** admin/portal/staff sidebars + main content now use logical CSS (`start-0`/`ms-64`/`border-e`) so they mirror correctly in Arabic/Hebrew (identical in LTR). **I18N-12:** fixed invalid OG locale `ar_AR` → `ar_PS`. **LINK-01:** created real `/privacy` and `/terms` pages (were 404s; added to sitemap) and wired the previously dead footer newsletter form to lead-capture via the hardened `/api/contact` (with success/error states). | `src/app/{admin,portal,staff}/layout.tsx`, `src/components/{admin,portal,staff}/sidebar.tsx`, `src/app/layout.tsx`, `src/components/layout/footer.tsx`, `src/app/{privacy,terms}/page.tsx` (new), `src/app/sitemap.ts` |
+
 ### 🔎 Self-review pass (2026-06-26)
 
 Ran a 6-agent adversarial review over the whole session's diff (each high/critical finding independently

@@ -51,7 +51,7 @@ export function AdminSidebar({ className, onClose }: AdminSidebarProps) {
     const t = useTranslations("admin");
 
     return (
-        <aside className={cn("bg-neutral-950 border-r border-white/10", className)}>
+        <aside className={cn("bg-neutral-950 border-e border-white/10", className)}>
             <div className="p-6 h-full flex flex-col overflow-y-auto">
                 {/* Logo/Header */}
                 <div className="mb-6 px-2">

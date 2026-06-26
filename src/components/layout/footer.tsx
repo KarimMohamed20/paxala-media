@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   Instagram,
@@ -24,6 +25,34 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+    "idle"
+  );
+
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Newsletter Subscriber",
+          email,
+          subject: "Newsletter Signup",
+          message: "Requested to subscribe to the newsletter from the site footer.",
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus("done");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    }
+  };
+
   return (
     <footer className="bg-black border-t border-white/10">
       {/* Main Footer */}
@@ -143,16 +172,36 @@ export function Footer() {
             {/* Newsletter */}
             <div className="mt-6 md:mt-8">
               <h5 className="text-white font-medium mb-2 md:mb-3">Stay Updated</h5>
-              <form className="flex gap-2">
-                <Input
-                  type="email"
-                  placeholder="Your email"
-                  className="flex-1"
-                />
-                <Button type="submit" size="icon">
-                  <ArrowUpRight size={18} />
-                </Button>
-              </form>
+              {status === "done" ? (
+                <p className="text-sm text-green-400">
+                  Thanks! We&rsquo;ll be in touch.
+                </p>
+              ) : (
+                <form onSubmit={handleNewsletter} className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email"
+                    className="flex-1"
+                    required
+                    aria-label="Email address for updates"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={status === "loading"}
+                    aria-label="Subscribe"
+                  >
+                    <ArrowUpRight size={18} />
+                  </Button>
+                </form>
+              )}
+              {status === "error" && (
+                <p className="text-sm text-red-400 mt-2">
+                  Something went wrong. Please try again.
+                </p>
+              )}
             </div>
           </div>
         </div>
