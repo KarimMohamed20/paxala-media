@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Prisma, type TaskStatus } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { emailService } from "@/lib/email/service";
+import { getValidNextStatuses } from "@/lib/milestones";
 
 // GET - Fetch single task
 export async function GET(
@@ -72,28 +74,75 @@ export async function PUT(
     const { taskId } = await params;
     const data = await request.json();
 
-    const updateData: any = {
-      title: data.title,
-      description: data.description || null,
-      status: data.status,
-      priority: data.priority,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      isVisible: data.isVisible,
-      assigneeId: data.assigneeId || null,
-    };
+    // Load current state for transition validation + approval authority.
+    const existing = await db.task.findUnique({
+      where: { id: taskId },
+      include: { assignee: { select: { managerId: true } } },
+    });
 
-    // Handle task status transitions
-    if (data.status === "SUBMITTED" && !data.submittedAt) {
-      updateData.submittedAt = new Date();
+    if (!existing) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    if (data.status === "APPROVED") {
-      updateData.approvedAt = new Date();
-      updateData.approvedById = session.user.id;
-    }
+    // Guarded partial update — only fields present in the body are written, so a
+    // partial edit can no longer silently null out description/dueDate/etc. (CORR-02).
+    const updateData: Prisma.TaskUncheckedUpdateInput = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description || null;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+    if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId || null;
 
-    if (data.status === "REJECTED") {
-      updateData.rejectionReason = data.rejectionReason || null;
+    // Validate + authorize status transitions.
+    if (data.status !== undefined && data.status !== existing.status) {
+      const VALID_STATUSES: TaskStatus[] = [
+        "TODO",
+        "IN_PROGRESS",
+        "SUBMITTED",
+        "APPROVED",
+        "REJECTED",
+      ];
+      if (!VALID_STATUSES.includes(data.status)) {
+        return NextResponse.json({ error: "Invalid task status" }, { status: 400 });
+      }
+
+      // Only an ADMIN, or the assignee's manager, may approve/reject submitted
+      // work — this closes the STAFF self-approval bypass (CORR-02).
+      const isManager =
+        session.user.role === "ADMIN" ||
+        (!!existing.assignee?.managerId &&
+          existing.assignee.managerId === session.user.id);
+
+      const allowed = getValidNextStatuses(existing.status, isManager);
+      if (!allowed.includes(data.status)) {
+        return NextResponse.json(
+          {
+            error: `Invalid status transition from ${existing.status} to ${data.status}`,
+          },
+          { status: 403 }
+        );
+      }
+
+      updateData.status = data.status;
+
+      if (data.status === "SUBMITTED") {
+        updateData.submittedAt = new Date();
+      }
+      if (data.status === "APPROVED") {
+        updateData.approvedAt = new Date();
+        updateData.approvedById = session.user.id;
+      }
+      if (data.status === "REJECTED") {
+        updateData.rejectionReason = data.rejectionReason || null;
+      }
+      // APPROVED is terminal in getValidNextStatuses, so there is no valid
+      // transition away from it here (un-approving would mean adding it to the
+      // transition graph — a deliberate product decision). Clear the stale
+      // rejection reason when a task leaves REJECTED.
+      if (existing.status === "REJECTED" && data.status !== "REJECTED") {
+        updateData.rejectionReason = null;
+      }
     }
 
     const task = await db.task.update({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { canAccessProject, getProjectForAccess } from "@/lib/authz";
 
 // GET all files for a project
 export async function GET(
@@ -14,6 +15,16 @@ export async function GET(
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Authorization: ADMIN/STAFF may read any project's files; a CLIENT may only
+    // read files for a project they own. Closes the IDOR (SEC-01).
+    const project = await getProjectForAccess(id);
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+    if (!canAccessProject(session, project)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

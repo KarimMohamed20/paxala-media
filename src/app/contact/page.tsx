@@ -61,6 +61,7 @@ export default function ContactPage() {
     phone: "",
     subject: "",
     message: "",
+    website: "", // honeypot — must stay empty
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -94,6 +95,7 @@ export default function ContactPage() {
         phone: "",
         subject: "",
         message: "",
+        website: "",
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -275,6 +277,20 @@ export default function ContactPage() {
                     </>
                   )}
                 </Button>
+
+                {/* Honeypot — hidden from users; bots that fill it are rejected server-side. */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website: e.target.value })
+                  }
+                  className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                />
               </form>
               </>
             )}

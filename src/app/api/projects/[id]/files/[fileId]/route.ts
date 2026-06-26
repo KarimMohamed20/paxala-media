@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { canAccessProject, getProjectForAccess } from "@/lib/authz";
+import { deleteLocalUpload } from "@/lib/storage";
 
 // GET single file
 export async function GET(
@@ -14,6 +16,15 @@ export async function GET(
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Authorization: ADMIN/STAFF, or the owning CLIENT only (SEC-01).
+    const project = await getProjectForAccess(id);
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+    if (!canAccessProject(session, project)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const file = await db.projectFile.findFirst({
@@ -155,6 +166,10 @@ export async function DELETE(
     await db.projectFile.delete({
       where: { id: fileId },
     });
+
+    // Remove the underlying file from disk so "deleted" files are not left
+    // permanently downloadable (SEC-02). No-op for external/link-type files.
+    await deleteLocalUpload(existingFile.url);
 
     return NextResponse.json({ message: "File deleted successfully" });
   } catch (error) {

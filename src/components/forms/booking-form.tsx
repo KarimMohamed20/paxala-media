@@ -72,6 +72,7 @@ function BookingFormContent() {
     email: "",
     phone: "",
     notes: "",
+    website: "", // honeypot — must stay empty
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -129,6 +130,7 @@ function BookingFormContent() {
           date: selectedDate?.toISOString(),
           timeSlot: selectedTime,
           notes: formData.notes || null,
+          website: formData.website, // honeypot
         }),
       });
 
@@ -590,6 +592,20 @@ function BookingFormContent() {
                     />
                   </div>
                 </div>
+
+                {/* Honeypot — hidden from users; bots that fill it are rejected server-side. */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website: e.target.value })
+                  }
+                  className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                />
               </div>
             </div>
           )}

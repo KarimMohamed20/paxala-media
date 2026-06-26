@@ -4,8 +4,16 @@ import { db } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { emailService } from "@/lib/email/service";
 import { EmailLocale } from "@/lib/email/styles";
+import {
+  rateLimit,
+  getClientIp,
+  isHoneypotTripped,
+  isValidEmail,
+  clampString,
+  HONEYPOT_FIELD,
+} from "@/lib/security";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -34,8 +42,36 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Throttle by IP — this endpoint sends two emails per request.
+    const limit = rateLimit(`booking:${getClientIp(req)}`, {
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+      );
+    }
+
     const body = await req.json();
-    const { name, email, phone, serviceType, packageId, date, timeSlot, notes } = body;
+
+    // Honeypot: pretend success so bots don't learn they were filtered.
+    if (isHoneypotTripped(body[HONEYPOT_FIELD])) {
+      return NextResponse.json(
+        { message: "Booking created successfully" },
+        { status: 201 }
+      );
+    }
+
+    const name = clampString(body.name, 120);
+    const email = clampString(body.email, 200);
+    const phone = clampString(body.phone, 40);
+    const serviceType = clampString(body.serviceType, 120);
+    const packageId = clampString(body.packageId, 120);
+    const timeSlot = clampString(body.timeSlot, 60);
+    const notes = clampString(body.notes, 2000);
+    const date = body.date;
 
     // Validate required fields
     if (!name || !email || !serviceType || !date || !timeSlot) {
@@ -43,6 +79,15 @@ export async function POST(req: NextRequest) {
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address" },
+        { status: 400 }
+      );
+    }
+    if (isNaN(new Date(date).getTime())) {
+      return NextResponse.json({ error: "Invalid date" }, { status: 400 });
     }
 
     // Get user session if available

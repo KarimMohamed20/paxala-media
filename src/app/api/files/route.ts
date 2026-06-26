@@ -5,6 +5,26 @@ import { join } from "path";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getFileUrl } from "@/lib/utils";
+import { canAccessProject } from "@/lib/authz";
+import { deleteLocalUpload } from "@/lib/storage";
+
+// Upload limits / allowlist for client deliverables (defense-in-depth).
+const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB
+const ALLOWED_UPLOAD_MIME = new Set<string>([
+  "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/avif",
+  "video/mp4", "video/webm", "video/quicktime", "video/x-msvideo", "video/avi",
+  "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "application/zip",
+  "application/x-rar-compressed",
+]);
 
 // GET files for a project
 export async function GET(request: NextRequest) {
@@ -35,10 +55,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const isAdmin = session.user.role === "ADMIN";
-    const isOwner = session.user.id === project.clientId;
-
-    if (!isAdmin && !isOwner) {
+    // ADMIN/STAFF may read any project's files; a CLIENT only their own.
+    if (!canAccessProject(session, project)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -83,6 +101,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Project ID is required" },
         { status: 400 }
+      );
+    }
+
+    // Validate size and MIME type before touching disk (defense-in-depth).
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: `File too large. Maximum allowed is ${Math.floor(MAX_UPLOAD_BYTES / (1024 * 1024))} MB.` },
+        { status: 413 }
+      );
+    }
+    if (!ALLOWED_UPLOAD_MIME.has(file.type)) {
+      return NextResponse.json(
+        { error: `Unsupported file type "${file.type || "unknown"}".` },
+        { status: 415 }
       );
     }
 
@@ -192,9 +224,9 @@ export async function DELETE(request: NextRequest) {
       where: { id: fileId },
     });
 
-    // Note: In production, you'd also want to delete the actual file from disk
-    // const fs = require('fs').promises;
-    // await fs.unlink(join(process.cwd(), 'public', file.url));
+    // Remove the underlying file from disk so deleted deliverables are no longer
+    // downloadable (SEC-02). Safe no-op for external/link-type files.
+    await deleteLocalUpload(file.url);
 
     return NextResponse.json({ message: "File deleted successfully" });
   } catch (error) {
