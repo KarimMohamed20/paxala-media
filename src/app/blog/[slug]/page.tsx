@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Link from "next/link";
 import { Calendar, Clock, ArrowLeft, Eye, Loader2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -178,7 +179,7 @@ export default function BlogPostPage() {
             prose-code:text-red-400 prose-code:bg-white/5 prose-code:px-2 prose-code:py-1 prose-code:rounded
             prose-pre:bg-white/5 prose-pre:border prose-pre:border-white/10
             prose-img:rounded-xl prose-img:shadow-2xl"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
       </article>
     </div>

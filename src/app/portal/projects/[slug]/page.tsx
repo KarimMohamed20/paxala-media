@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
@@ -436,7 +437,7 @@ export default function ProjectDetailPage() {
                       <div className="mt-6 pt-6 border-t border-white/10">
                         <div
                           className="text-white/80 prose prose-invert max-w-none"
-                          dangerouslySetInnerHTML={{ __html: project.content }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(project.content) }}
                         />
                       </div>
                     )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Image from "next/image";
 import { ArrowLeft, X, ChevronLeft, ChevronRight, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -193,7 +194,7 @@ export default function PortfolioDetailPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="prose prose-lg prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: portfolio.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(portfolio.content) }}
             />
           </div>
         </section>
