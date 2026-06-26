@@ -18,6 +18,7 @@ import {
     FileText,
     BarChart3,
     Shield,
+    MessageSquareQuote,
     LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const navItems = [
     { href: "/admin/projects", icon: Folder, labelKey: "projects" },
     { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
     { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },
+    { href: "/admin/testimonials", icon: MessageSquareQuote, labelKey: "testimonials" },
     { href: "/admin/blog", icon: FileText, labelKey: "blog" },
     { href: "/admin/approvals", icon: ClipboardCheck, labelKey: "approvals" },
     { href: "/admin/bookings", icon: Calendar, labelKey: "bookings" },

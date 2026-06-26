@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { Section, SectionHeader } from "@/components/ui/section";
-import { Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 
 // Client logos from /public/images/clients
 const clients = [
@@ -26,30 +26,32 @@ const clients = [
   { id: 16, name: "White Logo", logo: "/images/clients/WHITE LOGO PNG2-01.png" },
 ];
 
-// Testimonials data
-const testimonials = [
-  {
-    id: 1,
-    quote: "Paxala Media transformed our brand's visual identity. Their attention to detail and creative vision exceeded our expectations.",
-    author: "Sarah Johnson",
-    role: "Marketing Director",
-    company: "Tech Innovations",
-  },
-  {
-    id: 2,
-    quote: "Working with PMP was a game-changer. Their video production quality is unmatched, and they truly understand storytelling.",
-    author: "Michael Chen",
-    role: "CEO",
-    company: "StartUp Hub",
-  },
-  {
-    id: 3,
-    quote: "The team's professionalism and creativity made our project a success. Highly recommend for any media production needs.",
-    author: "Emily Davis",
-    role: "Brand Manager",
-    company: "Creative Co",
-  },
-];
+// DB-backed testimonial shape (localized fields) passed from the server.
+export type TestimonialDisplay = {
+  id: string;
+  quoteEn: string;
+  quoteAr: string;
+  quoteHe: string;
+  authorEn: string;
+  authorAr: string;
+  authorHe: string;
+  roleEn: string;
+  roleAr: string;
+  roleHe: string;
+  companyEn: string;
+  companyAr: string;
+  companyHe: string;
+  image: string | null;
+};
+
+// Shape after the parent resolves the active locale.
+type LocalizedTestimonial = {
+  id: string;
+  quote: string;
+  author: string;
+  role: string;
+  company: string;
+};
 
 // Infinite Marquee Component
 function InfiniteMarquee({
@@ -152,11 +154,9 @@ function ClientLogoCard({ client, index }: { client: (typeof clients)[0]; index:
 // Testimonial Card
 function TestimonialCard({
   testimonial,
-  index,
   isActive,
 }: {
-  testimonial: (typeof testimonials)[0];
-  index: number;
+  testimonial: LocalizedTestimonial;
   isActive: boolean;
 }) {
   return (
@@ -172,12 +172,23 @@ function TestimonialCard({
     >
       {/* Quote icon */}
       <motion.div
-        className="absolute top-4 right-4 text-red-600/20"
+        className="absolute top-4 end-4 text-red-600/20"
         animate={{ rotate: isActive ? 0 : -10, scale: isActive ? 1 : 0.8 }}
         transition={{ duration: 0.5 }}
       >
         <Quote size={48} />
       </motion.div>
+
+      {/* Star rating */}
+      <div
+        className="flex gap-1 mb-4 relative z-10"
+        role="img"
+        aria-label="5 out of 5 stars"
+      >
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star key={i} size={16} className="fill-red-500 text-red-500" />
+        ))}
+      </div>
 
       {/* Quote text */}
       <motion.p
@@ -231,18 +242,42 @@ interface ClientsContent {
   clientsWhatTheySayHe?: string;
 }
 
-export function ClientsSection({ content }: { content?: ClientsContent | null }) {
+export function ClientsSection({
+  content,
+  testimonials = [],
+}: {
+  content?: ClientsContent | null;
+  testimonials?: TestimonialDisplay[];
+}) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const locale = useLocale();
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   // Helper to get localized content
   const getLocalized = (key: string, defaultValue: string) => {
     if (!content) return defaultValue;
-    const localeKey = `${key}${locale.charAt(0).toUpperCase() + locale.slice(1)}`;
+    const localeKey = `${key}${cap(locale)}`;
     return content[localeKey] || content[`${key}En`] || defaultValue;
   };
+
+  // Resolve each DB testimonial to the active locale (English fallback).
+  const pick = (
+    t: TestimonialDisplay,
+    field: "quote" | "author" | "role" | "company"
+  ) => {
+    const localized = t[`${field}${cap(locale)}` as keyof TestimonialDisplay];
+    return (localized || t[`${field}En` as keyof TestimonialDisplay] || "") as string;
+  };
+
+  const localizedTestimonials: LocalizedTestimonial[] = testimonials.map((t) => ({
+    id: t.id,
+    quote: pick(t, "quote"),
+    author: pick(t, "author"),
+    role: pick(t, "role"),
+    company: pick(t, "company"),
+  }));
 
   // Default values
   const subtitle = getLocalized("clientsSubtitle", "Trusted By");
@@ -250,13 +285,14 @@ export function ClientsSection({ content }: { content?: ClientsContent | null })
   const description = getLocalized("clientsDescription", "We've had the privilege of working with amazing brands and businesses.");
   const whatTheySay = getLocalized("clientsWhatTheySay", "What They Say");
 
-  // Auto-rotate testimonials
-  useState(() => {
+  // Auto-rotate testimonials (only when there is more than one).
+  useEffect(() => {
+    if (localizedTestimonials.length <= 1) return;
     const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+      setActiveTestimonial((prev) => (prev + 1) % localizedTestimonials.length);
     }, 5000);
     return () => clearInterval(interval);
-  });
+  }, [localizedTestimonials.length]);
 
   return (
     <Section className="bg-gradient-to-b from-black to-neutral-950 relative overflow-hidden">
@@ -308,63 +344,68 @@ export function ClientsSection({ content }: { content?: ClientsContent | null })
           className="mb-12 md:mb-16"
         >
           <InfiniteMarquee direction="right" speed={35}>
-            {[...clients].sort(() => 0.5 - Math.random()).map((client, index) => (
+            {/* Reversed (not random) so SSR and client render the same order — avoids a hydration mismatch. */}
+            {[...clients].reverse().map((client, index) => (
               <ClientLogoCard key={`row2-${client.id}`} client={client} index={index} />
             ))}
           </InfiniteMarquee>
         </motion.div>
 
-        {/* Testimonials */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-8 md:mt-12"
-        >
-          <motion.h3
-            className="text-center text-white/40 text-sm uppercase tracking-wider mb-8"
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.6, delay: 0.7 }}
+        {/* Testimonials — only shown when real, DB-backed testimonials exist. */}
+        {localizedTestimonials.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mt-8 md:mt-12"
           >
-            {whatTheySay}
-          </motion.h3>
+            <motion.h3
+              className="text-center text-white/40 text-sm uppercase tracking-wider mb-8"
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              {whatTheySay}
+            </motion.h3>
 
-          {/* Testimonial Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={testimonial.id}
-                onClick={() => setActiveTestimonial(index)}
-                className="cursor-pointer"
-              >
-                <TestimonialCard
-                  testimonial={testimonial}
-                  index={index}
-                  isActive={activeTestimonial === index}
-                />
+            {/* Testimonial Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              {localizedTestimonials.map((testimonial, index) => (
+                <div
+                  key={testimonial.id}
+                  onClick={() => setActiveTestimonial(index)}
+                  className="cursor-pointer"
+                >
+                  <TestimonialCard
+                    testimonial={testimonial}
+                    isActive={activeTestimonial === index}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonial navigation dots */}
+            {localizedTestimonials.length > 1 && (
+              <div className="flex justify-center gap-2 mt-6">
+                {localizedTestimonials.map((_, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => setActiveTestimonial(index)}
+                    aria-label={`Show testimonial ${index + 1}`}
+                    className="w-2 h-2 rounded-full transition-colors"
+                    animate={{
+                      backgroundColor:
+                        activeTestimonial === index ? "rgb(239 68 68)" : "rgba(255, 255, 255, 0.2)",
+                      scale: activeTestimonial === index ? 1.2 : 1,
+                    }}
+                    whileHover={{ scale: 1.3 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Testimonial navigation dots */}
-          <div className="flex justify-center gap-2 mt-6">
-            {testimonials.map((_, index) => (
-              <motion.button
-                key={index}
-                onClick={() => setActiveTestimonial(index)}
-                className="w-2 h-2 rounded-full transition-colors"
-                animate={{
-                  backgroundColor:
-                    activeTestimonial === index ? "rgb(239 68 68)" : "rgba(255, 255, 255, 0.2)",
-                  scale: activeTestimonial === index ? 1.2 : 1,
-                }}
-                whileHover={{ scale: 1.3 }}
-                transition={{ duration: 0.3 }}
-              />
-            ))}
-          </div>
-        </motion.div>
+            )}
+          </motion.div>
+        )}
       </div>
     </Section>
   );

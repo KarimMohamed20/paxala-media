@@ -5,6 +5,16 @@ import { AboutSection } from "@/components/sections/about";
 import { TeamSection } from "@/components/sections/team";
 import { ClientsSection } from "@/components/sections/clients";
 import { CTASection } from "@/components/sections/cta";
+import { TestimonialsJsonLd } from "@/components/seo/testimonials-json-ld";
+import { db } from "@/lib/db";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
+
+// Self-canonical for the homepage (the root layout no longer sets a blanket
+// canonical, which would otherwise mark every route as a duplicate of "/").
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+};
 
 async function getHomePageContent() {
   try {
@@ -54,9 +64,38 @@ async function getTeamMembers() {
   }
 }
 
+async function getTestimonials() {
+  try {
+    return await db.testimonial.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        quoteEn: true,
+        quoteAr: true,
+        quoteHe: true,
+        authorEn: true,
+        authorAr: true,
+        authorHe: true,
+        roleEn: true,
+        roleAr: true,
+        roleHe: true,
+        companyEn: true,
+        companyAr: true,
+        companyHe: true,
+        image: true,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching testimonials:", error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   const content = await getHomePageContent();
   const teamMembers = await getTeamMembers();
+  const testimonials = await getTestimonials();
 
   return (
     <>
@@ -65,8 +104,9 @@ export default async function HomePage() {
       <PackagesSection />
       <AboutSection content={content} />
       <TeamSection content={content} teamMembers={teamMembers} />
-      <ClientsSection content={content} />
+      <ClientsSection content={content} testimonials={testimonials} />
       <CTASection content={content} />
+      <TestimonialsJsonLd testimonials={testimonials} />
     </>
   );
 }
