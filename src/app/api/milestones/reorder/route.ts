@@ -41,15 +41,22 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update order for each milestone
-    const updatePromises = milestoneIds.map((id: string, index: number) =>
-      db.milestone.update({
-        where: { id },
-        data: { order: index },
-      })
-    );
+    // Require the full set of milestones so a partial reorder can't leave
+    // duplicate order values (CORR-05/06).
+    const totalForProject = await db.milestone.count({ where: { projectId } });
+    if (milestoneIds.length !== totalForProject) {
+      return NextResponse.json(
+        { error: "Reorder must include all milestones for the project" },
+        { status: 400 }
+      );
+    }
 
-    await Promise.all(updatePromises);
+    // Apply all order updates atomically.
+    await db.$transaction(
+      milestoneIds.map((id: string, index: number) =>
+        db.milestone.update({ where: { id }, data: { order: index } })
+      )
+    );
 
     // Fetch updated milestones
     const updatedMilestones = await db.milestone.findMany({

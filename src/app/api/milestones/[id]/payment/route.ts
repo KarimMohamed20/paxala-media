@@ -39,6 +39,19 @@ export async function PUT(
       );
     }
 
+    // Validate the partial amount up front so NaN/garbage never reaches Prisma (CORR-08).
+    let partialAmount: number | null = null;
+    if (paymentStatus === "PARTIAL") {
+      partialAmount =
+        typeof paymentAmount === "number" ? paymentAmount : parseFloat(paymentAmount);
+      if (!Number.isFinite(partialAmount) || partialAmount < 0) {
+        return NextResponse.json(
+          { error: "A valid, non-negative payment amount is required for PARTIAL status" },
+          { status: 400 }
+        );
+      }
+    }
+
     const milestone = await db.milestone.findUnique({
       where: { id },
     });
@@ -66,8 +79,8 @@ export async function PUT(
     }
 
     // Set payment amount
-    if (paymentStatus === "PARTIAL" && paymentAmount !== undefined) {
-      updateData.paymentAmount = parseFloat(paymentAmount);
+    if (paymentStatus === "PARTIAL") {
+      updateData.paymentAmount = partialAmount;
     } else if (paymentStatus === "PAID") {
       updateData.paymentAmount = milestone.price
         ? parseFloat(milestone.price.toString())
