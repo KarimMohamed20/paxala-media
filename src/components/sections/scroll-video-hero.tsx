@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, Play, ChevronDown } from "lucide-react";
@@ -107,8 +107,35 @@ interface HeroContent {
   // ... add other specific keys if needed or rely on dynamic access
 }
 
+// Media query gating the heavy hero video: wide viewport AND motion allowed.
+const HERO_VIDEO_MEDIA_QUERY =
+  "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
+
+function subscribeHeroVideoMedia(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia(HERO_VIDEO_MEDIA_QUERY);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getHeroVideoMediaSnapshot(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(HERO_VIDEO_MEDIA_QUERY).matches;
+}
+
 export function ScrollVideoHero({ content }: { content?: HeroContent | null }) {
   const locale = useLocale();
+
+  // Only mount the (still multi-MB) background video on larger screens where the
+  // user hasn't asked for reduced motion. Mobile + reduced-motion visitors get the
+  // lightweight poster image only — avoids shipping the hero video on the mobile
+  // networks this audience uses, and honours prefers-reduced-motion (PERF-01 / A11Y-02).
+  // SSR snapshot is `false`, so the server renders the poster only (no hydration flash).
+  const enableVideo = useSyncExternalStore(
+    subscribeHeroVideoMedia,
+    getHeroVideoMediaSnapshot,
+    () => false
+  );
 
   // Helper to get localized content
   const getLocalized = (key: string, defaultValue: string) => {
@@ -140,16 +167,31 @@ export function ScrollVideoHero({ content }: { content?: HeroContent | null }) {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Looping Video Background */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
+      {/* Poster image — the LCP element. Lightweight (~100KB) and shown on every
+          device immediately; on mobile/reduced-motion it's the only hero media. */}
+      <img
+        src="/videos/hero-poster.jpg"
+        alt=""
+        aria-hidden="true"
         className="absolute top-0 left-0 w-full h-full object-cover"
-      >
-        <source src="/videos/video.mp4" type="video/mp4" />
-      </video>
+      />
+
+      {/* Looping video background — desktop only, ~2MB optimized file, deferred
+          (preload="none") so it never blocks first paint. */}
+      {enableVideo && (
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+          poster="/videos/hero-poster.jpg"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        >
+          <source src="/videos/video-optimized.mp4" type="video/mp4" />
+          <source src="/videos/video.mp4" type="video/mp4" />
+        </video>
+      )}
 
       {/* Dark overlay for text legibility */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
