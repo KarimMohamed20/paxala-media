@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
+import { formatDateLocalized } from "@/lib/format";
 import Image from "next/image";
 import { Calendar, Clock, ArrowRight, User, FileText, Loader2 } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/section";
@@ -28,6 +30,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 function BlogCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
+  const locale = useLocale();
   return (
     <article className={`group ${featured ? "md:col-span-2" : ""}`}>
       <Link href={`/blog/${post.slug}`}>
@@ -73,7 +76,7 @@ function BlogCard({ post, featured = false }: { post: BlogPost; featured?: boole
                 {post.publishedAt && (
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
-                    {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                    {formatDateLocalized(post.publishedAt, locale, {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

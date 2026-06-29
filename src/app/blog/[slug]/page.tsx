@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { useLocale } from "next-intl";
+import { formatDateLocalized } from "@/lib/format";
 import Link from "next/link";
 import { Calendar, Clock, ArrowLeft, Eye, Loader2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +38,7 @@ export default function BlogPostPage() {
   const router = useRouter();
   const slug = params?.slug as string;
 
+  const locale = useLocale();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -146,16 +149,8 @@ export default function BlogPostPage() {
             <Calendar size={16} />
             <span className="text-sm">
               {post.publishedAt
-                ? new Date(post.publishedAt).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : new Date(post.createdAt).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                ? formatDateLocalized(post.publishedAt, locale)
+                : formatDateLocalized(post.createdAt, locale)}
             </span>
           </div>
           <div className="flex items-center gap-2 text-white/60">

@@ -15,12 +15,13 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
+    // Log server-side; don't leak DB error details to the public endpoint (DEP-09).
+    console.error("Health check failed:", error);
     return NextResponse.json(
       {
         status: "unhealthy",
         timestamp: new Date().toISOString(),
         database: "disconnected",
-        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 503 }
     );

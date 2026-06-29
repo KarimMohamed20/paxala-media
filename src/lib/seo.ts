@@ -61,6 +61,61 @@ const SOCIAL_PROFILES = [
   siteConfig.social.linkedin,
 ];
 
+/** Article structured data for a blog post detail page. */
+export function articleLdJson(opts: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string | null;
+  datePublished?: string | null;
+  dateModified?: string | null;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: opts.title,
+    description: opts.description,
+    image: absoluteUrl(opts.image || "/og-image.png"),
+    datePublished: opts.datePublished || undefined,
+    dateModified: opts.dateModified || opts.datePublished || undefined,
+    mainEntityOfPage: absoluteUrl(opts.path),
+    author: { "@type": "Organization", name: siteConfig.name, url: SITE_URL },
+    publisher: { "@id": `${SITE_URL}/#organization` },
+  };
+}
+
+/** CreativeWork structured data for a portfolio item detail page. */
+export function creativeWorkLdJson(opts: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string | null;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: opts.title,
+    description: opts.description,
+    image: absoluteUrl(opts.image || "/og-image.png"),
+    url: absoluteUrl(opts.path),
+    creator: { "@id": `${SITE_URL}/#organization` },
+  };
+}
+
+/** BreadcrumbList structured data. */
+export function breadcrumbLdJson(items: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: absoluteUrl(it.path),
+    })),
+  };
+}
+
 /**
  * Site-wide Organization + LocalBusiness (ProfessionalService) structured data.
  * Helps PMP show up as a local business in Arabic/Hebrew/English search and maps.

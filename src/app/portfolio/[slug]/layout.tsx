@@ -1,6 +1,21 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { db } from "@/lib/db";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, creativeWorkLdJson, breadcrumbLdJson } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+
+// Cached so generateMetadata and the layout share a single query per request.
+const getPortfolio = cache((slug: string) =>
+  db.portfolio.findUnique({
+    where: { slug },
+    select: {
+      titleEn: true,
+      descriptionEn: true,
+      thumbnail: true,
+      published: true,
+    },
+  })
+);
 
 export async function generateMetadata({
   params,
@@ -9,15 +24,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const item = await db.portfolio.findUnique({
-      where: { slug },
-      select: {
-        titleEn: true,
-        descriptionEn: true,
-        thumbnail: true,
-        published: true,
-      },
-    });
+    const item = await getPortfolio(slug);
     if (item?.published) {
       return pageMetadata({
         title: item.titleEn,
@@ -41,10 +48,40 @@ export async function generateMetadata({
   };
 }
 
-export default function PortfolioItemLayout({
+export default async function PortfolioItemLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
-  return <>{children}</>;
+  const { slug } = await params;
+  let graph: unknown[] | null = null;
+  try {
+    const item = await getPortfolio(slug);
+    if (item?.published) {
+      graph = [
+        creativeWorkLdJson({
+          title: item.titleEn,
+          description: item.descriptionEn.slice(0, 160),
+          path: `/portfolio/${slug}`,
+          image: item.thumbnail,
+        }),
+        breadcrumbLdJson([
+          { name: "Home", path: "/" },
+          { name: "Portfolio", path: "/portfolio" },
+          { name: item.titleEn, path: `/portfolio/${slug}` },
+        ]),
+      ];
+    }
+  } catch (error) {
+    console.error("portfolio json-ld error", error);
+  }
+
+  return (
+    <>
+      {graph && <JsonLd data={graph} />}
+      {children}
+    </>
+  );
 }
