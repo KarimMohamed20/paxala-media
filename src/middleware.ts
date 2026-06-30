@@ -27,8 +27,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all routes except static files and API routes that don't need locale
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'
-
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/projects/upload|.*\\..*).*)'
 ],
 };
