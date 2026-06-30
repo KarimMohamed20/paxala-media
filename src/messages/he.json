@@ -345,6 +345,33 @@
       "saturday": "שבת: סגור"
     }
   },
+  "servicesHero": {
+    "badge": "המערכת שלנו",
+    "heading": "כל מה ש[[המותג]] שלך צריך.",
+    "headingSubline": "תחת קורת גג אחת.",
+    "slogan": "מהרעיון... לצמיחה.",
+    "description": "PMP משלבת הפקה, מיתוג, בינה מלאכותית, פרסום, פיתוח אתרים, אפליקציות ואוטומציה למערכת מחוברת אחת שעוזרת למותגים לצמוח מהר יותר.",
+    "exploreServices": "חקור שירותים",
+    "bookConsultation": "קבע ייעוץ",
+    "exploreByPackage": "חקור לפי חבילה",
+    "tierSilverLabel": "Brand 360°",
+    "tierSilverSublabel": "בסיסי",
+    "tierSilverDesc": "הפקה · צילום · פרסום · זהות מותג",
+    "tierGoldLabel": "Brand 360°+",
+    "tierGoldSublabel": "פופולרי",
+    "tierGoldDesc": "הכל בכסף + פיתוח אתרים",
+    "tierInfiniteLabel": "Brand 360° ∞",
+    "tierInfiniteSublabel": "מערכת מלאה",
+    "tierInfiniteDesc": "המערכת האקולוגית המלאה של PMP — כל 10 השירותים",
+    "startingFrom": "החל מ",
+    "priceNote": "דמי הקמה חלים · תקציב פרסום מחויב בנפרד"
+  },
+  "trustStrip": {
+    "clients": "לקוחות שרותו",
+    "retainers": "לקוחות פעילים",
+    "industries": "תעשיות",
+    "engagement": "חודשים ממוצע מעורבות"
+  },
   "categories": {
     "all": "כל הפרויקטים",
     "VIDEO_PRODUCTION": "הפקת וידאו",

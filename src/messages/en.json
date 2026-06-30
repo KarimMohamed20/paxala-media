@@ -345,6 +345,33 @@
       "saturday": "Saturday: Closed"
     }
   },
+  "servicesHero": {
+    "badge": "Our Ecosystem",
+    "heading": "Everything Your [[Brand]] Needs.",
+    "headingSubline": "Built Under One Roof.",
+    "slogan": "From the idea... to growth.",
+    "description": "PMP combines production, branding, AI, advertising, web development, applications and automation into one connected ecosystem that helps brands grow faster.",
+    "exploreServices": "Explore Services",
+    "bookConsultation": "Book Consultation",
+    "exploreByPackage": "Explore by package",
+    "tierSilverLabel": "Brand 360°",
+    "tierSilverSublabel": "Entry",
+    "tierSilverDesc": "Production · Photography · Advertising · Brand Identity",
+    "tierGoldLabel": "Brand 360°+",
+    "tierGoldSublabel": "Popular",
+    "tierGoldDesc": "Everything in Silver + Website Development",
+    "tierInfiniteLabel": "Brand 360° ∞",
+    "tierInfiniteSublabel": "Full Ecosystem",
+    "tierInfiniteDesc": "The complete PMP ecosystem — all 10 services",
+    "startingFrom": "Starting from",
+    "priceNote": "Setup fee applies · Ad spend billed separately"
+  },
+  "trustStrip": {
+    "clients": "Clients Served",
+    "retainers": "Active Retainers",
+    "industries": "Industries",
+    "engagement": "Months Avg. Engagement"
+  },
   "categories": {
     "all": "All Projects",
     "VIDEO_PRODUCTION": "Video Production",

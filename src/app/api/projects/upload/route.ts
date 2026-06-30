@@ -6,6 +6,8 @@ import path from 'path'
 import { existsSync } from 'fs'
 import { getFileUrl } from '@/lib/utils'
 
+export const maxDuration = 300 // 5 minutes — large video uploads need time
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     const allowedTypes = {
       thumbnail: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'],
       gallery: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'],
-      video: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/avi'],
+      video: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/avi', 'video/x-matroska', 'video/mov', 'video/3gpp', 'video/x-ms-wmv', 'application/octet-stream'],
       document: [
         // Images
         'image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif', 'image/svg+xml',
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Failed to upload file', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
