@@ -12,6 +12,10 @@ import {
   Edit,
   Eye,
   Loader2,
+  LayoutGrid,
+  List,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +83,24 @@ const categories = [
   "SOCIAL_MEDIA",
 ];
 
+const BOARD_STATUSES = ["DRAFT", "IN_PROGRESS", "REVIEW", "COMPLETED"] as const;
+
+const boardAccent: Record<string, string> = {
+  DRAFT: "border-t-neutral-500",
+  IN_PROGRESS: "border-t-yellow-500",
+  REVIEW: "border-t-blue-500",
+  COMPLETED: "border-t-green-500",
+};
+
+function isProjectOverdue(project: Project) {
+  return (
+    project.deadline &&
+    project.status !== "COMPLETED" &&
+    project.status !== "ARCHIVED" &&
+    new Date(project.deadline) < new Date()
+  );
+}
+
 export default function ProjectsPage() {
   const ta = useTranslations('adminUI');
   const tc = useTranslations('common');
@@ -99,6 +121,9 @@ export default function ProjectsPage() {
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"table" | "board">("table");
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropStatus, setDropStatus] = useState<string | null>(null);
 
   const fetchProjects = async () => {
     try {
@@ -218,6 +243,10 @@ export default function ProjectsPage() {
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    // optimistic update so drag & drop feels instant
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
+    );
     try {
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
@@ -231,6 +260,7 @@ export default function ProjectsPage() {
 
       fetchProjects();
     } catch (err) {
+      fetchProjects();
       alert(err instanceof Error ? err.message : ta('errorOccurred'));
     }
   };
@@ -285,9 +315,132 @@ export default function ProjectsPage() {
             </Button>
           ))}
         </div>
+        <div className="flex gap-2 ms-auto">
+          <Button
+            variant={view === "table" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setView("table")}
+          >
+            <List size={16} className="mr-2" />
+            {ta('tableView')}
+          </Button>
+          <Button
+            variant={view === "board" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setView("board")}
+          >
+            <LayoutGrid size={16} className="mr-2" />
+            {ta('boardView')}
+          </Button>
+        </div>
       </motion.div>
 
+      {/* Board View */}
+      {view === "board" && !loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start mb-6">
+          {BOARD_STATUSES.map((status) => (
+            <div
+              key={status}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDropStatus(status);
+              }}
+              onDragLeave={() => setDropStatus((s) => (s === status ? null : s))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragId) {
+                  const project = projects.find((p) => p.id === dragId);
+                  if (project && project.status !== status) {
+                    handleStatusChange(dragId, status);
+                  }
+                }
+                setDragId(null);
+                setDropStatus(null);
+              }}
+              className={`rounded-lg border border-white/10 border-t-2 ${boardAccent[status]} bg-neutral-950 min-h-[160px] ${
+                dropStatus === status && dragId ? "bg-white/5" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                <span className="text-white/80 text-sm font-medium">
+                  {status.replace("_", " ")}
+                </span>
+                <Badge variant="secondary">
+                  {projects.filter((p) => p.status === status).length}
+                </Badge>
+              </div>
+              <div className="p-2 space-y-2">
+                {projects
+                  .filter((p) => p.status === status)
+                  .map((project) => (
+                    <div
+                      key={project.id}
+                      draggable
+                      onDragStart={(e) => {
+                        setDragId(project.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragEnd={() => {
+                        setDragId(null);
+                        setDropStatus(null);
+                      }}
+                      className={`rounded-lg border bg-neutral-900 p-3 cursor-grab active:cursor-grabbing space-y-2 ${
+                        isProjectOverdue(project)
+                          ? "border-red-600/60"
+                          : "border-white/10"
+                      } ${dragId === project.id ? "opacity-40" : ""}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <a
+                          href={`/admin/projects/${project.id}`}
+                          className="text-white font-medium text-sm hover:underline min-w-0 truncate"
+                        >
+                          {project.title}
+                        </a>
+                        {isProjectOverdue(project) && (
+                          <span className="flex items-center gap-1 text-red-500 text-[10px] font-semibold uppercase shrink-0">
+                            <AlertCircle size={12} />
+                            {ta('overdue')}
+                          </span>
+                        )}
+                      </div>
+                      {project.clientName && (
+                        <p className="text-white/40 text-xs truncate">
+                          {project.clientName}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-white/40">
+                          {project.category.replace(/_/g, " ")}
+                        </span>
+                        {project.deadline && (
+                          <span
+                            className={`flex items-center gap-1 ${
+                              isProjectOverdue(project)
+                                ? "text-red-500"
+                                : "text-white/40"
+                            }`}
+                          >
+                            <Clock size={12} />
+                            {format(new Date(project.deadline), "MMM d")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {view === "board" && loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="animate-spin text-white/40" size={24} />
+        </div>
+      )}
+
       {/* Projects List */}
+      {view === "table" && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -330,7 +483,9 @@ export default function ProjectsPage() {
                   {projects.map((project) => (
                     <tr
                       key={project.id}
-                      className="border-b border-white/5 hover:bg-white/5"
+                      className={`border-b border-white/5 hover:bg-white/5 ${
+                        isProjectOverdue(project) ? "bg-red-950/20" : ""
+                      }`}
                     >
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -345,8 +500,11 @@ export default function ProjectsPage() {
                               /{project.slug}
                             </p>
                             {project.deadline && (
-                              <p className="text-orange-400 text-xs mt-0.5">
+                              <p className={`text-xs mt-0.5 ${
+                                isProjectOverdue(project) ? "text-red-500 font-medium" : "text-orange-400"
+                              }`}>
                                 {ta('deadline')}: {format(new Date(project.deadline), "MMM d, yyyy")}
+                                {isProjectOverdue(project) && ` — ${ta('overdue')}`}
                               </p>
                             )}
                           </div>
@@ -433,6 +591,7 @@ export default function ProjectsPage() {
           </CardContent>
         </Card>
       </motion.div>
+      )}
 
       {/* Create Project Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
