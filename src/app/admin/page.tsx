@@ -13,9 +13,21 @@ import {
   FileText,
   Clock,
   Loader2,
+  Target,
+  Send,
+  Percent,
+  Wallet,
+  Banknote,
+  Receipt,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
+interface MoneyByCurrency {
+  currency: string;
+  amount: string | number;
+}
 
 interface AdminStats {
   stats: {
@@ -24,6 +36,16 @@ interface AdminStats {
     bookings: { total: number; pending: number };
     inquiries: { total: number; new: number };
     files: { total: number };
+    kpi?: {
+      leadsThisMonth: number;
+      proposalsSentThisMonth: number;
+      conversionRate: number | null;
+      openPipeline: MoneyByCurrency[];
+      revenueThisMonth: MoneyByCurrency[];
+      outstandingReceivables: MoneyByCurrency[];
+      overdueProjects: number;
+      overdueFollowUps: number;
+    };
   };
   recent: {
     projects: Array<{
@@ -50,6 +72,15 @@ interface AdminStats {
       createdAt: string;
     }>;
   };
+}
+
+const CURRENCY_SYMBOL: Record<string, string> = { ILS: "₪", USD: "$", EUR: "€" };
+
+function moneyText(items: MoneyByCurrency[] | undefined) {
+  if (!items || items.length === 0) return "—";
+  return items
+    .map((i) => `${CURRENCY_SYMBOL[i.currency] || i.currency + " "}${Number(i.amount).toLocaleString()}`)
+    .join(" + ");
 }
 
 const statusColors = {
@@ -122,6 +153,104 @@ export default function AdminDashboard() {
           Overview of your media production business.
         </p>
       </motion.div>
+
+      {/* KPI Row */}
+      {stats?.kpi && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+          {[
+            {
+              icon: Target,
+              color: "text-blue-500",
+              label: ta("kpiLeadsThisMonth"),
+              value: String(stats.kpi.leadsThisMonth),
+              href: "/admin/leads",
+            },
+            {
+              icon: Send,
+              color: "text-cyan-500",
+              label: ta("kpiProposalsThisMonth"),
+              value: String(stats.kpi.proposalsSentThisMonth),
+              href: "/admin/leads",
+            },
+            {
+              icon: Percent,
+              color: "text-purple-500",
+              label: ta("conversionRate"),
+              value:
+                stats.kpi.conversionRate === null
+                  ? "—"
+                  : `${stats.kpi.conversionRate}%`,
+              href: "/admin/leads",
+            },
+            {
+              icon: Wallet,
+              color: "text-yellow-500",
+              label: ta("kpiOpenPipeline"),
+              value: moneyText(stats.kpi.openPipeline),
+              href: "/admin/leads",
+            },
+            {
+              icon: Banknote,
+              color: "text-green-500",
+              label: ta("kpiRevenueThisMonth"),
+              value: moneyText(stats.kpi.revenueThisMonth),
+              href: "/admin/invoices",
+            },
+            {
+              icon: Receipt,
+              color: "text-orange-500",
+              label: ta("kpiOutstanding"),
+              value: moneyText(stats.kpi.outstandingReceivables),
+              href: "/admin/invoices",
+            },
+            {
+              icon: AlertCircle,
+              color: "text-red-500",
+              label: ta("kpiOverdueProjects"),
+              value: String(stats.kpi.overdueProjects),
+              alert: stats.kpi.overdueProjects > 0,
+              href: "/admin/projects",
+            },
+            {
+              icon: Clock,
+              color: "text-red-500",
+              label: ta("overdueFollowUps"),
+              value: String(stats.kpi.overdueFollowUps),
+              alert: stats.kpi.overdueFollowUps > 0,
+              href: "/admin/leads",
+            },
+          ].map((kpi, i) => (
+            <a key={i} href={kpi.href}>
+              <Card
+                className={`h-full hover:bg-white/5 transition-colors ${
+                  kpi.alert ? "border-red-600/50" : ""
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <kpi.icon size={14} className={kpi.color} />
+                    <p className="text-white/40 text-xs uppercase tracking-wider truncate">
+                      {kpi.label}
+                    </p>
+                  </div>
+                  <p
+                    className={`text-lg font-bold truncate ${
+                      kpi.alert ? "text-red-500" : "text-white"
+                    }`}
+                  >
+                    {kpi.value}
+                  </p>
+                </CardContent>
+              </Card>
+            </a>
+          ))}
+        </motion.div>
+      )}
 
       {/* Stats Grid */}
       <motion.div
