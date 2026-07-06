@@ -5,6 +5,7 @@ import { getContactInquiryEmail } from './templates/contact';
 import { getTaskStatusEmail } from './templates/task-status';
 import { getMilestoneCompletedEmail } from './templates/milestone-completed';
 import { getTaskAssignedEmail } from './templates/task-assigned';
+import { getLeadCreatedEmail } from './templates/lead-created';
 import { EmailLocale } from './styles';
 
 // Configure transporter
@@ -73,6 +74,11 @@ export async function sendMilestoneCompleted(to: string, data: any, locale: Emai
     return sendEmail({ to, subject, html });
 }
 
+export async function sendLeadCreatedNotification(data: any) {
+    const { subject, html } = getLeadCreatedEmail(data);
+    return sendEmail({ to: ADMIN_EMAIL, subject, html });
+}
+
 // Default export object for backward compatibility (if needed) but preferring named imports
 export const emailService = {
     sendBookingConfirmation,
@@ -80,5 +86,6 @@ export const emailService = {
     sendTaskAssigned,
     sendContactInquiry,
     sendTaskStatusUpdate,
-    sendMilestoneCompleted
+    sendMilestoneCompleted,
+    sendLeadCreatedNotification
 };

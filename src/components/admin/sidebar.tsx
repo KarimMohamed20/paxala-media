@@ -20,17 +20,21 @@ import {
     Shield,
     MessageSquareQuote,
     LogOut,
+    Target,
+    Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 const navItems = [
     { href: "/admin", icon: LayoutDashboard, labelKey: "dashboard" },
+    { href: "/admin/leads", icon: Target, labelKey: "leads" },
     { href: "/admin/homepage", icon: Home, labelKey: "homepage" },
     { href: "/admin/services", icon: Briefcase, labelKey: "services" },
     { href: "/admin/team", icon: Users, labelKey: "team" },
     { href: "/admin/users", icon: Users, labelKey: "users" },
     { href: "/admin/projects", icon: Folder, labelKey: "projects" },
+    { href: "/admin/invoices", icon: Receipt, labelKey: "invoices" },
     { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
     { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },
     { href: "/admin/testimonials", icon: MessageSquareQuote, labelKey: "testimonials" },
