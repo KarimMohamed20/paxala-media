@@ -52,3 +52,10 @@ next-env.d.ts
 .worktrees/
 .security-key
 logs/security/
+
+# database dumps — never commit production data
+paxala_dump.sql
+*.dump
+
+# runtime logs from docker nginx
+docker/nginx/logs/
