@@ -173,13 +173,29 @@ async function main() {
   ];
 
   for (const member of teamMembers) {
+    const id = `team-${member.name.toLowerCase().replace(/\s+/g, "-")}`;
+    const data = {
+      nameEn: member.name,
+      nameAr: member.name,
+      nameHe: member.name,
+      roleEn: member.role,
+      roleAr: member.role,
+      roleHe: member.role,
+      bioEn: member.bio,
+      bioAr: member.bio,
+      bioHe: member.bio,
+      image: member.image,
+      team: member.team,
+      order: member.order,
+      skillsEn: member.skills,
+      skillsAr: member.skills,
+      skillsHe: member.skills,
+      social: member.social,
+    };
     await prisma.teamMember.upsert({
-      where: { id: `team-${member.name.toLowerCase().replace(/\s+/g, "-")}` },
-      update: member,
-      create: {
-        id: `team-${member.name.toLowerCase().replace(/\s+/g, "-")}`,
-        ...member,
-      },
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
   }
 
@@ -256,10 +272,24 @@ async function main() {
   ];
 
   for (const service of services) {
+    const data = {
+      nameEn: service.name,
+      nameAr: service.name,
+      nameHe: service.name,
+      slug: service.slug,
+      descriptionEn: service.description,
+      descriptionAr: service.description,
+      descriptionHe: service.description,
+      icon: service.icon,
+      featuresEn: service.features,
+      featuresAr: service.features,
+      featuresHe: service.features,
+      order: service.order,
+    };
     await prisma.service.upsert({
       where: { slug: service.slug },
-      update: service,
-      create: service,
+      update: data,
+      create: data,
     });
   }
 
@@ -427,13 +457,19 @@ async function main() {
   ];
 
   for (const logo of clientLogos) {
+    const id = `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}`;
+    const data = {
+      nameEn: logo.name,
+      nameAr: logo.name,
+      nameHe: logo.name,
+      logo: logo.logo,
+      website: logo.website,
+      order: logo.order,
+    };
     await prisma.clientLogo.upsert({
-      where: { id: `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}` },
-      update: logo,
-      create: {
-        id: `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}`,
-        ...logo,
-      },
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
   }
 
@@ -647,10 +683,30 @@ Happy shooting!`,
   ];
 
   for (const post of blogPosts) {
+    const data = {
+      titleEn: post.title,
+      titleAr: post.title,
+      titleHe: post.title,
+      slug: post.slug,
+      excerptEn: post.excerpt,
+      excerptAr: post.excerpt,
+      excerptHe: post.excerpt,
+      contentEn: post.content,
+      contentAr: post.content,
+      contentHe: post.content,
+      coverImage: post.coverImage,
+      authorId: post.authorId,
+      category: post.category,
+      tagsEn: post.tags,
+      tagsAr: post.tags,
+      tagsHe: post.tags,
+      published: post.published,
+      publishedAt: post.publishedAt,
+    };
     await prisma.blogPost.upsert({
       where: { slug: post.slug },
-      update: post,
-      create: post,
+      update: data,
+      create: data,
     });
   }
 
