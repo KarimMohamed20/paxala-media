@@ -227,10 +227,6 @@ export const packages = [
     tier: "base",
     name: "Brand 360°",
     subtitle: "Visual & Digital Marketing Retainer",
-    price: "Customized",
-    currency: "",
-    period: "per month",
-    minimumCommitment: "Minimum 3 months",
     description: "Perfect for restaurants and businesses that want strong brand presence, consistent content, and measurable marketing results.",
     features: [
       {
@@ -280,10 +276,6 @@ export const packages = [
     tier: "plus",
     name: "Brand 360°+ PLUS",
     subtitle: "Visual, Marketing & Web Development",
-    price: "Custom",
-    currency: "",
-    period: "based on website scope",
-    minimumCommitment: null,
     description: "Ideal for businesses that need a complete digital identity with a strong website that supports advertising and a professional online presence.",
     features: [
       {
@@ -322,10 +314,6 @@ export const packages = [
     tier: "infinite",
     name: "Brand 360° infinite",
     subtitle: "Full Digital Ecosystem (Web + Management + App)",
-    price: "Custom",
-    currency: "",
-    period: "fully customized project",
-    minimumCommitment: null,
     description: "The complete digital ecosystem for enterprise-level businesses, chains, and digital platforms requiring full integration across all channels.",
     features: [
       {

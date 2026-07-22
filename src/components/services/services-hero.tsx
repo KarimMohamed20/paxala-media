@@ -12,19 +12,16 @@ const TIER_DEFS = [
   {
     id: "silver" as const,
     color: "#A8B5C0",
-    price: "₪2,500",
     services: ["production", "photography", "advertising", "brand"] as readonly string[],
   },
   {
     id: "gold" as const,
     color: "#C9A84C",
-    price: "₪4,500",
     services: ["production", "photography", "advertising", "brand", "website"] as readonly string[],
   },
   {
     id: "infinite" as const,
     color: "#FF2020",
-    price: "₪10,000",
     services: null,
   },
 ] as const;
@@ -201,15 +198,6 @@ export function ServicesHero() {
                 >
                   <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
                     {tier.desc}
-                  </p>
-                  <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-sm font-bold" style={{ color: SX.accent }}>
-                      {t("startingFrom")} {tier.price}
-                      <span className="text-xs font-medium">/mo</span>
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
-                    {t("priceNote")}
                   </p>
                 </motion.div>
               )}

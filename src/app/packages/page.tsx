@@ -129,27 +129,6 @@ function PackageDetailCard({
               </div>
             </div>
 
-            {/* Price */}
-            <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10">
-              {pkg.price.startsWith("Custom") ? (
-                <div>
-                  <span className="text-5xl font-bold text-white">{pkg.price}</span>
-                  <p className="text-white/60 mt-2">{pkg.period}</p>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-white/60">{pkg.currency}</span>
-                    <span className="text-5xl font-bold text-white">{pkg.price}</span>
-                    <span className="text-white/60">/ {pkg.period}</span>
-                  </div>
-                  {pkg.minimumCommitment && (
-                    <p className="text-sm text-white/50 mt-2">{pkg.minimumCommitment}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Description */}
             <p className="text-lg text-white/70 leading-relaxed mb-8">
               {pkg.description}

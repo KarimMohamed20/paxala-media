@@ -112,17 +112,6 @@ function PackageCard({ pkg, index }: { pkg: (typeof packages)[0]; index: number 
             </div>
           </div>
 
-          {/* Price block */}
-          <div className="mb-7 rounded-2xl border p-5" style={{ borderColor: SX.border, backgroundColor: SX.card2 }}>
-            <p className="text-3xl font-bold text-white">{pkg.price}</p>
-            <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {pkg.currency} {pkg.period}
-            </p>
-            {pkg.minimumCommitment && (
-              <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{pkg.minimumCommitment}</p>
-            )}
-          </div>
-
           <p className="mb-7 text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             {pkg.description}
           </p>
