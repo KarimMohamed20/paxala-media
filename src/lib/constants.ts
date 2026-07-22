@@ -202,7 +202,6 @@ export const team = {
 export const navLinks = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
-  { href: "/packages", label: "Packages" },
   { href: "/portfolio", label: "Portfolio" },
   { href: "/about", label: "About" },
   { href: "/blog", label: "Blog" },
