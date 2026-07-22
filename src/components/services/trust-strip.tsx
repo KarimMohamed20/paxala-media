@@ -48,8 +48,7 @@ export function TrustStrip() {
             style={i > 0 ? { borderLeft: `1px solid ${SX.border}` } : undefined}
           >
             <span
-              className="text-4xl font-bold tabular-nums sm:text-5xl"
-              style={{ color: SX.accent }}
+              className="text-4xl font-bold tabular-nums text-white sm:text-5xl"
             >
               <Counter to={s.to} suffix={s.suffix} />
             </span>
