@@ -175,13 +175,29 @@ async function main() {
   ];
 
   for (const member of teamMembers) {
+    const id = `team-${member.name.toLowerCase().replace(/\s+/g, "-")}`;
+    const data = {
+      nameEn: member.name,
+      nameAr: member.name,
+      nameHe: member.name,
+      roleEn: member.role,
+      roleAr: member.role,
+      roleHe: member.role,
+      bioEn: member.bio,
+      bioAr: member.bio,
+      bioHe: member.bio,
+      image: member.image,
+      team: member.team,
+      order: member.order,
+      skillsEn: member.skills,
+      skillsAr: member.skills,
+      skillsHe: member.skills,
+      social: member.social,
+    };
     await prisma.teamMember.upsert({
-      where: { id: `team-${member.name.toLowerCase().replace(/\s+/g, "-")}` },
-      update: member,
-      create: {
-        id: `team-${member.name.toLowerCase().replace(/\s+/g, "-")}`,
-        ...member,
-      },
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
   }
 
@@ -258,10 +274,24 @@ async function main() {
   ];
 
   for (const service of services) {
+    const data = {
+      nameEn: service.name,
+      nameAr: service.name,
+      nameHe: service.name,
+      slug: service.slug,
+      descriptionEn: service.description,
+      descriptionAr: service.description,
+      descriptionHe: service.description,
+      icon: service.icon,
+      featuresEn: service.features,
+      featuresAr: service.features,
+      featuresHe: service.features,
+      order: service.order,
+    };
     await prisma.service.upsert({
       where: { slug: service.slug },
-      update: service,
-      create: service,
+      update: data,
+      create: data,
     });
   }
 
@@ -429,13 +459,19 @@ async function main() {
   ];
 
   for (const logo of clientLogos) {
+    const id = `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}`;
+    const data = {
+      nameEn: logo.name,
+      nameAr: logo.name,
+      nameHe: logo.name,
+      logo: logo.logo,
+      website: logo.website,
+      order: logo.order,
+    };
     await prisma.clientLogo.upsert({
-      where: { id: `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}` },
-      update: logo,
-      create: {
-        id: `logo-${logo.name.toLowerCase().replace(/\s+/g, "-")}`,
-        ...logo,
-      },
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
   }
 
@@ -649,10 +685,30 @@ Happy shooting!`,
   ];
 
   for (const post of blogPosts) {
+    const data = {
+      titleEn: post.title,
+      titleAr: post.title,
+      titleHe: post.title,
+      slug: post.slug,
+      excerptEn: post.excerpt,
+      excerptAr: post.excerpt,
+      excerptHe: post.excerpt,
+      contentEn: post.content,
+      contentAr: post.content,
+      contentHe: post.content,
+      coverImage: post.coverImage,
+      authorId: post.authorId,
+      category: post.category,
+      tagsEn: post.tags,
+      tagsAr: post.tags,
+      tagsHe: post.tags,
+      published: post.published,
+      publishedAt: post.publishedAt,
+    };
     await prisma.blogPost.upsert({
       where: { slug: post.slug },
-      update: post,
-      create: post,
+      update: data,
+      create: data,
     });
   }
 
@@ -687,6 +743,90 @@ Happy shooting!`,
   }
 
   console.log("   ✅ Site settings created\n");
+
+  // ==================== LEADS ====================
+  console.log("🎯 Creating example leads...");
+
+  const now = new Date();
+  const daysFromNow = (d: number) => new Date(now.getTime() + d * 24 * 60 * 60 * 1000);
+
+  const exampleLeads = [
+    {
+      clientName: "Rami Khalaily",
+      company: "Khalaily Furniture",
+      email: "rami@khalaily-furniture.example",
+      phone: "+972 52-000-0001",
+      source: "WEBSITE" as const,
+      interestedIn: "Product photography for new showroom",
+      stage: "NEW" as const,
+      expectedValue: 4500,
+      currency: "ILS",
+      nextFollowUpAt: daysFromNow(2),
+      notes: "Came through the contact form. Wants a quote before end of month.",
+    },
+    {
+      clientName: "Lina Abu Ria",
+      company: "Lina's Kitchen",
+      email: "lina@linaskitchen.example",
+      phone: "+972 52-000-0002",
+      source: "INSTAGRAM" as const,
+      interestedIn: "Monthly social media content retainer",
+      stage: "CONTACTED" as const,
+      expectedValue: 3000,
+      currency: "ILS",
+      nextFollowUpAt: daysFromNow(-3), // overdue on purpose (test red highlight)
+      notes: "Replied on Instagram DM. Asked for portfolio examples.",
+    },
+    {
+      clientName: "Yousef Ghanayem",
+      company: "Ghanayem Motors",
+      email: "yousef@ghanayem-motors.example",
+      phone: "+972 52-000-0003",
+      source: "REFERRAL" as const,
+      interestedIn: "Showroom video + 3 reels",
+      stage: "PROPOSAL_SENT" as const,
+      expectedValue: 8500,
+      currency: "ILS",
+      nextFollowUpAt: daysFromNow(5),
+      notes: "Referred by Waleed. Proposal sent, waiting for feedback.",
+    },
+    {
+      clientName: "Maha Zoabi",
+      company: "Zoabi Dental Clinic",
+      email: "maha@zoabi-dental.example",
+      phone: "+972 52-000-0004",
+      source: "WHATSAPP" as const,
+      interestedIn: "Clinic branding video",
+      stage: "WON" as const,
+      expectedValue: 6000,
+      currency: "ILS",
+      notes: "Signed! Kickoff scheduled.",
+    },
+    {
+      clientName: "Samir Khatib",
+      company: null,
+      email: "samir.khatib@example.com",
+      phone: "+972 52-000-0005",
+      source: "OTHER" as const,
+      interestedIn: "Wedding videography",
+      stage: "LOST" as const,
+      expectedValue: 2500,
+      currency: "ILS",
+      lostReason: "Went with a cheaper freelancer",
+      notes: "Budget was the main blocker.",
+    },
+  ];
+
+  for (const leadData of exampleLeads) {
+    const existingLead = await prisma.lead.findFirst({
+      where: { email: leadData.email },
+    });
+    if (!existingLead) {
+      await prisma.lead.create({ data: leadData });
+    }
+  }
+
+  console.log("   ✅ Example leads created\n");
 
   // ==================== SUMMARY ====================
   console.log("═══════════════════════════════════════════════════════");

@@ -15,6 +15,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const OPEN_STAGES = ["NEW", "CONTACTED", "PROPOSAL_SENT", "NEGOTIATING"] as const;
+
     // Get various stats
     const [
       totalUsers,
@@ -38,6 +42,58 @@ export async function GET(request: NextRequest) {
       db.contactInquiry.count(),
       db.contactInquiry.count({ where: { status: "NEW" } }),
       db.projectFile.count(),
+    ]);
+
+    // KPI block (leads / invoices / overdue)
+    const [
+      leadsThisMonth,
+      proposalsSentThisMonth,
+      wonLeads,
+      lostLeads,
+      openPipeline,
+      revenueThisMonth,
+      outstandingReceivables,
+      overdueProjects,
+      overdueFollowUps,
+    ] = await Promise.all([
+      db.lead.count({ where: { createdAt: { gte: monthStart } } }),
+      // Approximation: stage history is not tracked, so we count leads that
+      // are currently at PROPOSAL_SENT or further and were updated this month.
+      db.lead.count({
+        where: {
+          stage: { in: ["PROPOSAL_SENT", "NEGOTIATING", "WON"] },
+          updatedAt: { gte: monthStart },
+        },
+      }),
+      db.lead.count({ where: { stage: "WON" } }),
+      db.lead.count({ where: { stage: "LOST" } }),
+      db.lead.groupBy({
+        by: ["currency"],
+        where: { stage: { in: [...OPEN_STAGES] } },
+        _sum: { expectedValue: true },
+      }),
+      db.invoice.groupBy({
+        by: ["currency"],
+        where: { status: "PAID", updatedAt: { gte: monthStart } },
+        _sum: { total: true },
+      }),
+      db.invoice.groupBy({
+        by: ["currency"],
+        where: { status: "ISSUED" },
+        _sum: { total: true },
+      }),
+      db.project.count({
+        where: {
+          deadline: { lt: now },
+          status: { notIn: ["COMPLETED", "ARCHIVED"] },
+        },
+      }),
+      db.lead.count({
+        where: {
+          nextFollowUpAt: { lt: now },
+          stage: { in: [...OPEN_STAGES] },
+        },
+      }),
     ]);
 
     // Get recent activity
@@ -122,6 +178,28 @@ export async function GET(request: NextRequest) {
         },
         files: {
           total: totalFiles,
+        },
+        kpi: {
+          leadsThisMonth,
+          proposalsSentThisMonth,
+          conversionRate:
+            wonLeads + lostLeads > 0
+              ? Math.round((wonLeads / (wonLeads + lostLeads)) * 100)
+              : null,
+          openPipeline: openPipeline.map((g) => ({
+            currency: g.currency,
+            amount: g._sum.expectedValue ?? 0,
+          })),
+          revenueThisMonth: revenueThisMonth.map((g) => ({
+            currency: g.currency,
+            amount: g._sum.total ?? 0,
+          })),
+          outstandingReceivables: outstandingReceivables.map((g) => ({
+            currency: g.currency,
+            amount: g._sum.total ?? 0,
+          })),
+          overdueProjects,
+          overdueFollowUps,
         },
       },
       recent: {

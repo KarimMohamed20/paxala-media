@@ -38,6 +38,7 @@ model User {
   assignedTasks    Task[]            @relation("AssignedTasks")
   approvedTasks    Task[]            @relation("ApprovedTasks")
   contacts         ClientContact[]   @relation("ClientContacts")
+  leads            Lead[]            @relation("ClientLeads")
   contentPlans     ContentPlan[]
   contentReviews   ContentApproval[] @relation("ContentReviews")
   contentComments  ContentComment[]  @relation("ContentComments")
@@ -229,6 +230,7 @@ model Project {
   milestones   Milestone[]
   invoices     Invoice[]
   contacts     ClientContact[] @relation("ProjectContacts")
+  lead         Lead?           @relation("LeadProject")
   contentPlans ContentPlan[]
   contentItems ContentItem[]
 }
@@ -302,6 +304,50 @@ enum ProjectStatus {
   REVIEW
   COMPLETED
   ARCHIVED
+}
+
+// ==================== LEADS ====================
+enum LeadSource {
+  WEBSITE
+  INSTAGRAM
+  REFERRAL
+  WHATSAPP
+  OTHER
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  PROPOSAL_SENT
+  NEGOTIATING
+  WON
+  LOST
+}
+
+model Lead {
+  id                 String     @id @default(cuid())
+  clientName         String
+  company            String?
+  email              String
+  phone              String?
+  source             LeadSource @default(WEBSITE)
+  interestedIn       String?
+  stage              LeadStage  @default(NEW)
+  expectedValue      Decimal?   @db.Decimal(10, 2)
+  currency           String     @default("ILS")
+  nextFollowUpAt     DateTime?
+  notes              String?    @db.Text
+  lostReason         String?
+  clientId           String?
+  client             User?      @relation("ClientLeads", fields: [clientId], references: [id])
+  convertedProjectId String?    @unique
+  convertedProject   Project?   @relation("LeadProject", fields: [convertedProjectId], references: [id])
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@index([stage])
+  @@index([email])
+  @@index([nextFollowUpAt])
 }
 
 // ==================== BOOKINGS ====================

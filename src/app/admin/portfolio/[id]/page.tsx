@@ -143,13 +143,14 @@ export default function PortfolioManagePage() {
         body: uploadFormData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
-
       const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Upload failed (${response.status})`);
+
       setFormData((prev) => ({ ...prev, thumbnail: result.url }));
     } catch (error) {
       console.error("Error uploading thumbnail:", error);
-      alert(ta('errorOccurred'));
+      const msg = error instanceof Error ? error.message : "Upload failed";
+      setError(`Thumbnail upload failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -196,13 +197,16 @@ export default function PortfolioManagePage() {
         body: uploadFormData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
-
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.details || result.error || `Upload failed (${response.status})`);
+      }
+
       setFormData((prev) => ({ ...prev, videoUrl: result.url }));
     } catch (error) {
       console.error("Error uploading video:", error);
-      alert(ta('errorOccurred'));
+      const msg = error instanceof Error ? error.message : "Upload failed";
+      setError(`Video upload failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -703,7 +707,7 @@ export default function PortfolioManagePage() {
 
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-2">
-                  Video URL / Upload
+                  Video Upload
                 </label>
                 {formData.videoUrl ? (
                   <div className="relative w-full">
@@ -722,13 +726,19 @@ export default function PortfolioManagePage() {
                       <Trash2 size={16} />
                     </Button>
                   </div>
+                ) : uploading ? (
+                  <div className="w-full h-32 border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center gap-2 text-white/60">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <span className="text-sm">Uploading video… this may take a minute</span>
+                  </div>
                 ) : (
                   <FileUpload
                     onChange={handleVideoUpload}
-                    accept="video/*"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/*"
                     disabled={uploading}
                   />
                 )}
+                <p className="mt-1 text-[11px] text-white/30">MP4, MOV, WebM supported · Large files may take a few minutes</p>
               </div>
             </CardContent>
           </Card>

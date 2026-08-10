@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { emailService } from "@/lib/email/service";
+import { autoCreateLeadFromWebsite } from "@/lib/leads";
 import {
   rateLimit,
   getClientIp,
@@ -72,6 +73,15 @@ export async function POST(req: NextRequest) {
       phone,
       subject,
       message,
+    });
+
+    // Add to lead pipeline if this email is not already a lead
+    await autoCreateLeadFromWebsite({
+      clientName: name,
+      email,
+      phone,
+      interestedIn: subject,
+      notes: message,
     });
 
     return NextResponse.json(

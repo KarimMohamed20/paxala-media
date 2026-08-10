@@ -54,9 +54,13 @@ next-env.d.ts
 logs/security/
 
 # Database dumps — never commit, they contain real client data
+paxala_dump.sql
 *.dump
 *.sql.gz
 
 # Local report exports and scratch notes
 PAXALA_REPORT_AR.*
 last updates.md
+
+# runtime logs from docker nginx
+docker/nginx/logs/

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { emailService } from "@/lib/email/service";
 import { EmailLocale } from "@/lib/email/styles";
+import { autoCreateLeadFromWebsite } from "@/lib/leads";
 import {
   rateLimit,
   getClientIp,
@@ -150,6 +151,15 @@ export async function POST(req: NextRequest) {
         notes,
       })
     ]);
+
+    // Add to lead pipeline if this email is not already a lead
+    await autoCreateLeadFromWebsite({
+      clientName: name,
+      email,
+      phone,
+      interestedIn: serviceType,
+      notes,
+    });
 
     return NextResponse.json(
       { message: "Booking created successfully", id: booking.id },
