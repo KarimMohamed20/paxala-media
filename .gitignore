@@ -52,3 +52,11 @@ next-env.d.ts
 .worktrees/
 .security-key
 logs/security/
+
+# Database dumps — never commit, they contain real client data
+*.dump
+*.sql.gz
+
+# Local report exports and scratch notes
+PAXALA_REPORT_AR.*
+last updates.md

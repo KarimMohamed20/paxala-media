@@ -44,6 +44,12 @@ export default function PortalLayout({
     return null;
   }
 
+  // Print views render as a bare document — no sidebar, no nav — but still
+  // behind the session check above.
+  if (pathname.endsWith("/print")) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-black">
       <PortalMobileNav />

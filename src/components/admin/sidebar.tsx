@@ -8,6 +8,8 @@ import {
     Users,
     Folder,
     Calendar,
+    CalendarCheck,
+    CalendarRange,
     MessageSquare,
     Settings,
     ArrowLeft,
@@ -31,6 +33,10 @@ const navItems = [
     { href: "/admin/team", icon: Users, labelKey: "team" },
     { href: "/admin/users", icon: Users, labelKey: "users" },
     { href: "/admin/projects", icon: Folder, labelKey: "projects" },
+    // CalendarRange, not Calendar — /admin/bookings already owns that glyph.
+    { href: "/admin/content-calendar", icon: CalendarRange, labelKey: "contentCalendar" },
+    // CalendarCheck: Calendar (bookings) and CalendarRange (content) are taken.
+    { href: "/admin/monthly-plans", icon: CalendarCheck, labelKey: "monthlyPlans" },
     { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
     { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },
     { href: "/admin/testimonials", icon: MessageSquareQuote, labelKey: "testimonials" },

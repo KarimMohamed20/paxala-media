@@ -4,121 +4,135 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
-    LayoutDashboard,
-    Folder,
-    Calendar,
-    Download,
-    Settings,
-    LogOut,
-    Shield,
+  LayoutGrid,
+  CalendarDays,
+  CalendarRange,
+  CheckCircle2,
+  Folder,
+  Image as ImageIcon,
+  BarChart3,
+  CreditCard,
+  Headphones,
+  Settings,
+  LogOut,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 const navItems = [
-    { href: "/portal/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
-    { href: "/portal/projects", icon: Folder, labelKey: "projects" },
-    { href: "/portal/bookings", icon: Calendar, labelKey: "bookings" },
-    { href: "/portal/files", icon: Download, labelKey: "files" },
-    { href: "/portal/settings", icon: Settings, labelKey: "settings" },
+  { href: "/portal/dashboard", icon: LayoutGrid, labelKey: "overview", defaultLabel: "Overview" },
+  { href: "/portal/monthly-plan", icon: CalendarDays, labelKey: "monthlyPlan", defaultLabel: "Monthly Plan" },
+  { href: "/portal/calendar", icon: CalendarRange, labelKey: "contentCalendar", defaultLabel: "Content Calendar" },
+  { href: "/portal/approvals", icon: CheckCircle2, labelKey: "approvals", defaultLabel: "Approvals" },
+  { href: "/portal/projects", icon: Folder, labelKey: "projects", defaultLabel: "Projects" },
+  { href: "/portal/files", icon: ImageIcon, labelKey: "assetLibrary", defaultLabel: "Asset Library" },
+  { href: "/portal/reports", icon: BarChart3, labelKey: "reports", defaultLabel: "Reports" },
+  { href: "/portal/billing", icon: CreditCard, labelKey: "billing", defaultLabel: "Billing" },
+  { href: "/portal/support", icon: Headphones, labelKey: "support", defaultLabel: "Support" },
 ];
 
 interface PortalSidebarProps {
-    className?: string;
-    onClose?: () => void;
+  className?: string;
+  onClose?: () => void;
 }
 
 export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
-    const { data: session } = useSession();
-    const pathname = usePathname();
-    const t = useTranslations("portal");
+  const { data: session } = useSession();
+  const pathname = usePathname();
+  const t = useTranslations("portal");
 
-    const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "ADMIN";
 
-    return (
-        <aside className={cn("bg-neutral-950 border-e border-white/10", className)}>
-            <div className="p-6 h-full flex flex-col">
-                {/* Logo */}
-                <div className="mb-8 px-2">
-                    <h1 className="text-xl font-bold text-white tracking-tight">
-                        Paxala<span className="text-red-600">Media</span>
-                    </h1>
-                </div>
+  return (
+    <aside className={cn("bg-neutral-950 border-e border-white/10 w-64 shrink-0 flex flex-col justify-between h-full", className)}>
+      <div className="p-6 flex flex-col h-full overflow-y-auto">
+        {/* Logo Header */}
+        <div className="mb-8 px-2">
+          <Link href="/portal/dashboard" className="flex items-center gap-2 group">
+            <span className="text-2xl font-black text-white tracking-tighter">
+              PMP<span className="text-red-600">.</span>
+            </span>
+            <span className="text-[10px] text-white/40 leading-tight uppercase tracking-widest font-semibold block border-s border-white/15 ps-2">
+              Paxala Media<br />Production
+            </span>
+          </Link>
+        </div>
 
-                {/* User Info */}
-                <div className="mb-8 pb-6 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center text-red-500 font-medium shrink-0">
-                            {session?.user?.name?.[0]?.toUpperCase() || "U"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium truncate">
-                                {session?.user?.name || "User"}
-                            </p>
-                            <p className="text-white/40 text-xs truncate">
-                                {session?.user?.email}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+        {/* Navigation Items */}
+        <nav className="space-y-1.5 flex-1">
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/portal/dashboard" && pathname.startsWith(item.href));
+            
+            let label = item.defaultLabel;
+            try {
+              const translated = t(item.labelKey);
+              if (translated && !translated.startsWith("portal.")) {
+                label = translated;
+              }
+            } catch {
+              label = item.defaultLabel;
+            }
 
-                <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
-                    {t("panel")}
-                </h2>
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-white/10 text-white font-semibold shadow-inner border border-white/10"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <item.icon
+                  size={18}
+                  className={cn(
+                    "transition-colors",
+                    isActive ? "text-red-500" : "text-white/40 group-hover:text-white"
+                  )}
+                />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-                <nav className="space-y-1 flex-1">
-                    {navItems.map((item) => {
-                        const isActive =
-                            pathname === item.href ||
-                            (item.href !== "/portal/dashboard" &&
-                                pathname.startsWith(item.href));
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={onClose}
-                                className={cn(
-                                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                                    isActive
-                                        ? "bg-red-600 text-white"
-                                        : "text-white/60 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <item.icon size={18} />
-                                <span>{t(item.labelKey)}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
+        {/* Sidebar Footer & REC Indicator */}
+        <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={onClose}
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-amber-400/90 hover:bg-amber-500/10 transition-colors"
+            >
+              <Shield size={18} />
+              <span>Admin Panel</span>
+            </Link>
+          )}
 
-                {/* Footer Actions */}
-                <div className="mt-auto pt-6 space-y-4">
-                    {/* Admin Link */}
-                    {isAdmin && (
-                        <div className="pt-6 border-t border-white/10">
-                            <Link
-                                href="/admin"
-                                onClick={onClose}
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors"
-                            >
-                                <Shield size={18} />
-                                <span>{t("adminPanel")}</span>
-                            </Link>
-                        </div>
-                    )}
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-white/40 hover:text-red-400 hover:bg-white/5 transition-colors w-full"
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </button>
 
-                    {/* Logout */}
-                    <div className={cn(!isAdmin && "pt-6 border-t border-white/10")}>
-                        <button
-                            onClick={() => signOut({ callbackUrl: "/" })}
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-red-500 hover:bg-white/5 transition-colors w-full"
-                        >
-                            <LogOut size={18} />
-                            <span>{t("signOut")}</span>
-                        </button>
-                    </div>
-                </div>
+          {/* PMP Tagline & REC Indicator */}
+          <div className="pt-3 border-t border-white/5 text-[11px] text-white/40 font-medium space-y-1">
+            <p className="font-semibold text-white/70">PMP - Paxala Media Production</p>
+            <p className="text-white/40">We produce. You grow.</p>
+            <div className="flex items-center gap-2 pt-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+              <span className="font-bold text-white tracking-widest text-[10px]">REC</span>
             </div>
-        </aside>
-    );
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
 }

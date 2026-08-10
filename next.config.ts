@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "paxalamedia.com" },
       { protocol: "https", hostname: "www.paxalamedia.com" },
       { protocol: "http", hostname: "localhost" },
+      // Demo/seed media only. api/dashboard and api/portal/projects already emit
+      // Unsplash placeholder URLs, so these were broken images in production.
+      // Remove both once real client media replaces the seeded assets.
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "commondatastorage.googleapis.com" },
     ],
     // Disable optimization for local development to avoid private IP error
     unoptimized: process.env.NODE_ENV === 'development',

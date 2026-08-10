@@ -13,6 +13,18 @@ export async function getProjectForAccess(projectId: string) {
 }
 
 /**
+ * Same as getProjectForAccess, but keyed by slug — portal project routes address
+ * projects by slug (/api/projects/[slug], /api/portal/projects/[slug]/milestones).
+ * Returns null if the project does not exist.
+ */
+export async function getProjectBySlugForAccess(slug: string) {
+  return db.project.findUnique({
+    where: { slug },
+    select: { id: true, slug: true, title: true, clientId: true },
+  });
+}
+
+/**
  * Authorization rule for project-scoped resources (files, milestones, tasks…).
  *
  * ADMIN and STAFF may access any project; a CLIENT may access only the project

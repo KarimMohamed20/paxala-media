@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectContentTab } from "@/components/content/project-content-tab";
 
 interface ProjectFile {
   id: string;
@@ -40,6 +41,10 @@ interface ProjectFile {
   type: string;
   size: number;
   createdAt: string;
+  // Present on the wire (the API selects the whole model) — needed by the
+  // content asset picker.
+  thumbnail?: string | null;
+  category?: string | null;
 }
 
 interface Comment {
@@ -172,6 +177,7 @@ function formatFileSize(bytes: number): string {
 export default function ProjectDetailPage() {
   const t = useTranslations('portal');
   const tc = useTranslations('common');
+  const tcon = useTranslations('content');
   const { slug } = useParams();
   const router = useRouter();
   const { data: session } = useSession();
@@ -416,6 +422,7 @@ export default function ProjectDetailPage() {
             <TabsTrigger value="files">
               {tc('files')} ({project.files.length})
             </TabsTrigger>
+            <TabsTrigger value="content">{tcon('projectTab.title')}</TabsTrigger>
             <TabsTrigger value="comments">
               {t('comments')} ({project.comments.length})
             </TabsTrigger>
@@ -718,6 +725,19 @@ export default function ProjectDetailPage() {
                     })}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="content">
+            <Card>
+              <CardContent className="pt-6">
+                <ProjectContentTab
+                  projectId={project.id}
+                  projectSlug={project.slug}
+                  projectTitle={project.title}
+                  assets={project.files}
+                />
               </CardContent>
             </Card>
           </TabsContent>

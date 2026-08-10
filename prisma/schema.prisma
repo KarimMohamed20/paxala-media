@@ -22,18 +22,29 @@ model User {
   managedUsers  User[]    @relation("UserManager")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  industry      String?      // Company industry (for CLIENT role only)
-  socialMedia   Json?        // Social media accounts (for CLIENT role only)
+  industry      String? // Company industry (for CLIENT role only)
+  socialMedia   Json? // Social media accounts (for CLIENT role only)
+  /// Staff job title shown on the Monthly Plan team strip ("Creative Director").
+  /// Single column, so it is NOT localizable — see PlanTeamMember.roleLabel for
+  /// the per-plan override. Null for CLIENT accounts.
+  jobTitle      String?
 
-  accounts        Account[]
-  sessions        Session[]
-  projects        Project[]        @relation("ClientProjects")
-  assignedProjects Project[]       @relation("ProjectStaff")
-  bookings        Booking[]
-  comments        Comment[]
-  assignedTasks   Task[]           @relation("AssignedTasks")
-  approvedTasks   Task[]           @relation("ApprovedTasks")
-  contacts        ClientContact[]  @relation("ClientContacts")
+  accounts         Account[]
+  sessions         Session[]
+  projects         Project[]         @relation("ClientProjects")
+  assignedProjects Project[]         @relation("ProjectStaff")
+  bookings         Booking[]
+  comments         Comment[]
+  assignedTasks    Task[]            @relation("AssignedTasks")
+  approvedTasks    Task[]            @relation("ApprovedTasks")
+  contacts         ClientContact[]   @relation("ClientContacts")
+  contentPlans     ContentPlan[]
+  contentReviews   ContentApproval[] @relation("ContentReviews")
+  contentComments  ContentComment[]  @relation("ContentComments")
+
+  planTeamships        PlanTeamMember[]    @relation("PlanTeamUser")
+  planActionsCompleted PlanAction[]        @relation("PlanActionCompleter")
+  planChangeRequests   PlanChangeRequest[] @relation("PlanChangeRequester")
 }
 
 model Account {
@@ -72,14 +83,14 @@ model VerificationToken {
 }
 
 model ClientContact {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String
-  jobTitle  String?
-  clientId  String
-  client    User     @relation("ClientContacts", fields: [clientId], references: [id], onDelete: Cascade)
+  id       String  @id @default(cuid())
+  name     String
+  phone    String
+  jobTitle String?
+  clientId String
+  client   User    @relation("ClientContacts", fields: [clientId], references: [id], onDelete: Cascade)
 
-  projects  Project[] @relation("ProjectContacts")
+  projects Project[] @relation("ProjectContacts")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -111,7 +122,7 @@ model TeamMember {
   skillsEn  String[] @default([])
   skillsAr  String[] @default([])
   skillsHe  String[] @default([])
-  social    Json?    // { instagram, linkedin, etc. }
+  social    Json? // { instagram, linkedin, etc. }
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,53 +136,53 @@ enum TeamType {
 
 // ==================== SERVICES ====================
 model Service {
-  id             String    @id @default(cuid())
-  nameEn         String
-  nameAr         String
-  nameHe         String
-  slug           String    @unique
-  descriptionEn  String    @db.Text
-  descriptionAr  String    @db.Text
-  descriptionHe  String    @db.Text
-  icon           String?
-  image          String?
-  featuresEn     String[]  @default([])
-  featuresAr     String[]  @default([])
-  featuresHe     String[]  @default([])
-  order          Int       @default(0)
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  projects       Project[]
+  id            String    @id @default(cuid())
+  nameEn        String
+  nameAr        String
+  nameHe        String
+  slug          String    @unique
+  descriptionEn String    @db.Text
+  descriptionAr String    @db.Text
+  descriptionHe String    @db.Text
+  icon          String?
+  image         String?
+  featuresEn    String[]  @default([])
+  featuresAr    String[]  @default([])
+  featuresHe    String[]  @default([])
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      Project[]
 }
 
 // ==================== PORTFOLIO ====================
 model Portfolio {
-  id             String            @id @default(cuid())
-  titleEn        String
-  titleAr        String
-  titleHe        String
-  slug           String            @unique
-  descriptionEn  String            @db.Text
-  descriptionAr  String            @db.Text
-  descriptionHe  String            @db.Text
-  contentEn      String?           @db.Text
-  contentAr      String?           @db.Text
-  contentHe      String?           @db.Text
-  thumbnail      String?
-  images         String[]          @default([])
-  videoUrl       String?
-  category       PortfolioCategory
-  tagsEn         String[]          @default([])
-  tagsAr         String[]          @default([])
-  tagsHe         String[]          @default([])
-  clientName     String?
-  featured       Boolean           @default(false)
-  published      Boolean           @default(false)
-  publishedAt    DateTime?
-  order          Int               @default(0)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  titleEn       String
+  titleAr       String
+  titleHe       String
+  slug          String            @unique
+  descriptionEn String            @db.Text
+  descriptionAr String            @db.Text
+  descriptionHe String            @db.Text
+  contentEn     String?           @db.Text
+  contentAr     String?           @db.Text
+  contentHe     String?           @db.Text
+  thumbnail     String?
+  images        String[]          @default([])
+  videoUrl      String?
+  category      PortfolioCategory
+  tagsEn        String[]          @default([])
+  tagsAr        String[]          @default([])
+  tagsHe        String[]          @default([])
+  clientName    String?
+  featured      Boolean           @default(false)
+  published     Boolean           @default(false)
+  publishedAt   DateTime?
+  order         Int               @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 }
 
 enum PortfolioCategory {
@@ -187,53 +198,91 @@ enum PortfolioCategory {
 
 // ==================== PROJECTS ====================
 model Project {
-  id          String        @id @default(cuid())
+  id          String          @id @default(cuid())
   title       String
-  slug        String        @unique
-  description String        @db.Text
-  content     String?       @db.Text
+  slug        String          @unique
+  description String          @db.Text
+  content     String?         @db.Text
   thumbnail   String?
-  images      String[]      @default([])
+  images      String[]        @default([])
   videoUrl    String?
   category    ProjectCategory
-  tags        String[]      @default([])
+  tags        String[]        @default([])
   clientName  String?
   clientId    String?
-  client      User?         @relation("ClientProjects", fields: [clientId], references: [id])
+  client      User?           @relation("ClientProjects", fields: [clientId], references: [id])
   serviceId   String?
-  service     Service?      @relation(fields: [serviceId], references: [id])
-  staff       User[]        @relation("ProjectStaff")
-  status      ProjectStatus @default(IN_PROGRESS)
-  featured    Boolean       @default(false)
+  service     Service?        @relation(fields: [serviceId], references: [id])
+  staff       User[]          @relation("ProjectStaff")
+  status      ProjectStatus   @default(IN_PROGRESS)
+  featured    Boolean         @default(false)
   publishedAt DateTime?
   startDate   DateTime?
   endDate     DateTime?
   deadline    DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  files        ProjectFile[]
+  folders      Folder[]
+  comments     Comment[]
+  milestones   Milestone[]
+  invoices     Invoice[]
+  contacts     ClientContact[] @relation("ProjectContacts")
+  contentPlans ContentPlan[]
+  contentItems ContentItem[]
+}
+
+model Folder {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  description String?       @db.Text
+  color       String?       @default("red")
+  isShared    Boolean       @default(false)
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  files       ProjectFile[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  files      ProjectFile[]
-  comments   Comment[]
-  milestones Milestone[]
-  invoices   Invoice[]
-  contacts   ClientContact[] @relation("ProjectContacts")
+  @@index([projectId])
 }
 
 model ProjectFile {
-  id          String   @id @default(cuid())
-  name        String
-  url         String
-  type        String   @default("link") // link, video, image, document, etc.
-  size        Int?     // Optional for NAS/URL files
-  description String?  @db.Text
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  taskId      String?  // Optional: attach to specific task
-  task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
+  id                String             @id @default(cuid())
+  name              String
+  url               String
+  type              String             @default("link") // link, video, image, document, etc.
+  size              Float? // Size in bytes (Float supports > 2GB)
+  description       String?            @db.Text
+  category          String?            @default("Video") // Video, Photography, Design, Brand Files, Web & Digital, Documents
+  folder            String?            @default("General") // Brand Identity, Campaigns 2026, Video Masters, Photography, Website & Digital, Documents
+  folderId          String?
+  folderRef         Folder?            @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  version           String?            @default("V1 Final")
+  status            String?            @default("Approved") // Approved Final, Approved, Shared, New, Final
+  duration          String?
+  thumbnail         String?
+  uploader          String?            @default("PMP Creative Team")
+  resolution        String?            @default("4K MP4")
+  usageRights       String?            @default("Approved for web and social.")
+  formats           Json? // Array of available format objects [{ name, resolution, size }]
+  versionHistory    Json? // Array of version history objects [{ version, date, status }]
+  isShared          Boolean            @default(false)
+  projectId         String
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId            String? // Optional: attach to specific task
+  task              Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  contentItemAssets ContentItemAsset[]
+  contentComments   ContentComment[]   @relation("ContentCommentAsset")
+  createdAt         DateTime           @default(now())
 
   @@index([projectId])
   @@index([taskId])
+  @@index([category])
+  @@index([folder])
+  @@index([folderId])
 }
 
 enum ProjectCategory {
@@ -264,7 +313,7 @@ model Booking {
   email       String
   phone       String?
   serviceType String
-  packageId   String?       // Optional package selection (e.g., "package-01", "package-02", "package-03")
+  packageId   String? // Optional package selection (e.g., "package-01", "package-02", "package-03")
   date        DateTime
   timeSlot    String
   duration    Int           @default(60) // minutes
@@ -394,37 +443,37 @@ model HomePageContent {
   heroStatsHe     Json   @default("[{\"value\":\"1000+\",\"label\":\"Projects Completed\"},{\"value\":\"200+\",\"label\":\"Happy Clients\"},{\"value\":\"8+\",\"label\":\"Services Offered\"},{\"value\":\"10+\",\"label\":\"Years Experience\"}]")
 
   // About Section
-  aboutBadgeEn       String  @default("About Us")
-  aboutBadgeAr       String  @default("About Us")
-  aboutBadgeHe       String  @default("About Us")
-  aboutHeadingEn     String  @default("About Paxala Media")
-  aboutHeadingAr     String  @default("About Paxala Media")
-  aboutHeadingHe     String  @default("About Paxala Media")
-  aboutImage         String? // Upload path
-  aboutParagraph1En  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
-  aboutParagraph1Ar  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
-  aboutParagraph1He  String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
-  aboutParagraph2En  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
-  aboutParagraph2Ar  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
-  aboutParagraph2He  String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
-  aboutParagraph3En  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
-  aboutParagraph3Ar  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
-  aboutParagraph3He  String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
-  aboutParagraph4En  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
-  aboutParagraph4Ar  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
-  aboutParagraph4He  String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
-  aboutParagraph5En  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
-  aboutParagraph5Ar  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
-  aboutParagraph5He  String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
-  aboutHighlightsEn  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
-  aboutHighlightsAr  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
-  aboutHighlightsHe  Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
-  aboutYearsTextEn   String  @default("10+")
-  aboutYearsTextAr   String  @default("10+")
-  aboutYearsTextHe   String  @default("10+")
-  aboutYearsLabelEn  String  @default("Years of Excellence")
-  aboutYearsLabelAr  String  @default("Years of Excellence")
-  aboutYearsLabelHe  String  @default("Years of Excellence")
+  aboutBadgeEn      String  @default("About Us")
+  aboutBadgeAr      String  @default("About Us")
+  aboutBadgeHe      String  @default("About Us")
+  aboutHeadingEn    String  @default("About Paxala Media")
+  aboutHeadingAr    String  @default("About Paxala Media")
+  aboutHeadingHe    String  @default("About Paxala Media")
+  aboutImage        String? // Upload path
+  aboutParagraph1En String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph1Ar String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph1He String  @default("Paxala Media Production is a full-service creative agency with in-house production, built to shape, scale, and elevate brands through strategic visual storytelling.") @db.Text
+  aboutParagraph2En String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph2Ar String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph2He String  @default("What began as a passion-driven studio has evolved into a multidisciplinary creative house that leads with strategy and creative direction, while executing everything under one roof — from branding and content to film, digital, and growth.") @db.Text
+  aboutParagraph3En String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph3Ar String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph3He String  @default("Every project is led under a single creative direction and executed through a fully integrated in-house system — ensuring clarity, consistency, and control from strategy to final delivery.") @db.Text
+  aboutParagraph4En String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph4Ar String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph4He String  @default("We partner with ambitious brands, institutions, and companies that understand visuals are not decoration — they are a business asset.") @db.Text
+  aboutParagraph5En String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutParagraph5Ar String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutParagraph5He String  @default("At PMP, we don't just produce content. We build visual systems that tell stories, build trust, and drive results.") @db.Text
+  aboutHighlightsEn Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutHighlightsAr Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutHighlightsHe Json    @default("[\"Full-service creative agency\",\"Expert team of filmmakers & designers\",\"Cutting-edge equipment & technology\",\"End-to-end project management\",\"Dedicated to client success\"]")
+  aboutYearsTextEn  String  @default("10+")
+  aboutYearsTextAr  String  @default("10+")
+  aboutYearsTextHe  String  @default("10+")
+  aboutYearsLabelEn String  @default("Years of Excellence")
+  aboutYearsLabelAr String  @default("Years of Excellence")
+  aboutYearsLabelHe String  @default("Years of Excellence")
 
   // Team Section
   teamSubtitleEn    String @default("Our Team")
@@ -472,12 +521,12 @@ model HomePageContent {
   ctaSubtitleHe String @default("Let's create something amazing together. Book a consultation or get in touch to discuss your next project.")
 
   // About Page Specific Content
-  aboutPageHeroBadgeEn    String @default("About Us")
-  aboutPageHeroBadgeAr    String @default("About Us")
-  aboutPageHeroBadgeHe    String @default("About Us")
-  aboutPageHeroHeadingEn  String @default("About Paxala Media")
-  aboutPageHeroHeadingAr  String @default("About Paxala Media")
-  aboutPageHeroHeadingHe  String @default("About Paxala Media")
+  aboutPageHeroBadgeEn   String @default("About Us")
+  aboutPageHeroBadgeAr   String @default("About Us")
+  aboutPageHeroBadgeHe   String @default("About Us")
+  aboutPageHeroHeadingEn String @default("About Paxala Media")
+  aboutPageHeroHeadingAr String @default("About Paxala Media")
+  aboutPageHeroHeadingHe String @default("About Paxala Media")
 
   // About Page Values Section
   aboutValuesSubtitleEn    String @default("What Drives Us")
@@ -519,12 +568,12 @@ model HomePageContent {
   aboutTeamDescriptionHe String @default("The talented professionals behind our creative productions.")
 
   // About Page CTA Section
-  aboutCtaHeadingEn    String @default("Ready to Start Your Project?")
-  aboutCtaHeadingAr    String @default("Ready to Start Your Project?")
-  aboutCtaHeadingHe    String @default("Ready to Start Your Project?")
-  aboutCtaSubtitleEn   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
-  aboutCtaSubtitleAr   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
-  aboutCtaSubtitleHe   String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaHeadingEn  String @default("Ready to Start Your Project?")
+  aboutCtaHeadingAr  String @default("Ready to Start Your Project?")
+  aboutCtaHeadingHe  String @default("Ready to Start Your Project?")
+  aboutCtaSubtitleEn String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaSubtitleAr String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
+  aboutCtaSubtitleHe String @default("Let's collaborate and create something extraordinary together. Our team is excited to hear about your project.")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -597,33 +646,33 @@ model Milestone {
 }
 
 model Invoice {
-  id            String    @id @default(cuid())
-  number        String    @unique // e.g., INV-2024-001
-  status        InvoiceStatus @default(DRAFT)
-  issueDate     DateTime  @default(now())
-  dueDate       DateTime?
-  currency      String    @default("USD") // or SAR, ILS
-  language      String    @default("en") // en, ar, he
+  id        String        @id @default(cuid())
+  number    String        @unique // e.g., INV-2024-001
+  status    InvoiceStatus @default(DRAFT)
+  issueDate DateTime      @default(now())
+  dueDate   DateTime?
+  currency  String        @default("USD") // or SAR, ILS
+  language  String        @default("en") // en, ar, he
 
   // Amounts
-  subtotal      Decimal   @db.Decimal(10, 2)
-  taxRate       Decimal   @default(0) @db.Decimal(5, 2)
-  taxAmount     Decimal   @default(0) @db.Decimal(10, 2)
-  total         Decimal   @db.Decimal(10, 2)
-  
-  // Relations
-  projectId     String
-  project       Project   @relation(fields: [projectId], references: [id])
-  milestoneId   String?   @unique
-  milestone     Milestone? @relation(fields: [milestoneId], references: [id])
-  
-  // Content
-  items         Json      // Array of { description, quantity, price, total }
-  notes         String?   @db.Text
-  pdfUrl        String?   // Path to stored PDF
+  subtotal  Decimal @db.Decimal(10, 2)
+  taxRate   Decimal @default(0) @db.Decimal(5, 2)
+  taxAmount Decimal @default(0) @db.Decimal(10, 2)
+  total     Decimal @db.Decimal(10, 2)
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  // Relations
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id])
+  milestoneId String?    @unique
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id])
+
+  // Content
+  items  Json // Array of { description, quantity, price, total }
+  notes  String? @db.Text
+  pdfUrl String? // Path to stored PDF
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId])
 }
@@ -658,4 +707,372 @@ model Task {
 
   @@index([milestoneId])
   @@index([assigneeId])
+}
+
+// ==================== CONTENT PLANNING & CALENDAR ====================
+
+enum ContentStatus {
+  DRAFT
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  SCHEDULED
+  PUBLISHED
+  IN_PROGRESS
+}
+
+enum ContentPlatform {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  LINKEDIN
+  YOUTUBE
+  PAID_ADS
+}
+
+enum ContentFormat {
+  REEL
+  CAROUSEL
+  POST
+  STORIES
+  VIDEO
+  PAID_CAMPAIGN
+}
+
+/// The client's Monthly Plan — one per client per month. Also the container the
+/// content calendar hangs its ContentItems off, which is why the plan's
+/// deliverable counters and the calendar can never disagree.
+model ContentPlan {
+  id    String @id @default(cuid())
+  title String // e.g. "August 2026 Content Strategy"
+  month Int // 1 - 12
+  year  Int // e.g. 2026
+
+  /// Header line 2 — "Creative & Marketing Roadmap".
+  subtitle  String?
+  /// Monthly Objective paragraph.
+  objective String?  @db.Text
+  /// Focus chips: ["Brand Awareness", "Product Launch", "Lead Generation"].
+  tags      String[] @default([])
+  /// Retainer tier — an id from `packages` in src/lib/constants.ts. Not an FK:
+  /// packages are code constants, exactly as Booking.packageId already is.
+  packageId String?
+
+  /// A CLIENT sees the plan only when true. A bare row is auto-created by the
+  /// content-calendar upsert, so unpublished is the only safe default.
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  /// Drives the "Updated 01 Aug 2026" strip. Separate from `updatedAt` because
+  /// the calendar's upsert({ update: {} }) touches the row on every content-item
+  /// create, which would otherwise show the client work they never saw.
+  contentUpdatedAt DateTime?
+
+  clientId String
+  client   User   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  items ContentItem[]
+
+  deliverables   PlanDeliverable[]
+  keyDates       PlanKeyDate[]
+  weeks          PlanWeek[]
+  actions        PlanAction[]
+  teamMembers    PlanTeamMember[]
+  changeRequests PlanChangeRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, month, year])
+  @@index([clientId])
+  @@index([clientId, isPublished])
+}
+
+/// Badge vocabulary shared by timeline items and client actions — the mockup
+/// uses the same four states for both. Deliberately not TaskStatus, which has
+/// no AWAITING_CLIENT/SCHEDULED and is entangled with the milestone invoice flow.
+enum PlanItemStatus {
+  SCHEDULED
+  IN_PROGRESS
+  AWAITING_CLIENT
+  COMPLETED
+}
+
+enum PlanChangeRequestStatus {
+  OPEN
+  RESOLVED
+  DECLINED
+}
+
+/// One counter in the Deliverables card ("Video Production 3/4").
+model PlanDeliverable {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  label  String
+  /// Lucide icon name, validated against DELIVERABLE_ICONS in lib/monthly-plan.ts.
+  icon   String?
+  target Int     @default(0)
+
+  /// Auto-count source. Non-empty => done is derived from the month's
+  /// ContentItems with these formats that reached Approved/Scheduled/Published.
+  formats    ContentFormat[] @default([])
+  /// Used only when `formats` is empty — a photography session is not a ContentItem.
+  manualDone Int?
+
+  order Int @default(0)
+
+  @@index([planId, order])
+}
+
+/// A dated marker in the Key Dates rail ("05 AUG — Campaign Brief").
+model PlanKeyDate {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  title String
+  /// Stored at 00:00 UTC; rendered day/month only.
+  date  DateTime
+  note  String?
+  order Int      @default(0)
+
+  @@index([planId, date])
+  @@index([planId, order])
+}
+
+/// One column of the monthly timeline.
+model PlanWeek {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  /// Column position; the visible "Week N" label is order + 1.
+  /// No @@unique([planId, order]) on purpose: swapping two columns inside one
+  /// transaction would violate it mid-statement, and Prisma cannot declare a
+  /// DEFERRABLE constraint.
+  order Int    @default(0)
+  title String
+
+  startsOn DateTime?
+  endsOn   DateTime?
+
+  items PlanWeekItem[]
+
+  @@index([planId, order])
+}
+
+/// A checklist line inside a week column.
+model PlanWeekItem {
+  id     String   @id @default(cuid())
+  weekId String
+  week   PlanWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  title  String
+  status PlanItemStatus @default(SCHEDULED)
+  order  Int            @default(0)
+
+  @@index([weekId, order])
+}
+
+/// A to-do owned by the CLIENT ("Approve campaign concept", due 08 Aug).
+model PlanAction {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?        @db.Text
+  dueAt       DateTime?
+  status      PlanItemStatus @default(SCHEDULED)
+  order       Int            @default(0)
+
+  /// Optional deep link into /portal/approvals?item=<id>.
+  contentItemId String?
+  contentItem   ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+
+  completedAt   DateTime?
+  // SetNull, not Cascade: deleting a user must not erase the plan's history —
+  // the rule ContentApproval and ContentComment already follow.
+  completedById String?
+  completedBy   User?     @relation("PlanActionCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([planId, order])
+  @@index([status])
+  @@index([contentItemId])
+}
+
+/// The PMP Team lineup. An explicit join rather than an implicit m2m because the
+/// four cards are an ordered lineup and an implicit join row cannot carry `order`.
+model PlanTeamMember {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("PlanTeamUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Per-plan override; null falls back to User.jobTitle.
+  roleLabel String?
+  order     Int     @default(0)
+
+  @@unique([planId, userId])
+  @@index([planId, order])
+  @@index([userId])
+}
+
+/// The header's "Request Change" — the only write a CLIENT makes against the
+/// plan document. A table, not a fire-and-forget email, so the request survives
+/// an SMTP failure and the agency has an inbox.
+model PlanChangeRequest {
+  id     String      @id @default(cuid())
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  requesterId   String?
+  requester     User?   @relation("PlanChangeRequester", fields: [requesterId], references: [id], onDelete: SetNull)
+  requesterName String?
+  requesterRole Role
+
+  message        String                  @db.Text
+  status         PlanChangeRequestStatus @default(OPEN)
+  resolutionNote String?                 @db.Text
+  resolvedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId, createdAt])
+  @@index([status])
+}
+
+model ContentItem {
+  id       String          @id @default(cuid())
+  title    String // e.g. "New Collection Teaser"
+  caption  String?         @db.Text
+  platform ContentPlatform @default(INSTAGRAM)
+  format   ContentFormat   @default(REEL)
+  status   ContentStatus   @default(DRAFT)
+
+  scheduledAt DateTime
+  publishedAt DateTime?
+  /// When the client is expected to finish reviewing. Distinct from scheduledAt,
+  /// which is when the post goes live. Falls back to scheduledAt when unset.
+  reviewDueAt DateTime?
+
+  planId String
+  plan   ContentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  assets ContentItemAsset[]
+
+  // Denormalized "latest review" mirrors of the ContentApproval log. Kept because the
+  // calendar grid renders 30+ items per month and must not join per item. Always written
+  // in the same transaction as the log row — see src/lib/content-authz.ts.
+  clientNotes String?   @db.Text
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+
+  approvals   ContentApproval[]
+  comments    ContentComment[]
+  planActions PlanAction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([projectId])
+}
+
+model ContentItemAsset {
+  id            String      @id @default(cuid())
+  contentItemId String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  fileId String
+  file   ProjectFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  order Int @default(0)
+
+  @@unique([contentItemId, fileId])
+  @@index([contentItemId])
+  @@index([fileId])
+}
+
+enum ContentApprovalAction {
+  SUBMITTED // staff/admin sent the item to the client for review
+  APPROVED
+  REJECTED
+}
+
+/// Immutable audit log — one row per review action on a ContentItem.
+/// Invariant: an item may only enter APPROVED or REJECTED via a write that also
+/// creates a row here, in the same transaction. Enforced by the transition matrix
+/// in src/lib/content-authz.ts, which blocks those two statuses on PUT entirely.
+model ContentApproval {
+  id String @id @default(cuid())
+
+  contentItemId String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  action ContentApprovalAction
+  notes  String?               @db.Text
+
+  // SetNull, not Cascade: deleting a user must not silently erase review history.
+  reviewerId   String?
+  reviewer     User?   @relation("ContentReviews", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewerRole Role // snapshot — tells a client approval from an agency override
+  reviewerName String? // display snapshot, survives reviewer deletion
+
+  fromStatus ContentStatus? // nullable: seeded/legacy rows may not know
+  toStatus   ContentStatus
+
+  createdAt DateTime @default(now())
+
+  @@index([contentItemId, createdAt])
+  @@index([reviewerId])
+  @@index([action])
+}
+
+/// Review conversation on a content item — the running feedback thread, kept
+/// separate from ContentApproval so that log stays an immutable record of
+/// verdicts only. A comment may be pinned to a moment in an attached video
+/// (timecodeSec) and/or to a specific attached file (assetId).
+model ContentComment {
+  id String @id @default(cuid())
+
+  contentItemId String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  // SetNull, not Cascade: deleting a user must not erase the feedback history.
+  authorId   String?
+  author     User?   @relation("ContentComments", fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String? // display snapshot, survives author deletion
+  authorRole Role
+
+  body String @db.Text
+
+  /// Seconds into the referenced video. Null for a general (non-pinned) comment.
+  timecodeSec Float?
+
+  /// Which attached file the comment annotates. Null for item-level feedback.
+  assetId String?
+  asset   ProjectFile? @relation("ContentCommentAsset", fields: [assetId], references: [id], onDelete: SetNull)
+
+  resolved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contentItemId, createdAt])
+  @@index([authorId])
+  @@index([assetId])
 }

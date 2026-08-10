@@ -1,5 +1,5 @@
 import { PrismaClient, Role, TeamType, ProjectCategory, ProjectStatus, BookingStatus, BlogCategory } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hashSeedPw } from "./seed-utils";
 
 const prisma = new PrismaClient();
 
@@ -10,19 +10,10 @@ async function main() {
   console.log("👤 Creating users...");
 
   // Seed passwords come from env so production never gets weak hardcoded creds (DEP-04).
-  const seedPw = (envVar: string, fallback: string) => {
-    const v = process.env[envVar];
-    if (!v) {
-      console.warn(
-        `⚠️  ${envVar} not set — using a default seed password. Set it (and change it) before seeding any shared/production database.`
-      );
-    }
-    return v || fallback;
-  };
-
-  const adminPassword = await bcrypt.hash(seedPw("SEED_ADMIN_PASSWORD", "ChangeMe!Admin2026"), 12);
-  const staffPassword = await bcrypt.hash(seedPw("SEED_STAFF_PASSWORD", "ChangeMe!Staff2026"), 12);
-  const clientPassword = await bcrypt.hash(seedPw("SEED_CLIENT_PASSWORD", "ChangeMe!Client2026"), 12);
+  // Shared with scripts/seed-content.ts via prisma/seed-utils.ts.
+  const adminPassword = await hashSeedPw("SEED_ADMIN_PASSWORD", "ChangeMe!Admin2026");
+  const staffPassword = await hashSeedPw("SEED_STAFF_PASSWORD", "ChangeMe!Staff2026");
+  const clientPassword = await hashSeedPw("SEED_CLIENT_PASSWORD", "ChangeMe!Client2026");
 
   const admin = await prisma.user.upsert({
     where: { username: "admin" },
@@ -702,14 +693,16 @@ Happy shooting!`,
   console.log("🎉 Database seed completed successfully!");
   console.log("═══════════════════════════════════════════════════════");
   console.log("");
-  console.log("📧 Default Login Credentials:");
-  console.log("   ┌─────────────────────────────────────┐");
-  console.log("   │ Role    │ Username    │ Password   │");
-  console.log("   ├─────────────────────────────────────┤");
-  console.log("   │ Admin   │ admin       │ admin123   │");
-  console.log("   │ Staff   │ karim       │ staff123   │");
-  console.log("   │ Client  │ client      │ client123  │");
-  console.log("   └─────────────────────────────────────┘");
+  // Passwords come from the SEED_*_PASSWORD env vars — never print them here.
+  console.log("📧 Login usernames (passwords from env):");
+  console.log("   ┌────────────────────────────────────────────┐");
+  console.log("   │ Role    │ Username │ Password from         │");
+  console.log("   ├────────────────────────────────────────────┤");
+  console.log("   │ Admin   │ admin    │ SEED_ADMIN_PASSWORD   │");
+  console.log("   │ Staff   │ karim    │ SEED_STAFF_PASSWORD   │");
+  console.log("   │ Client  │ client   │ SEED_CLIENT_PASSWORD  │");
+  console.log("   │ Client  │ roma     │ SEED_CLIENT_PASSWORD  │");
+  console.log("   └────────────────────────────────────────────┘");
   console.log("");
 }
 

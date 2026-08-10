@@ -9,8 +9,12 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:seed:content": "npx tsx scripts/seed-content.ts",
+    "db:seed:content:reset": "npx tsx scripts/seed-content.ts --reset",
+    "db:seed:all": "npm run db:seed && npm run db:seed:content",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset"
   },
