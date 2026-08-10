@@ -149,25 +149,6 @@ function PackageCard({
               <p className="text-xs md:text-sm text-white/60">{pkg.subtitle}</p>
             </div>
           </div>
-
-          {/* Price */}
-          <div className="mt-4">
-            {pkg.price === "Custom" ? (
-              <div>
-                <span className="text-3xl md:text-4xl font-bold text-white">Custom</span>
-                <p className="text-sm text-white/60 mt-1">{pkg.period}</p>
-              </div>
-            ) : (
-              <div>
-                <span className="text-sm text-white/60">{pkg.currency}</span>
-                <span className="text-3xl md:text-4xl font-bold text-white ml-1">{pkg.price}</span>
-                <span className="text-sm text-white/60 ml-2">/ {pkg.period}</span>
-                {pkg.minimumCommitment && (
-                  <p className="text-xs text-white/50 mt-1">{pkg.minimumCommitment}</p>
-                )}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Description */}
