@@ -42,6 +42,7 @@ model User {
   contentPlans     ContentPlan[]
   contentReviews   ContentApproval[] @relation("ContentReviews")
   contentComments  ContentComment[]  @relation("ContentComments")
+  folders          Folder[]          @relation("ClientFolders")
 
   planTeamships        PlanTeamMember[]    @relation("PlanTeamUser")
   planActionsCompleted PlanAction[]        @relation("PlanActionCompleter")
@@ -236,19 +237,31 @@ model Project {
 }
 
 model Folder {
-  id          String        @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
-  slug        String        @unique
-  description String?       @db.Text
-  color       String?       @default("red")
-  isShared    Boolean       @default(false)
-  projectId   String?
-  project     Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  files       ProjectFile[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  slug        String  @unique
+  description String? @db.Text
+  color       String? @default("red")
+  isShared    Boolean @default(false)
+
+  /// Which client's library this folder belongs to. Null means agency-wide —
+  /// the shipped defaults (Brand Identity, Photography…) that every client sees.
+  /// Set whenever a CLIENT creates a folder, so one client's folder names never
+  /// surface in another client's Asset Library. Visibility rule lives in
+  /// folderVisibilityWhere() in src/lib/asset-scope.ts.
+  /// SetNull, not Cascade: deleting a user must not delete their folders (the
+  /// files inside belong to projects, which outlive the user account).
+  clientId String?
+  client   User?   @relation("ClientFolders", fields: [clientId], references: [id], onDelete: SetNull)
+
+  projectId String?
+  project   Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  files     ProjectFile[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([projectId])
+  @@index([clientId])
 }
 
 model ProjectFile {

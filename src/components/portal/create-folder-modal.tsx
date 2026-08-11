@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FolderPlus, Loader2, Check } from "lucide-react";
+import { X, FolderPlus, FolderPen, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+export interface EditableFolder {
+  id?: string | null;
+  name: string;
+  description?: string | null;
+  color?: string | null;
+  shared?: boolean;
+}
 
 interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onFolderCreated: () => void;
+  /** When set, the modal renames that folder instead of creating a new one. */
+  folder?: EditableFolder | null;
+  /**
+   * Agency-side only: the client whose library the new folder belongs to.
+   * Undefined creates an agency-wide folder. A CLIENT session never sets this —
+   * the server stamps their own id regardless of what is sent.
+   */
+  clientId?: string;
 }
 
 const colorOptions = [
@@ -24,13 +40,26 @@ export function CreateFolderModal({
   isOpen,
   onClose,
   onFolderCreated,
+  folder = null,
+  clientId,
 }: CreateFolderModalProps) {
+  const isEditing = Boolean(folder?.id);
   const [folderName, setFolderName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("red");
   const [isShared, setIsShared] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Preload when opened for an existing folder; reset when opened blank.
+  useEffect(() => {
+    if (!isOpen) return;
+    setFolderName(folder?.name || "");
+    setDescription(folder?.description || "");
+    setColor(folder?.color || "red");
+    setIsShared(Boolean(folder?.shared));
+    setError(null);
+  }, [isOpen, folder]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +70,13 @@ export function CreateFolderModal({
 
     try {
       const res = await fetch("/api/folders", {
-        method: "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(isEditing ? { id: folder!.id } : {}),
+          ...(!isEditing && clientId ? { clientId } : {}),
           name: folderName.trim(),
-          description: description.trim() || undefined,
+          description: description.trim() || null,
           color,
           isShared,
         }),
@@ -53,7 +84,9 @@ export function CreateFolderModal({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create folder");
+        throw new Error(
+          data.error || `Failed to ${isEditing ? "update" : "create"} folder`
+        );
       }
 
       setFolderName("");
@@ -61,8 +94,8 @@ export function CreateFolderModal({
       setIsShared(false);
       onFolderCreated();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -93,11 +126,17 @@ export function CreateFolderModal({
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center border border-red-500/30">
-                <FolderPlus size={20} />
+                {isEditing ? <FolderPen size={20} /> : <FolderPlus size={20} />}
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Create New Folder</h3>
-                <p className="text-xs text-white/50">Organize your campaign & production assets</p>
+                <h3 className="text-base font-bold text-white">
+                  {isEditing ? "Edit Folder" : "Create New Folder"}
+                </h3>
+                <p className="text-xs text-white/50">
+                  {isEditing
+                    ? "Rename or restyle this folder"
+                    : "Organize your campaign & production assets"}
+                </p>
               </div>
             </div>
             <button
@@ -192,7 +231,13 @@ export function CreateFolderModal({
                 disabled={loading || !folderName.trim()}
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold px-5 flex items-center gap-2"
               >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Folder"}
+                {loading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : isEditing ? (
+                  "Save Folder"
+                ) : (
+                  "Create Folder"
+                )}
               </Button>
             </div>
           </form>

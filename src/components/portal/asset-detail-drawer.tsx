@@ -7,11 +7,12 @@ import {
   Share2,
   CheckCircle2,
   Play,
-  FileText,
-  Clock,
   Layers,
   ShieldCheck,
   ArrowDownToLine,
+  Pencil,
+  Trash2,
+  Folder as FolderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,7 +22,15 @@ export interface AssetDetail {
   url: string;
   type: string;
   category?: string;
+  /** Denormalised folder name — always present, even for folder-less uploads. */
+  folder?: string | null;
+  /** Set when the asset is attached to a real Folder row. */
+  folderId?: string | null;
+  description?: string | null;
+  isShared?: boolean;
+  size?: number;
   sizeFormatted?: string;
+  createdAt?: string;
   projectId?: string;
   projectTitle?: string;
   formattedDate?: string;
@@ -48,9 +57,18 @@ interface AssetDetailDrawerProps {
   asset: AssetDetail | null;
   isOpen: boolean;
   onClose: () => void;
+  onEdit?: (asset: AssetDetail) => void;
+  /** Omitted when the viewer may not delete (clients). */
+  onDelete?: (asset: AssetDetail) => void;
 }
 
-export function AssetDetailDrawer({ asset, isOpen, onClose }: AssetDetailDrawerProps) {
+export function AssetDetailDrawer({
+  asset,
+  isOpen,
+  onClose,
+  onEdit,
+  onDelete,
+}: AssetDetailDrawerProps) {
   if (!asset) return null;
 
   const isVideo = asset.type === "video" || asset.name.endsWith(".mp4");
@@ -79,15 +97,35 @@ export function AssetDetailDrawer({ asset, isOpen, onClose }: AssetDetailDrawerP
             <div className="p-6 space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-sm font-bold text-white truncate max-w-[280px]">
+                <h3 className="text-sm font-bold text-white truncate max-w-[220px]">
                   {asset.name}
                 </h3>
-                <button
-                  onClick={onClose}
-                  className="text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-1">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(asset)}
+                      title="Edit asset"
+                      className="text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(asset)}
+                      title="Delete asset"
+                      className="text-white/40 hover:text-red-400 p-1 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                  <button
+                    onClick={onClose}
+                    className="text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
               {/* Media Preview Box */}
@@ -119,11 +157,26 @@ export function AssetDetailDrawer({ asset, isOpen, onClose }: AssetDetailDrawerP
                 </span>
               </div>
 
+              {asset.description && (
+                <p className="text-xs text-white/60 leading-relaxed">{asset.description}</p>
+              )}
+
               {/* Metadata List */}
               <div className="bg-neutral-900/60 rounded-xl border border-white/5 p-4 space-y-2.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-white/40">Project</span>
                   <span className="text-white font-medium">{asset.projectTitle || "New Collection Launch"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/40">Folder</span>
+                  <span className="text-white font-medium flex items-center gap-1.5">
+                    <FolderIcon size={12} className="text-white/40" />
+                    {asset.folder || "General"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/40">Category</span>
+                  <span className="text-white font-medium">{asset.category || "Video"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/40">Type</span>

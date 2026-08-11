@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -6,10 +7,17 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getFileUrl } from "@/lib/utils";
 import { canAccessProject } from "@/lib/authz";
+import { resolveAssetScope } from "@/lib/asset-scope";
 import { deleteLocalUpload } from "@/lib/storage";
+import {
+  ASSET_CATEGORIES,
+  ASSET_STATUSES,
+  DEFAULT_FOLDER_NAME,
+  MAX_UPLOAD_BYTES,
+  formatBytes,
+} from "@/lib/assets";
 import { format } from "date-fns";
 
-const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB
 const ALLOWED_UPLOAD_MIME = new Set<string>([
   "image/jpeg",
   "image/jpg",
@@ -39,12 +47,87 @@ const ALLOWED_UPLOAD_MIME = new Set<string>([
   "application/x-rar-compressed",
 ]);
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+const VIDEO_PLACEHOLDER_THUMBNAIL =
+  "https://images.unsplash.com/photo-1579165466741-7f35e4755660?q=80&w=800&auto=format&fit=crop";
+
+type SerializableFile = Prisma.ProjectFileGetPayload<{
+  include: { project: { select: { id: true; title: true; slug: true } } };
+}>;
+
+/**
+ * The single asset shape the Asset Library consumes. GET and PATCH both return
+ * it, so an edited card renders identically to a freshly fetched one.
+ */
+function serializeAsset(file: SerializableFile) {
+  return {
+    id: file.id,
+    name: file.name,
+    url: file.url,
+    type: file.type,
+    category: file.category || "Video",
+    // Both folder fields ship to the client: the Asset Library filters on
+    // `folderId` when set and falls back to the legacy `folder` name.
+    folder: file.folder || DEFAULT_FOLDER_NAME,
+    folderId: file.folderId,
+    description: file.description,
+    isShared: file.isShared,
+    size: file.size || 0,
+    sizeFormatted: formatBytes(file.size || 0),
+    projectId: file.projectId,
+    projectTitle: file.project.title,
+    projectSlug: file.project.slug,
+    createdAt: file.createdAt.toISOString(),
+    formattedDate: format(new Date(file.createdAt), "dd MMM yyyy"),
+    version: file.version || "V1 Final",
+    status: file.status || "Approved",
+    duration: file.duration || null,
+    thumbnail:
+      file.thumbnail ||
+      (file.type === "image" ? file.url : VIDEO_PLACEHOLDER_THUMBNAIL),
+    uploader: file.uploader || "PMP Creative Team",
+    resolution: file.resolution || "4K MP4",
+    usageRights: file.usageRights || "Approved for web and social.",
+    availableFormats: file.formats || [
+      {
+        name: "Original Master",
+        resolution: file.resolution || "Master File",
+        size: formatBytes(file.size || 0),
+      },
+    ],
+    versionHistory: file.versionHistory || [
+      {
+        version: file.version || "V1 Final",
+        date: format(new Date(file.createdAt), "dd MMM yyyy"),
+        status: "Current",
+      },
+    ],
+  };
+}
+
+/**
+ * Resolve a folder name to a real Folder row, so uploads and edits populate
+ * `folderId` instead of only the legacy `folder` string. Returns null when no
+ * folder row carries that name (the name is still stored on the file).
+ */
+async function resolveFolderId(
+  folderName: string | null,
+  projectId: string,
+  ownerClientId: string | null
+): Promise<string | null> {
+  if (!folderName) return null;
+  const candidates = await db.folder.findMany({
+    where: {
+      name: folderName,
+      OR: [{ projectId }, { projectId: null }],
+      // Never adopt a folder owned by a different client just because the name
+      // matches — agency-wide folders (clientId null) are fair game for all.
+      AND: [{ OR: [{ clientId: null }, { clientId: ownerClientId }] }],
+    },
+    select: { id: true, projectId: true },
+  });
+  // Prefer a folder scoped to this project over a global one of the same name.
+  const scoped = candidates.find((f) => f.projectId === projectId);
+  return (scoped ?? candidates[0])?.id ?? null;
 }
 
 // GET files for a project or all accessible assets for the user directly from PostgreSQL DB
@@ -59,9 +142,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
     const isGlobal = searchParams.get("global") === "true" || !projectId;
-
-    const userRole = session.user.role;
-    const userId = session.user.id;
 
     if (projectId && !isGlobal) {
       const project = await db.project.findUnique({
@@ -85,13 +165,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(files);
     }
 
-    const projectsWhere = userRole === "ADMIN" ? {} : { clientId: userId };
-    const projects = await db.project.findMany({
-      where: projectsWhere,
-      select: { id: true, title: true, slug: true },
-    });
-
-    const projectIds = projects.map((p) => p.id);
+    // Agency users may narrow the library to one client; a CLIENT is always
+    // pinned to their own projects regardless of what they send.
+    const scoped = await resolveAssetScope(session, searchParams.get("clientId"));
+    if (!scoped.ok) {
+      return NextResponse.json({ error: scoped.error }, { status: scoped.status });
+    }
+    const { projects, projectIds, clients, clientId, isStaff } = scoped.scope;
 
     const dbFiles = await db.projectFile.findMany({
       where: {
@@ -115,8 +195,16 @@ export async function GET(request: NextRequest) {
       (f) => new Date(f.createdAt) >= startOfMonth
     ).length;
 
+    type DerivedFolder = {
+      name: string;
+      filesCount: number;
+      updatedDate: string;
+      shared: boolean;
+      latestTime: number;
+    };
+
     const folderMap = dbFiles.reduce((acc, file) => {
-      const folderName = file.folder || "General";
+      const folderName = file.folder || DEFAULT_FOLDER_NAME;
       if (!acc[folderName]) {
         acc[folderName] = {
           name: folderName,
@@ -133,41 +221,11 @@ export async function GET(request: NextRequest) {
         acc[folderName].updatedDate = `Updated ${format(new Date(file.createdAt), "dd MMM yyyy")}`;
       }
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, DerivedFolder>);
 
     const folders = Object.values(folderMap);
 
-    const assets = dbFiles.map((file) => ({
-      id: file.id,
-      name: file.name,
-      url: file.url,
-      type: file.type,
-      category: file.category || "Video",
-      size: file.size || 0,
-      sizeFormatted: formatBytes(file.size || 0),
-      projectId: file.projectId,
-      projectTitle: file.project.title,
-      projectSlug: file.project.slug,
-      createdAt: file.createdAt.toISOString(),
-      formattedDate: format(new Date(file.createdAt), "dd MMM yyyy"),
-      version: file.version || "V1 Final",
-      status: file.status || "Approved",
-      duration: file.duration || null,
-      thumbnail:
-        file.thumbnail ||
-        (file.type === "image"
-          ? file.url
-          : "https://images.unsplash.com/photo-1579165466741-7f35e4755660?q=80&w=800&auto=format&fit=crop"),
-      uploader: file.uploader || "PMP Creative Team",
-      resolution: file.resolution || "4K MP4",
-      usageRights: file.usageRights || "Approved for web and social.",
-      availableFormats: (file.formats as any) || [
-        { name: "Original Master", resolution: file.resolution || "Master File", size: formatBytes(file.size || 0) },
-      ],
-      versionHistory: (file.versionHistory as any) || [
-        { version: file.version || "V1 Final", date: format(new Date(file.createdAt), "dd MMM yyyy"), status: "Current" },
-      ],
-    }));
+    const assets = dbFiles.map(serializeAsset);
 
     return NextResponse.json({
       stats: {
@@ -182,6 +240,10 @@ export async function GET(request: NextRequest) {
       folders,
       projects,
       assets,
+      // Drives the agency-side client switcher; empty for a CLIENT session.
+      clients,
+      clientId,
+      isStaff,
     });
   } catch (error) {
     console.error("Fetch files error:", error);
@@ -206,6 +268,7 @@ export async function POST(request: NextRequest) {
     const projectId = formData.get("projectId") as string | null;
     const customCategory = formData.get("category") as string | null;
     const customFolder = formData.get("folder") as string | null;
+    const customFolderId = formData.get("folderId") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -263,7 +326,7 @@ export async function POST(request: NextRequest) {
     const mimeType = file.type;
     let fileType = "other";
     let category = "Design";
-    let folder = "General";
+    let folder = DEFAULT_FOLDER_NAME;
 
     if (mimeType.startsWith("image/")) {
       fileType = "image";
@@ -290,6 +353,27 @@ export async function POST(request: NextRequest) {
     if (customCategory) category = customCategory;
     if (customFolder) folder = customFolder;
 
+    // Link the upload to a real Folder row when one exists, so folder cards
+    // report accurate counts and folder filtering survives a rename.
+    let folderId: string | null = null;
+    if (customFolderId) {
+      const target = await db.folder.findUnique({
+        where: { id: customFolderId },
+        select: { id: true, name: true, projectId: true, clientId: true },
+      });
+      const projectMatches =
+        target && (target.projectId === null || target.projectId === projectId);
+      const clientMatches =
+        target && (target.clientId === null || target.clientId === project.clientId);
+      if (target && projectMatches && clientMatches) {
+        folderId = target.id;
+        folder = target.name;
+      }
+    }
+    if (!folderId) {
+      folderId = await resolveFolderId(folder, projectId, project.clientId);
+    }
+
     const relativePath = `/uploads/${projectId}/${filename}`;
     const fullUrl = getFileUrl(relativePath);
 
@@ -301,6 +385,7 @@ export async function POST(request: NextRequest) {
         size: file.size,
         category,
         folder,
+        folderId,
         version: "V1 Final",
         status: "Approved",
         uploader: session.user.name || "PMP Staff",
@@ -332,6 +417,186 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PATCH — edit asset metadata (rename, recategorise, move between folders,
+// change status/version, update usage rights, toggle sharing).
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, ...updates } = body ?? {};
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "File ID is required" }, { status: 400 });
+    }
+
+    const file = await db.projectFile.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        projectId: true,
+        folder: true,
+        folderId: true,
+        version: true,
+        versionHistory: true,
+        project: { select: { clientId: true } },
+      },
+    });
+
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    if (!canAccessProject(session, file.project)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const isStaff = session.user.role === "ADMIN" || session.user.role === "STAFF";
+
+    // Approval state and usage rights carry contractual meaning, so only the
+    // agency side may change them — a client can still organise and rename.
+    if (!isStaff && (updates.status !== undefined || updates.usageRights !== undefined)) {
+      return NextResponse.json(
+        { error: "Only the PMP team can change approval status or usage rights." },
+        { status: 403 }
+      );
+    }
+
+    const data: Record<string, unknown> = {};
+
+    if (typeof updates.name === "string") {
+      const name = updates.name.trim();
+      if (!name) {
+        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      }
+      data.name = name;
+    }
+
+    if (typeof updates.description === "string" || updates.description === null) {
+      data.description = updates.description ? String(updates.description).trim() : null;
+    }
+
+    if (typeof updates.category === "string") {
+      if (!ASSET_CATEGORIES.includes(updates.category as (typeof ASSET_CATEGORIES)[number])) {
+        return NextResponse.json(
+          { error: `Unknown category "${updates.category}".` },
+          { status: 400 }
+        );
+      }
+      data.category = updates.category;
+    }
+
+    if (typeof updates.status === "string") {
+      if (!ASSET_STATUSES.includes(updates.status as (typeof ASSET_STATUSES)[number])) {
+        return NextResponse.json(
+          { error: `Unknown status "${updates.status}".` },
+          { status: 400 }
+        );
+      }
+      data.status = updates.status;
+    }
+
+    if (typeof updates.version === "string" && updates.version.trim()) {
+      data.version = updates.version.trim();
+    }
+
+    if (typeof updates.usageRights === "string") {
+      data.usageRights = updates.usageRights.trim() || null;
+    }
+
+    if (typeof updates.resolution === "string") {
+      data.resolution = updates.resolution.trim() || null;
+    }
+
+    if (typeof updates.duration === "string" || updates.duration === null) {
+      data.duration = updates.duration ? String(updates.duration).trim() : null;
+    }
+
+    if (typeof updates.isShared === "boolean") {
+      data.isShared = updates.isShared;
+    }
+
+    // Folder move. `folderId` wins when supplied; otherwise a bare folder name
+    // is resolved to a row so the two stay in sync.
+    if (updates.folderId !== undefined) {
+      if (updates.folderId === null || updates.folderId === "") {
+        data.folderId = null;
+        data.folder =
+          typeof updates.folder === "string" && updates.folder.trim()
+            ? updates.folder.trim()
+            : DEFAULT_FOLDER_NAME;
+      } else {
+        const target = await db.folder.findUnique({
+          where: { id: String(updates.folderId) },
+          select: { id: true, name: true, projectId: true, clientId: true },
+        });
+        if (!target) {
+          return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+        }
+        if (target.projectId !== null && target.projectId !== file.projectId) {
+          return NextResponse.json(
+            { error: "That folder belongs to another project." },
+            { status: 400 }
+          );
+        }
+        // Blocks filing an asset into a folder owned by a different client,
+        // which would make it visible in that client's library.
+        if (target.clientId !== null && target.clientId !== file.project.clientId) {
+          return NextResponse.json(
+            { error: "That folder belongs to another client." },
+            { status: 403 }
+          );
+        }
+        data.folderId = target.id;
+        data.folder = target.name;
+      }
+    } else if (typeof updates.folder === "string") {
+      const folderName = updates.folder.trim() || DEFAULT_FOLDER_NAME;
+      data.folder = folderName;
+      data.folderId = await resolveFolderId(
+        folderName,
+        file.projectId,
+        file.project.clientId
+      );
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "No editable fields provided" }, { status: 400 });
+    }
+
+    // A version bump is worth a history entry — the drawer renders this trail.
+    if (typeof data.version === "string" && data.version !== file.version) {
+      const history = Array.isArray(file.versionHistory)
+        ? (file.versionHistory as Array<Record<string, unknown>>)
+        : [];
+      data.versionHistory = [
+        { version: data.version, date: format(new Date(), "dd MMM yyyy"), status: "Current" },
+        ...history.map((entry) =>
+          entry?.status === "Current" ? { ...entry, status: "Superseded" } : entry
+        ),
+      ];
+    }
+
+    const updated = await db.projectFile.update({
+      where: { id },
+      data,
+      include: { project: { select: { id: true, title: true, slug: true } } },
+    });
+
+    return NextResponse.json({
+      message: "File updated successfully",
+      file: serializeAsset(updated),
+    });
+  } catch (error) {
+    console.error("Update file error:", error);
+    return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
+  }
+}
+
 // DELETE file
 export async function DELETE(request: NextRequest) {
   try {
@@ -357,10 +622,15 @@ export async function DELETE(request: NextRequest) {
 
     const file = await db.projectFile.findUnique({
       where: { id: fileId },
+      include: { project: { select: { clientId: true } } },
     });
 
     if (!file) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    if (!canAccessProject(session, file.project)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await db.projectFile.delete({
