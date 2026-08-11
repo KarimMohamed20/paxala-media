@@ -125,7 +125,7 @@ restart() {
 # Run database migrations
 migrate() {
     log_info "Running database migrations..."
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" --profile migrate up migrate
+    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" --profile migrate up --build migrate
     log_success "Database migrations completed."
 }
 
