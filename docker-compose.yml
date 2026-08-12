@@ -88,10 +88,15 @@ services:
     depends_on:
       - app
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      # `nginx -t` only validates config syntax; it stays "healthy" even if
+      # nginx can't reach the app upstream (e.g. after a redeploy leaves a
+      # stale cached upstream IP), which masked a site-wide 502 outage.
+      # Probe the actual proxied health endpoint instead.
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
     networks:
       - pmp_network
 
