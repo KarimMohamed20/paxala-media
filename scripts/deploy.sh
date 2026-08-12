@@ -243,7 +243,14 @@ update() {
     # Pull latest code (if git repo)
     if [[ -d ".git" ]]; then
         log_info "Pulling latest code..."
-        git pull
+        # Use fetch + hard reset instead of `git pull` so the server always
+        # exactly matches origin/main instead of accumulating local
+        # divergence (e.g. from stray commits), which has caused stale
+        # config/bind-mount confusion in the past. Only touches tracked
+        # files, so untracked dirs like public/uploads/ and backups/ are
+        # unaffected.
+        git fetch origin
+        git reset --hard origin/main
     fi
 
     # Rebuild and restart
