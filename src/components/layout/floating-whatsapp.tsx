@@ -2,10 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { getWhatsAppUrl } from "@/lib/constants";
-
-// Routes where a sales CTA is unwanted (authenticated app surfaces, auth pages).
-const HIDDEN_PREFIXES = ["/portal", "/admin", "/staff"];
+import { getWhatsAppUrl, isAppShellRoute } from "@/lib/constants";
 
 // Map the current public route to a pre-filled-message key (must exist in the
 // `whatsapp.messages` namespace of every locale).
@@ -22,7 +19,8 @@ export function FloatingWhatsApp() {
   const pathname = usePathname();
   const t = useTranslations("whatsapp");
 
-  if (HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  // A sales CTA is unwanted on authenticated app surfaces.
+  if (isAppShellRoute(pathname)) {
     return null;
   }
 

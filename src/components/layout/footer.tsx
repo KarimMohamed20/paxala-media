@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Instagram,
   Facebook,
@@ -13,7 +14,13 @@ import {
   MessageCircle,
   ArrowUpRight,
 } from "lucide-react";
-import { siteConfig, navLinks, services, getWhatsAppUrl } from "@/lib/constants";
+import {
+  siteConfig,
+  navLinks,
+  services,
+  getWhatsAppUrl,
+  isAppShellRoute,
+} from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -25,6 +32,7 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
     "idle"
@@ -52,6 +60,13 @@ export function Footer() {
       setStatus("error");
     }
   };
+
+  // The marketing footer previously had no route guard at all, so it rendered
+  // underneath the whole portal/admin/staff experience. Hooks above run first so
+  // this early return stays legal.
+  if (isAppShellRoute(pathname)) {
+    return null;
+  }
 
   return (
     <footer className="bg-black border-t border-white/10">

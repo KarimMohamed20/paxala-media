@@ -47,6 +47,22 @@ model User {
   planTeamships        PlanTeamMember[]    @relation("PlanTeamUser")
   planActionsCompleted PlanAction[]        @relation("PlanActionCompleter")
   planChangeRequests   PlanChangeRequest[] @relation("PlanChangeRequester")
+
+  // ---- Playground ----
+  playgroundRooms              PlaygroundRoom[]           @relation("PlaygroundRoomClient")
+  playgroundRoomsCreated       PlaygroundRoom[]           @relation("PlaygroundRoomCreator")
+  playgroundMemberships        PlaygroundMember[]         @relation("PlaygroundMemberships")
+  playgroundNodes              PlaygroundNode[]           @relation("PlaygroundNodeAuthor")
+  playgroundEvents             PlaygroundEvent[]          @relation("PlaygroundEventActor")
+  playgroundComments           PlaygroundComment[]        @relation("PlaygroundComments")
+  playgroundMessages           PlaygroundMessage[]        @relation("PlaygroundMessages")
+  playgroundReactions          PlaygroundReaction[]       @relation("PlaygroundReactions")
+  playgroundDecisions          PlaygroundDecision[]       @relation("PlaygroundDecisions")
+  playgroundApprovalsRequested PlaygroundApproval[]       @relation("PlaygroundApprovalRequester")
+  playgroundApprovalActions    PlaygroundApprovalAction[] @relation("PlaygroundApprovalResponder")
+  playgroundFiles              PlaygroundFile[]           @relation("PlaygroundFileUploader")
+  playgroundAiRuns             PlaygroundAiRun[]          @relation("PlaygroundAiRuns")
+  playgroundSummaries          PlaygroundSummary[]        @relation("PlaygroundSummaryReviewer")
 }
 
 model Account {
@@ -234,6 +250,8 @@ model Project {
   lead         Lead?           @relation("LeadProject")
   contentPlans ContentPlan[]
   contentItems ContentItem[]
+
+  playgroundRooms PlaygroundRoom[]
 }
 
 model Folder {
@@ -291,7 +309,11 @@ model ProjectFile {
   task              Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
   contentItemAssets ContentItemAsset[]
   contentComments   ContentComment[]   @relation("ContentCommentAsset")
-  createdAt         DateTime           @default(now())
+
+  playgroundNodes PlaygroundNode[] @relation("PlaygroundNodeAsset")
+  playgroundFiles PlaygroundFile[] @relation("PlaygroundFilePromotion")
+
+  createdAt DateTime @default(now())
 
   @@index([projectId])
   @@index([taskId])
@@ -1134,4 +1156,637 @@ model ContentComment {
   @@index([contentItemId, createdAt])
   @@index([authorId])
   @@index([assetId])
+}
+
+// ==================== PLAYGROUND ====================
+//
+// PMP Playground: a persistent collaborative creative room (infinite canvas,
+// presence, chat, decisions, client approvals) that outlives the meeting.
+//
+// Tenancy follows the rest of this schema: there is no workspace model, and a
+// "client" is a User row with role = CLIENT. PlaygroundRoom.clientId is the
+// tenant boundary, exactly as Project.clientId and ContentPlan.clientId are.
+//
+// Every read on behalf of a CLIENT actor MUST go through clientNodeWhere() /
+// clientNodeSelect in src/lib/playground/client-scope.ts. That module is the
+// entire Client Mode guarantee — see its file header before changing anything
+// here.
+
+enum PlaygroundRoomStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+/// Room-scoped grant. The brief's four actor types are expressed as
+/// min(global Role ceiling, room grant), computed in resolveRoomActor():
+///   PMP Admin       = ADMIN  + OWNER
+///   Creative Team   = STAFF  + EDITOR
+///   Client Approver = CLIENT + APPROVER
+///   Client Viewer   = CLIENT + VIEWER
+/// A misfiled row granting a CLIENT user EDITOR does NOT escalate them; the
+/// global-role ceiling wins. The global Role enum is deliberately untouched.
+enum RoomMemberRole {
+  OWNER
+  EDITOR
+  APPROVER
+  VIEWER
+}
+
+/// Author intent for a node. NOT the security boundary on its own — a node only
+/// becomes client-readable when visibility != TEAM_ONLY AND clientVisibleSince
+/// is set by the explicit "Publish to client" action.
+enum NodeVisibility {
+  TEAM_ONLY
+  CLIENT_SELECTED
+  EVERYONE
+}
+
+enum PlaygroundNodeKind {
+  STICKY
+  TEXT
+  IMAGE
+  FILE
+  DRAWING
+  SHAPE
+  FRAME
+  CAMPAIGN_ROUTE
+  SCRIPT
+  PALETTE
+  POLL
+  DECISION
+  AI_CARD
+}
+
+/// TEAM is internal-only and is filtered server-side before the DB is touched.
+/// SHARED is the channel a client participates in.
+enum MessageChannel {
+  TEAM
+  SHARED
+}
+
+enum RoomApprovalStatus {
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
+  WITHDRAWN
+}
+
+enum RoomApprovalAction {
+  SUBMITTED
+  APPROVED
+  CHANGES_REQUESTED
+  WITHDRAWN
+}
+
+enum AiRunStatus {
+  OK
+  FAILED
+  BLOCKED
+}
+
+enum PlaygroundLinkEntity {
+  TASK
+  PROJECT_FILE
+  MILESTONE
+}
+
+enum PlaygroundEventType {
+  NODE_CREATE
+  NODE_MOVE
+  NODE_RESIZE
+  NODE_STYLE
+  NODE_TEXT
+  NODE_DATA
+  NODE_VISIBILITY
+  NODE_ORDER
+  NODE_DELETE
+  EDGE_CREATE
+  EDGE_UPDATE
+  EDGE_DELETE
+  COMMENT_ADDED
+  COMMENT_RESOLVED
+  MESSAGE
+  REACTION
+  DECISION_RECORDED
+  PUBLISHED_TO_CLIENT
+  UNPUBLISHED_FROM_CLIENT
+  APPROVAL_SUBMITTED
+  APPROVAL_APPROVED
+  APPROVAL_CHANGES_REQUESTED
+  APPROVAL_WITHDRAWN
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  ROOM_UPDATED
+  FILE_UPLOADED
+  AI_GENERATED
+  SAVED_TO_PROJECT
+}
+
+model PlaygroundRoom {
+  id          String               @id @default(cuid())
+  title       String
+  slug        String               @unique
+  description String?              @db.Text
+  status      PlaygroundRoomStatus @default(ACTIVE)
+
+  /// SetNull, not Cascade: deleting a client account must not destroy the
+  /// creative history of the campaigns PMP ran for them.
+  clientId String?
+  client   User?   @relation("PlaygroundRoomClient", fields: [clientId], references: [id], onDelete: SetNull)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  /// When true, STAFF also need an explicit PlaygroundMember row. Default false
+  /// keeps the agency-wide default of "the team can see the team's work".
+  restricted Boolean @default(false)
+
+  /// Room-scoped, GAPLESS, COMMIT-ORDERED event counter, allocated ONLY by
+  /// allocSeq() in src/lib/playground/seq.ts:
+  ///   UPDATE "PlaygroundRoom" SET "opSeq" = "opSeq" + $n WHERE id = $1 RETURNING "opSeq"
+  /// which takes a row lock, so seq order == commit order. A Postgres sequence
+  /// would NOT give this: it allocates outside transaction control, so a
+  /// reconnecting client replaying `seq > lastSeq` could permanently skip an
+  /// event whose transaction committed late.
+  /// Int, not BigInt, deliberately: 2.1B events in one room is unreachable, and
+  /// BigInt makes JSON.stringify throw at every API boundary.
+  opSeq Int @default(0)
+
+  /// Default camera for a first-time visitor: { x, y, z }.
+  camera Json?
+
+  createdById   String?
+  createdBy     User?   @relation("PlaygroundRoomCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByName String?
+
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  members   PlaygroundMember[]
+  nodes     PlaygroundNode[]
+  edges     PlaygroundEdge[]
+  events    PlaygroundEvent[]
+  comments  PlaygroundComment[]
+  messages  PlaygroundMessage[]
+  decisions PlaygroundDecision[]
+  approvals PlaygroundApproval[]
+  files     PlaygroundFile[]
+  aiRuns    PlaygroundAiRun[]
+  summaries PlaygroundSummary[]
+  links     PlaygroundLink[]
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status, lastActiveAt])
+}
+
+model PlaygroundMember {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId String
+  user   User           @relation("PlaygroundMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role   RoomMemberRole @default(VIEWER)
+
+  /// Server-side replay floor and unread marker. Never trusted from the client.
+  lastSeenSeq Int @default(0)
+
+  /// "Reopens exactly as you left it": { x, y, z }.
+  lastViewport Json?
+  lastSeenAt   DateTime?
+
+  invitedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model PlaygroundNode {
+  /// CLIENT-MINTED id (crypto.randomUUID() on the authoring tab), NOT a cuid
+  /// default — the one deliberate deviation from this schema's id convention.
+  /// Two reasons: an edge drawn while offline can reference its endpoints before
+  /// any server round trip, and a retried NODE_CREATE collides on the primary
+  /// key instead of silently producing a duplicate sticky.
+  id     String         @id
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  kind PlaygroundNodeKind
+
+  /// FAIL CLOSED. A forgotten assignment hides content; it never exposes it.
+  visibility NodeVisibility @default(TEAM_ONLY)
+
+  /// The publication gate. A CLIENT actor may read a node ONLY when
+  /// visibility != TEAM_ONLY AND clientVisibleSince != null. Flipping visibility
+  /// in Studio Mode does nothing on its own — a staff member must run the
+  /// explicit "Publish to client" action, which sets this column and writes a
+  /// PUBLISHED_TO_CLIENT event. This is the brief's "PMP must deliberately
+  /// publish" requirement. Un-publishing sets it back to null.
+  clientVisibleSince DateTime?
+
+  x Float
+  y Float
+  w Float @default(240)
+  h Float @default(160)
+  z Int   @default(0)
+
+  /// Stored but not editable in the first release (rotate UI is cut). Present so
+  /// rotation is additive later with no migration.
+  rotation Float @default(0)
+
+  /// Frames own their children, so moving a frame drags its contents. SetNull,
+  /// not Cascade: deleting a frame must not silently delete the work inside it.
+  frameId  String?
+  frame    PlaygroundNode?  @relation("NodeFrame", fields: [frameId], references: [id], onDelete: SetNull)
+  children PlaygroundNode[] @relation("NodeFrame")
+
+  /// Plain-text mirror of the node body. Powers canvas search, AI context and
+  /// the screen-reader description without parsing `data`. Clamped on write.
+  text String? @db.Text
+
+  /// Kind-specific payload: stroke points, palette hexes, poll options, decision
+  /// fields, script beats. Validated on write by hand-rolled predicates in
+  /// src/lib/playground/node-schema.ts (the parseEnum style used by
+  /// src/lib/content-authz.ts — no schema-validation dependency).
+  data  Json @default("{}")
+  style Json @default("{}")
+
+  /// An existing Asset Library file dropped onto the canvas.
+  fileId String?
+  file   ProjectFile? @relation("PlaygroundNodeAsset", fields: [fileId], references: [id], onDelete: SetNull)
+
+  /// A file uploaded directly into this room.
+  roomFileId String?
+  roomFile   PlaygroundFile? @relation(fields: [roomFileId], references: [id], onDelete: SetNull)
+
+  /// Optimistic-concurrency counter for DISCRETE ops only (text, data, style,
+  /// visibility, order). Geometry ops (move/resize) deliberately carry NO version
+  /// guard: a guard is first-writer-wins-and-reject-the-rest, and applying that
+  /// to a continuous drag makes two users rubber-band against each other for the
+  /// whole gesture.
+  version Int @default(0)
+
+  /// SERVER-ENFORCED exclusive text-edit lock. 30s TTL, refreshed every 10s while
+  /// typing; a NODE_TEXT op from a non-holder inside the TTL is rejected 409.
+  /// Columns rather than in-memory state on purpose: an in-process lock cannot
+  /// survive a deploy and cannot see a client whose SSE pipe died silently.
+  /// Deliberately NOT a foreign key — it is transient, expires in 30s, and a
+  /// relation here would buy nothing but a back-reference on User.
+  editLockById String?
+  editLockAt   DateTime?
+
+  createdById   String?
+  createdBy     User?   @relation("PlaygroundNodeAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  edgesFrom PlaygroundEdge[]     @relation("EdgeFrom")
+  edgesTo   PlaygroundEdge[]     @relation("EdgeTo")
+  comments  PlaygroundComment[]
+  messages  PlaygroundMessage[]
+  reactions PlaygroundReaction[]
+
+  @@index([roomId])
+  /// Drives the Client Mode read path — see clientNodeWhere().
+  @@index([roomId, visibility, clientVisibleSince])
+  @@index([frameId])
+  @@index([roomFileId])
+}
+
+model PlaygroundEdge {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  /// Cascade on both endpoints: an edge with a missing end is not a connector,
+  /// it is a rendering bug.
+  fromNodeId String
+  fromNode   PlaygroundNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNodeId   String
+  toNode     PlaygroundNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  kind  String @default("arrow")
+  style Json   @default("{}")
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([roomId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+/// Append-only operation log. Three jobs: reconnect replay (Last-Event-ID),
+/// undo, and the activity timeline.
+model PlaygroundEvent {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  /// Gapless within a room; allocated by allocSeq(). See PlaygroundRoom.opSeq.
+  seq  Int
+  type PlaygroundEventType
+
+  actorId   String?
+  actor     User?   @relation("PlaygroundEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorName String?
+  actorRole Role
+
+  /// Deliberately NOT a foreign key. A NODE_DELETE event has to outlive the node
+  /// it describes, or undo and the audit trail both lose the thing that matters.
+  nodeId String?
+
+  /// Op-specific body. For NODE_TEXT this carries { before, after } so a clobber
+  /// is always recoverable; for NODE_DELETE it carries the node payload PLUS its
+  /// comments and reaction tally, because both cascade and would otherwise be
+  /// destroyed by an "undo".
+  payload Json @default("{}")
+
+  /// Client-generated idempotency key. On a P2002 collision the handler returns
+  /// the original row's seq, so a retried batch is exactly-once.
+  clientOpId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([roomId, seq])
+  @@unique([roomId, clientOpId])
+  @@index([roomId, seq])
+  @@index([actorId])
+}
+
+model PlaygroundComment {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  nodeId String?
+  node   PlaygroundNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  body String @db.Text
+
+  // SetNull + snapshots, matching ContentComment: deleting a user must not erase
+  // the feedback history.
+  authorId   String?
+  author     User?   @relation("PlaygroundComments", fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String?
+  authorRole Role
+
+  resolved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId, createdAt])
+  @@index([nodeId])
+  @@index([authorId])
+}
+
+model PlaygroundMessage {
+  id      String         @id @default(cuid())
+  roomId  String
+  room    PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  channel MessageChannel @default(TEAM)
+
+  body String @db.Text
+
+  replyToId String?
+  replyTo   PlaygroundMessage?  @relation("MessageThread", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   PlaygroundMessage[] @relation("MessageThread")
+
+  /// "Jump to the thing we were talking about". SetNull so deleting the node
+  /// does not delete the conversation about it.
+  nodeId String?
+  node   PlaygroundNode? @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+
+  authorId   String?
+  author     User?   @relation("PlaygroundMessages", fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String?
+  authorRole Role
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId, channel, createdAt])
+  @@index([nodeId])
+  @@index([authorId])
+}
+
+/// Reactions and votes on a canvas node. `kind` is the emoji or ballot value.
+model PlaygroundReaction {
+  id     String         @id @default(cuid())
+  nodeId String
+  node   PlaygroundNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  userId String
+  user   User           @relation("PlaygroundReactions", fields: [userId], references: [id], onDelete: Cascade)
+  kind   String
+
+  createdAt DateTime @default(now())
+
+  @@unique([nodeId, userId, kind])
+  @@index([nodeId])
+  @@index([userId])
+}
+
+model PlaygroundDecision {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String? @db.Text
+
+  /// Snapshot of the options as they read when the decision was recorded, so the
+  /// record still makes sense after the underlying cards are edited.
+  options Json     @default("[]")
+  outcome String?
+  nodeIds String[] @default([])
+
+  createdById   String?
+  createdBy     User?   @relation("PlaygroundDecisions", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  approvals PlaygroundApproval[]
+
+  @@index([roomId, createdAt])
+}
+
+/// A client approval request.
+///
+/// `payload` is the ONLY place bytes are frozen. It is built once, at submit
+/// time, by the enumerated-column serializer in src/lib/playground/publish.ts —
+/// never by findMany() + strip. This is the same pattern Invoice already uses:
+/// items/subtotal/total are frozen at the commitment moment while the client
+/// still browses live Milestone rows.
+model PlaygroundApproval {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  decisionId String?
+  decision   PlaygroundDecision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+
+  status RoomApprovalStatus @default(PENDING)
+  title  String
+  note   String?            @db.Text
+
+  payload     Json
+  /// SHA-256 over the canonical serialization of `payload`. What lets an approval
+  /// record prove exactly which version was approved.
+  contentHash String
+  /// Room sequence at which the payload was frozen.
+  atSeq       Int
+
+  requestedById   String?
+  requestedBy     User?   @relation("PlaygroundApprovalRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  requestedByName String?
+
+  dueAt     DateTime?
+  decidedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  actions PlaygroundApprovalAction[]
+
+  @@index([roomId, status])
+  @@index([contentHash])
+}
+
+/// Immutable audit log — one row per action on an approval.
+/// Invariant: PlaygroundApproval.status may only change in a transaction that
+/// also creates a row here. Mirrors ContentApproval.
+model PlaygroundApprovalAction {
+  id         String             @id @default(cuid())
+  approvalId String
+  approval   PlaygroundApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+
+  action RoomApprovalAction
+  notes  String?            @db.Text
+
+  responderId   String?
+  responder     User?   @relation("PlaygroundApprovalResponder", fields: [responderId], references: [id], onDelete: SetNull)
+  responderName String?
+  responderRole Role
+
+  fromStatus RoomApprovalStatus?
+  toStatus   RoomApprovalStatus
+
+  createdAt DateTime @default(now())
+
+  @@index([approvalId, createdAt])
+  @@index([responderId])
+}
+
+model PlaygroundFile {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  name     String
+  url      String
+  mime     String
+  /// Bytes. Float for parity with ProjectFile.size (supports > 2GB).
+  size     Float?
+  /// Client-generated WebP thumbnail, so a board opening 40 references does not
+  /// pull 40 masters over the wire.
+  thumbUrl String?
+
+  /// Set when a room upload is deliberately promoted into the Asset Library.
+  /// Null keeps brainstorm scraps out of the client's library.
+  projectFileId String?
+  projectFile   ProjectFile? @relation("PlaygroundFilePromotion", fields: [projectFileId], references: [id], onDelete: SetNull)
+
+  uploadedById   String?
+  uploadedBy     User?   @relation("PlaygroundFileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedByName String?
+
+  createdAt DateTime @default(now())
+
+  nodes PlaygroundNode[]
+
+  @@index([roomId])
+  @@index([projectFileId])
+}
+
+model PlaygroundAiRun {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  /// A task id from the server-side registry, never a client-supplied prompt.
+  intent  String
+  nodeIds String[]    @default([])
+  output  String      @db.Text
+  status  AiRunStatus @default(OK)
+  error   String?
+
+  provider  String
+  model     String
+  tokensIn  Int?
+  tokensOut Int?
+
+  createdById String?
+  createdBy   User?   @relation("PlaygroundAiRuns", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([roomId, createdAt])
+  /// Backs the durable monthly spend cap, which cannot live in the in-memory
+  /// rateLimit() bucket because that resets on every deploy.
+  @@index([createdAt])
+}
+
+model PlaygroundSummary {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  /// The event range this summary was generated from.
+  fromSeq Int
+  toSeq   Int
+
+  draft Json
+
+  reviewedById       String?
+  reviewedBy         User?     @relation("PlaygroundSummaryReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt         DateTime?
+  sharedWithClientAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId, createdAt])
+}
+
+/// Back-reference from a room to whatever "Save to Project" produced, so project
+/// items link home to the Playground content that originated them without
+/// adding columns to Task / ProjectFile / Milestone.
+model PlaygroundLink {
+  id     String         @id @default(cuid())
+  roomId String
+  room   PlaygroundRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  /// Plain String, not an FK: the originating node may later be deleted, and the
+  /// provenance record must survive it.
+  nodeId String?
+
+  entityType PlaygroundLinkEntity
+  entityId   String
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([roomId, entityType, entityId])
+  @@index([roomId])
 }

@@ -7,6 +7,7 @@ import { FloatingWhatsApp } from "@/components/layout/floating-whatsapp";
 import { OrganizationJsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/seo";
 import { AuthProvider } from "@/components/providers/session-provider";
+import { ToastProvider } from "@/components/ui/toast";
 import { ScrollProvider, ScrollProgress } from "@/components/animations";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -130,14 +131,19 @@ export default async function RootLayout({
         <OrganizationJsonLd />
         <AuthProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <ScrollProvider>
-              <PwaRegistry />
-              <ScrollProgress />
-              <Navbar />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-              <FloatingWhatsApp />
-            </ScrollProvider>
+            {/* Inside NextIntlClientProvider so toast bodies can be localised
+                by their callers; outside ScrollProvider so the viewport is
+                unaffected by smooth-scroll teardown between routes. */}
+            <ToastProvider>
+              <ScrollProvider>
+                <PwaRegistry />
+                <ScrollProgress />
+                <Navbar />
+                <main className="min-h-screen">{children}</main>
+                <Footer />
+                <FloatingWhatsApp />
+              </ScrollProvider>
+            </ToastProvider>
           </NextIntlClientProvider>
         </AuthProvider>
       </body>

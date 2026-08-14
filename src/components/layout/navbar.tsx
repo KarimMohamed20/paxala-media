@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { siteConfig } from "@/lib/constants";
+import { siteConfig, isAppShellRoute } from "@/lib/constants";
 import { useTranslations, useLocale } from 'next-intl';
 import { isRTL, type Locale } from "@/i18n/config";
 import { LanguageSwitcher, LanguageSwitcherMobile } from "./language-switcher";
@@ -47,8 +47,8 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  // Don't show navbar on portal, staff, or admin pages
-  if (pathname.startsWith('/portal') || pathname.startsWith('/staff') || pathname.startsWith('/admin')) {
+  // App shells (portal, admin, staff, playground) supply their own chrome.
+  if (isAppShellRoute(pathname)) {
     return null;
   }
 

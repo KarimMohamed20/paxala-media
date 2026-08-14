@@ -11,9 +11,14 @@ export async function middleware(request: NextRequest) {
   // ---- Server-side protection for /admin, /staff, /portal ----
   const needsAdmin = pathname === '/admin' || pathname.startsWith('/admin/');
   const needsStaff = pathname === '/staff' || pathname.startsWith('/staff/');
+  // /playground needs a session but no particular role — a CLIENT reaches rooms
+  // they were invited to. Per-room membership is authorized server-side; see
+  // src/lib/playground/actors.ts. Middleware only proves "signed in".
   const needsSession =
-    (pathname === '/portal' || pathname.startsWith('/portal/')) &&
-    !PUBLIC_PORTAL_PATHS.some((p) => pathname.startsWith(p));
+    ((pathname === '/portal' || pathname.startsWith('/portal/')) &&
+      !PUBLIC_PORTAL_PATHS.some((p) => pathname.startsWith(p))) ||
+    pathname === '/playground' ||
+    pathname.startsWith('/playground/');
 
   if (needsAdmin || needsStaff || needsSession) {
     const token = await getToken({

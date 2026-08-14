@@ -24,6 +24,7 @@ import {
     LogOut,
     Target,
     Receipt,
+    Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -40,6 +41,9 @@ const navItems = [
     { href: "/admin/content-calendar", icon: CalendarRange, labelKey: "contentCalendar" },
     // CalendarCheck: Calendar (bookings) and CalendarRange (content) are taken.
     { href: "/admin/monthly-plans", icon: CalendarCheck, labelKey: "monthlyPlans" },
+    // Top-level route: a Playground room is edge-to-edge and renders outside
+    // the admin shell, so it is not under /admin/*.
+    { href: "/playground", icon: Sparkles, labelKey: "playground" },
     { href: "/admin/invoices", icon: Receipt, labelKey: "invoices" },
     { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
     { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },

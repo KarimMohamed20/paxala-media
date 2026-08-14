@@ -256,7 +256,8 @@
     "testimonials": "המלצות",
     "backToPortal": "חזרה לפורטל",
     "contentCalendar": "לוח תוכן",
-    "monthlyPlans": "תכניות חודשיות"
+    "monthlyPlans": "תכניות חודשיות",
+    "playground": "חדר יצירה"
   },
   "portal": {
     "panel": "פורטל לקוח",
@@ -325,7 +326,8 @@
     "nothingHere": "אין כאן כלום עדיין",
     "noProjectsYet": "אין פרויקטים עדיין",
     "noBookingsYet": "אין הזמנות עדיין",
-    "noFilesYet": "אין קבצים זמינים עדיין"
+    "noFilesYet": "אין קבצים זמינים עדיין",
+    "playground": "חדר יצירה"
   },
   "content": {
     "platform": {
@@ -988,7 +990,6 @@
     "contentCalendar": "לוח תוכן",
     "manageContent": "תכנן, סקור ופרסם תוכן עבור כל הלקוחות",
     "newContentItem": "תוכן חדש",
-    "allClients": "כל הלקוחות",
     "contentItems": "פריטי תוכן",
     "noContentItems": "אין פריטים התואמים לסינון",
     "sendForApproval": "שלח לאישור",
@@ -1000,7 +1001,427 @@
     "bulkApply": "החל על הנבחרים",
     "selectedItems": "{count} נבחרו",
     "calendarView": "לוח שנה",
-    "tableView": "טבלה",
     "listView": "רשימה"
+  },
+  "playground": {
+    "title": "חדר יצירה",
+    "productName": "PMP Playground",
+    "tagline": "רעיונות הופכים למציאות",
+    "subtitle": "חדרי יצירה קבועים שבהם הצוות והלקוח בונים קמפיינים יחד.",
+    "common": {
+      "loading": "טוען…",
+      "retry": "נסה שוב",
+      "cancel": "ביטול",
+      "close": "סגירה",
+      "unnamed": "ללא שם",
+      "someone": "מישהו אחר"
+    },
+    "status": {
+      "LIVE": "בשידור",
+      "ACTIVE": "פעיל",
+      "AWAITING_CLIENT": "ממתין ללקוח",
+      "DRAFT": "טיוטה",
+      "ARCHIVED": "בארכיון"
+    },
+    "sections": {
+      "awaitingClient": "ממתין לאישור הלקוח",
+      "active": "חדרים פעילים",
+      "drafts": "טיוטות",
+      "archived": "ארכיון"
+    },
+    "card": {
+      "nodeCount": "{count, plural, =0 {קנבס ריק} one {פריט אחד} two {שני פריטים} other {# פריטים}}",
+      "restricted": "מוגבל"
+    },
+    "empty": {
+      "title": "אין עדיין חדרים",
+      "bodyStaff": "צור חדר כדי להתחיל קמפיין עם הלקוח — הקנבס, ההחלטות והאישורים נמצאים כאן.",
+      "bodyClient": "כאשר PMP תזמין אותך לפגישת יצירה, היא תופיע כאן."
+    },
+    "errors": {
+      "loadFailedTitle": "לא ניתן לטעון את החדרים",
+      "loadFailedBody": "החיבור נכשל. שום דבר לא אבד — נסה שוב.",
+      "noAccessTitle": "החדר אינו זמין",
+      "noAccessBody": "החדר אינו קיים או שאינו משותף איתך.",
+      "roomFailedTitle": "לא ניתן לפתוח את החדר",
+      "roomFailedBody": "החיבור נכשל. העבודה שלך שמורה — נסה שוב בעוד רגע."
+    },
+    "create": {
+      "cta": "חדר חדש",
+      "title": "יצירת חדר",
+      "subtitle": "החדר שומר הכול: הקנבס, ההחלטות ותיעוד האישורים.",
+      "roomName": "שם החדר",
+      "roomNamePlaceholder": "קמפיין קיץ — סיעור מוחות 01",
+      "brief": "בריף",
+      "briefPlaceholder": "מה אנחנו פותרים? מטרה, קהל, תוצרים…",
+      "client": "לקוח",
+      "noClient": "עדיין ללא לקוח",
+      "project": "פרויקט",
+      "noProject": "עדיין ללא פרויקט",
+      "participants": "משתתפים",
+      "restricted": "חדר מוגבל",
+      "restrictedHint": "רק מוזמנים יכולים לפתוח אותו. שאר צוות PMP לא יראה אותו ברשימה.",
+      "submit": "צור חדר",
+      "created": "החדר נוצר",
+      "failed": "לא ניתן ליצור את החדר. נסה שוב.",
+      "template": "תבנית",
+      "blankHint": "קנבס ריק",
+      "frameCount": "{count, plural, one {מסגרת אחת} two {שתי מסגרות} other {# מסגרות}}"
+    },
+    "roles": {
+      "team": "PMP",
+      "client": "לקוח"
+    },
+    "roomRoles": {
+      "OWNER": "מארח",
+      "EDITOR": "צוות יצירה",
+      "APPROVER": "מאשר",
+      "VIEWER": "צופה"
+    },
+    "mode": {
+      "studio": "סטודיו — פנימי",
+      "client": "לקוח — מצגת"
+    },
+    "room": {
+      "backToRooms": "כל החדרים",
+      "loading": "פותח את החדר…",
+      "share": "שיתוף",
+      "invite": "הזמנת אנשים",
+      "showPanel": "הצג פאנל חדר",
+      "hidePanel": "הסתר פאנל חדר",
+      "noClient": "לא מקושר לקוח",
+      "canvasEmptyTitle": "הקנבס ריק",
+      "canvasEmptyStaff": "כלי היצירה מגיעים עם הקנבס בגרסה הבאה. שאר החדר — אנשים, צ'אט והחלטות — כבר פעיל.",
+      "canvasEmptyClient": "PMP עדיין לא הציגה כאן דבר. תראה את הכיוונים הנבחרים ברגע שיפורסמו.",
+      "loadingCanvas": "טוען את הקנבס",
+      "linkCopied": "קישור החדר הועתק",
+      "copyFailed": "העתק את הקישור ידנית"
+    },
+    "toolbar": {
+      "label": "כלי יצירה",
+      "select": "בחירה",
+      "sticky": "פתקית",
+      "draw": "ציור",
+      "text": "טקסט",
+      "shape": "צורה",
+      "upload": "העלאה",
+      "frame": "מסגרת",
+      "palette": "צבעים",
+      "ai": "ניצוץ AI",
+      "comingWithCanvas": "יהיה זמין עם השקת הקנבס",
+      "readOnly": "יש לך הרשאת צפייה בלבד בחדר הזה",
+      "connect": "חיבור"
+    },
+    "panel": {
+      "label": "חדר",
+      "people": "אנשים",
+      "chat": "צ'אט",
+      "decisions": "החלטות",
+      "you": "(אתה)",
+      "host": "מארח",
+      "peopleEmptyTitle": "אין כאן עדיין אף אחד",
+      "peopleEmptyBody": "הזמן את הצוות ואת הלקוח כדי להתחיל.",
+      "chatEmptyTitle": "אין עדיין הודעות",
+      "chatEmptyBody": "צ'אט החדר נפתח בגרסת שיתוף הפעולה.",
+      "decisionsEmptyTitle": "לא נרשמו החלטות",
+      "decisionsEmptyBody": "ההחלטות בחדר יישמרו כאן, יחד עם מי החליט ומתי.",
+      "outline": "מתאר",
+      "activity": "פעילות",
+      "comments": "תגובות"
+    },
+    "meeting": {
+      "label": "בקרות פגישה",
+      "mic": "מיקרופון",
+      "camera": "מצלמה",
+      "share": "שיתוף מסך",
+      "react": "תגובה",
+      "raise": "הרמת יד",
+      "leave": "יציאה",
+      "notConfigured": "וידאו חי אינו מופעל בסביבה זו"
+    },
+    "ai": {
+      "name": "PAX AI",
+      "placeholder": "הפוך את הרעיון הזה למסלול קמפיין",
+      "expand": "הרחב את PAX AI",
+      "collapse": "כווץ את PAX AI",
+      "notConfigured": "PAX AI עדיין לא מוגדר. לאחר חיבור ספק, בחר פריטים מהקנבס ובקש כיוונים, כותרות או רשימת שוטים.",
+      "contextSelected": "{count, plural, one {פריט אחד נבחר} two {שני פריטים נבחרו} other {# פריטים נבחרו}}",
+      "contextRoom": "כל החדר",
+      "withSelection": "עם הבחירה שלך",
+      "sparks": "ניצוצות יצירתיים",
+      "selectHint": "בחר פריטים בלוח כדי לעבוד עליהם ישירות.",
+      "insert": "הוספה",
+      "regenerate": "יצירה מחדש",
+      "copy": "העתקה",
+      "discard": "ביטול",
+      "inserted": "נוסף ללוח, לצוות בלבד",
+      "copied": "הועתק",
+      "failed": "PAX AI לא הצליח לענות",
+      "tasks": {
+        "campaign_route": "מסלול קמפיין",
+        "three_directions": "3 כיוונים",
+        "headline": "כותרות",
+        "script": "תסריט",
+        "shot_list": "רשימת שוטים",
+        "challenge": "אתגר את זה",
+        "spark_visual": "ניצוץ ויזואלי",
+        "spark_story": "ניצוץ סיפור",
+        "spark_headline": "ניצוץ כותרת",
+        "spark_camera": "ניצוץ מצלמה",
+        "spark_social": "ניצוץ סושיאל",
+        "spark_unexpected": "בלתי צפוי"
+      }
+    },
+    "canvas": {
+      "minimap": "סקירת הלוח",
+      "zoomIn": "הגדלה",
+      "zoomOut": "הקטנה",
+      "resetZoom": "חזרה ל-100%",
+      "fit": "התאמת הלוח",
+      "fitAnnounce": "הותאמו {count} פריטים למסך",
+      "selectionCleared": "הבחירה בוטלה",
+      "deleted": "{count, plural, one {פריט אחד נמחק} two {שני פריטים נמחקו} other {# פריטים נמחקו}}",
+      "lockedTitle": "מישהו אחר עורך",
+      "lockedBody": "{name} עורך את הפריט הזה. השינוי שלך לא הוחל.",
+      "staleTitle": "הפריט השתנה במקום אחר",
+      "staleBody": "מישהו עדכן את הפריט לפניך. רענן כדי לראות את הגרסה הנוכחית."
+    },
+    "outline": {
+      "emptyTitle": "אין דבר על הלוח",
+      "emptyBody": "פריטים שתוסיף לקנבס יופיעו כאן בסדר קריאה.",
+      "noContent": "ללא טקסט"
+    },
+    "visibility": {
+      "published": "פורסם ללקוח",
+      "teamOnly": "לצוות בלבד"
+    },
+    "nodeKinds": {
+      "STICKY": "פתקית",
+      "TEXT": "טקסט",
+      "IMAGE": "תמונה",
+      "FILE": "קובץ",
+      "DRAWING": "ציור",
+      "SHAPE": "צורה",
+      "FRAME": "מסגרת",
+      "CAMPAIGN_ROUTE": "כיוון",
+      "SCRIPT": "תסריט",
+      "PALETTE": "פלטה",
+      "POLL": "סקר",
+      "DECISION": "החלטה",
+      "AI_CARD": "AI"
+    },
+    "save": {
+      "pending": "לא נשמר",
+      "saving": "שומר…",
+      "offline": "לא מקוון — השינויים נשמרו",
+      "error": "חלק מהשינויים נדחו"
+    },
+    "stream": {
+      "reconnecting": "מתחבר מחדש…",
+      "offline": "לא מקוון"
+    },
+    "upload": {
+      "failed": "לא ניתן להוסיף את הקובץ"
+    },
+    "chat": {
+      "team": "צוות",
+      "shared": "משותף",
+      "teamHint": "פנימי — הלקוח לא רואה את הערוץ הזה.",
+      "sharedHint": "הלקוח יכול לקרוא את הערוץ הזה.",
+      "emptyTeam": "השיחה הפנימית מתחילה כאן.",
+      "emptyShared": "עדיין לא שותף דבר עם הלקוח.",
+      "placeholderTeam": "כתוב לצוות…",
+      "placeholderShared": "כתוב לחדר…",
+      "send": "שליחה",
+      "showOnCanvas": "הצג בקנבס"
+    },
+    "decisions": {
+      "record": "תיעוד החלטה",
+      "latest": "ההחלטה האחרונה",
+      "titleLabel": "מה הוחלט",
+      "titlePlaceholder": "אנחנו הולכים על מסלול רגע הגיבור",
+      "outcomeLabel": "למה",
+      "outcomePlaceholder": "נימוקים, הסתייגויות, מה הלאה…",
+      "citing": "{count, plural, one {מצטט פריט אחד שנבחר} two {מצטט שני פריטים שנבחרו} other {מצטט # פריטים שנבחרו}}",
+      "showOnCanvas": "{count, plural, one {הצג את הפריט} two {הצג שני פריטים} other {הצג # פריטים}}"
+    },
+    "activity": {
+      "emptyTitle": "עדיין לא קרה דבר",
+      "emptyBody": "כל מה שקורה בחדר הזה מתועד כאן.",
+      "loadMore": "טען פעילות קודמת",
+      "show": "הצג",
+      "types": {
+        "NODE_CREATE": "הוסיף פריט",
+        "NODE_TEXT": "ערך טקסט",
+        "NODE_DATA": "עדכן פריט",
+        "NODE_VISIBILITY": "שינה מי יכול לראות פריט",
+        "NODE_DELETE": "מחק פריט",
+        "EDGE_CREATE": "חיבר שני פריטים",
+        "EDGE_UPDATE": "שינה מחבר",
+        "EDGE_DELETE": "הסיר מחבר",
+        "COMMENT_ADDED": "הגיב",
+        "COMMENT_RESOLVED": "סגר תגובה",
+        "MESSAGE": "שלח הודעה",
+        "REACTION": "הגיב באימוג'י",
+        "DECISION_RECORDED": "תיעד החלטה",
+        "PUBLISHED_TO_CLIENT": "פרסם ללקוח",
+        "UNPUBLISHED_FROM_CLIENT": "ביטל פרסום ללקוח",
+        "APPROVAL_SUBMITTED": "ביקש אישור",
+        "APPROVAL_APPROVED": "אישר",
+        "APPROVAL_CHANGES_REQUESTED": "ביקש שינויים",
+        "APPROVAL_WITHDRAWN": "משך בקשת אישור",
+        "MEMBER_ADDED": "הצטרף לחדר",
+        "MEMBER_REMOVED": "עזב את החדר",
+        "ROOM_UPDATED": "עדכן את החדר",
+        "FILE_UPLOADED": "הוסיף קובץ",
+        "AI_GENERATED": "השתמש ב-PAX AI",
+        "SAVED_TO_PROJECT": "שמר עבודה לפרויקט",
+        "NODE_MOVE": "הזיז פריט",
+        "NODE_RESIZE": "שינה גודל פריט",
+        "NODE_STYLE": "שינה עיצוב פריט",
+        "NODE_ORDER": "שינה סדר פריט"
+      }
+    },
+    "publish": {
+      "visibleToClient": "גלוי ללקוח",
+      "teamOnly": "לצוות בלבד",
+      "partial": "פורסמו {count} מתוך {total}",
+      "presentToClient": "הצג ללקוח",
+      "retract": "בטל פרסום",
+      "requestApproval": "בקש אישור",
+      "published": "{count, plural, one {פריט אחד פורסם} two {שני פריטים פורסמו} other {# פריטים פורסמו}}",
+      "retracted": "{count, plural, one {פריט אחד בוטל} two {שני פריטים בוטלו} other {# פריטים בוטלו}}",
+      "someRefused": "חלק מהפריטים לא פורסמו",
+      "refusedBody": "{count, plural, one {פריט אחד לא ניתן להצגה ללקוח} two {שני פריטים לא ניתנים להצגה} other {# פריטים לא ניתנים להצגה}}",
+      "failed": "לא ניתן לשנות את מה שהלקוח רואה",
+      "approvalTitlePrompt": "מה אתה מבקש שהלקוח יאשר?",
+      "approvalSent": "נשלח ללקוח לאישור"
+    },
+    "approve": {
+      "eyebrow": "לאישורך",
+      "approve": "אישור",
+      "requestChanges": "בקשת שינויים",
+      "notesLabel": "הערות ל-PMP",
+      "notesPlaceholder": "מה תרצה לשנות?",
+      "approved": "אושר — תודה",
+      "changesSent": "ההערות שלך נשלחו",
+      "failed": "לא ניתן לרשום את תגובתך",
+      "history": "היסטוריה",
+      "unavailableTitle": "הבקשה אינה זמינה",
+      "unavailableBody": "ייתכן שהיא בוטלה, או שאינה משותפת איתך.",
+      "status": {
+        "APPROVED": "אישרת את זה",
+        "CHANGES_REQUESTED": "ביקשת שינויים",
+        "WITHDRAWN": "PMP ביטלה את הבקשה",
+        "PENDING": "ממתין לתגובתך"
+      },
+      "actions": {
+        "SUBMITTED": "שלח לאישור",
+        "APPROVED": "אישר",
+        "CHANGES_REQUESTED": "ביקש שינויים",
+        "WITHDRAWN": "ביטל את הבקשה"
+      }
+    },
+    "comments": {
+      "noSelectionTitle": "בחר פריט",
+      "noSelectionBody": "בחר פריט בלוח כדי לקרוא ולהוסיף תגובות.",
+      "multiSelectTitle": "פריט אחד בכל פעם",
+      "multiSelectBody": "תגובות שייכות לפריט יחיד. צמצם את הבחירה לאחד.",
+      "emptyTitle": "אין עדיין תגובות",
+      "emptyBody": "היה הראשון להגיב על זה.",
+      "placeholder": "הוסף תגובה…",
+      "post": "פרסם",
+      "resolve": "סמן כטופל",
+      "reopen": "פתח מחדש"
+    },
+    "preview": {
+      "enter": "תצוגה מקדימה כלקוח",
+      "exit": "יציאה מתצוגת לקוח"
+    },
+    "templates": {
+      "BLANK": "ריק",
+      "CAMPAIGN_BRAINSTORM": "סיעור מוחות לקמפיין",
+      "BRAND_IDENTITY": "זהות מותג",
+      "VIDEO_CONCEPT": "קונספט וידאו",
+      "SOCIAL_CAMPAIGN": "קמפיין סושיאל",
+      "WEBSITE_EXPERIENCE": "חוויית אתר",
+      "PRODUCT_LAUNCH": "השקת מוצר",
+      "CLIENT_PRESENTATION": "מצגת ללקוח",
+      "PRODUCTION_PLANNING": "תכנון הפקה"
+    },
+    "templateFrames": {
+      "brief": "בריף",
+      "references": "רפרנסים",
+      "insights": "תובנות",
+      "directions": "כיוונים",
+      "moodboard": "מודבורד",
+      "typography": "טיפוגרפיה",
+      "palette": "פלטה",
+      "applications": "יישומים",
+      "treatment": "טריטמנט",
+      "storyboard": "סטוריבורד",
+      "shotList": "רשימת שוטים",
+      "audience": "קהל",
+      "contentPillars": "עמודי תוכן",
+      "executions": "ביצועים",
+      "calendar": "לוח שנה",
+      "sitemap": "מפת אתר",
+      "wireframes": "וויירפריימים",
+      "visualDirection": "כיוון ויזואלי",
+      "positioning": "מיצוב",
+      "keyMessages": "מסרים מרכזיים",
+      "assets": "נכסים",
+      "timeline": "ציר זמן",
+      "theProblem": "הבעיה",
+      "theIdea": "הרעיון",
+      "theExecution": "הביצוע",
+      "nextSteps": "הצעדים הבאים",
+      "deliverables": "תוצרים",
+      "schedule": "לו\"ז",
+      "crew": "צוות",
+      "locations": "לוקיישנים",
+      "budget": "תקציב"
+    },
+    "produce": {
+      "review": "סקירה",
+      "saveToProject": "שמור לפרויקט",
+      "saved": "{count, plural, =0 {נשמר לפרויקט} one {משימה אחת נוצרה} two {שתי משימות נוצרו} other {# משימות נוצרו}}",
+      "failed": "לא ניתן לשמור לפרויקט"
+    },
+    "invite": {
+      "title": "אנשים בחדר הזה",
+      "subtitle": "התפקידים מוגבלים למה שחשבון כל אחד מאפשר.",
+      "inRoom": "בחדר הזה",
+      "addPeople": "הוספת אנשים",
+      "search": "חיפוש לפי שם",
+      "noMatches": "אין עוד מי להוסיף",
+      "roleLabel": "תפקיד בחדר",
+      "remove": "הסרה מהחדר",
+      "failed": "לא ניתן לעדכן את החדר"
+    },
+    "inspector": {
+      "colour": "צבע",
+      "swatch": "גוון {index}",
+      "addSwatch": "הוספת צבע",
+      "removeSwatch": "הסרת צבע",
+      "shapes": {
+        "rect": "מלבן",
+        "ellipse": "אליפסה",
+        "triangle": "משולש"
+      }
+    },
+    "summary": {
+      "title": "סיכום מפגש",
+      "generate": "יצירה",
+      "reviewed": "נבדק",
+      "unreviewed": "טיוטה — לא נבדקה",
+      "draftWarning": "נכתב על ידי PAX AI מההחלטות והאישורים בחדר. בדוק לפני שיתוף כלשהו עם הלקוח.",
+      "markReviewed": "סמן כנבדק",
+      "emptyTitle": "אין עדיין סיכומים",
+      "emptyBody": "כשיהיו בחדר החלטות או אישורי לקוח, PAX AI יוכל לנסח סיכום מפגש.",
+      "failed": "לא ניתן ליצור סיכום",
+      "deniedTitle": "לא זמין",
+      "deniedBody": "סיכומי מפגש הם פנימיים לצוות PMP."
+    }
   }
 }

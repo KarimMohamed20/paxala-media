@@ -255,7 +255,8 @@
     "testimonials": "آراء العملاء",
     "backToPortal": "العودة إلى البوابة",
     "contentCalendar": "تقويم المحتوى",
-    "monthlyPlans": "الخطط الشهرية"
+    "monthlyPlans": "الخطط الشهرية",
+    "playground": "غرفة الإبداع"
   },
   "portal": {
     "panel": "بوابة العميل",
@@ -324,7 +325,8 @@
     "nothingHere": "لا يوجد شيء هنا بعد",
     "noProjectsYet": "لا توجد مشاريع بعد",
     "noBookingsYet": "لا توجد حجوزات بعد",
-    "noFilesYet": "لا توجد ملفات متاحة بعد"
+    "noFilesYet": "لا توجد ملفات متاحة بعد",
+    "playground": "غرفة الإبداع"
   },
   "content": {
     "platform": {
@@ -987,7 +989,6 @@
     "contentCalendar": "تقويم المحتوى",
     "manageContent": "خطّط وراجع وانشر المحتوى لجميع العملاء",
     "newContentItem": "محتوى جديد",
-    "allClients": "كل العملاء",
     "contentItems": "عناصر المحتوى",
     "noContentItems": "لا توجد عناصر مطابقة للتصفية",
     "sendForApproval": "إرسال للموافقة",
@@ -999,7 +1000,427 @@
     "bulkApply": "تطبيق على المحدد",
     "selectedItems": "{count} محدد",
     "calendarView": "تقويم",
-    "tableView": "جدول",
     "listView": "قائمة"
+  },
+  "playground": {
+    "title": "غرفة الإبداع",
+    "productName": "PMP Playground",
+    "tagline": "الأفكار تصير حقيقة",
+    "subtitle": "غرف إبداعية دائمة يبني فيها الفريق والعميل الحملات معًا.",
+    "common": {
+      "loading": "جارٍ التحميل…",
+      "retry": "أعد المحاولة",
+      "cancel": "إلغاء",
+      "close": "إغلاق",
+      "unnamed": "بدون اسم",
+      "someone": "شخص آخر"
+    },
+    "status": {
+      "LIVE": "مباشر",
+      "ACTIVE": "نشطة",
+      "AWAITING_CLIENT": "بانتظار العميل",
+      "DRAFT": "مسودة",
+      "ARCHIVED": "مؤرشفة"
+    },
+    "sections": {
+      "awaitingClient": "بانتظار موافقة العميل",
+      "active": "الغرف النشطة",
+      "drafts": "المسودات",
+      "archived": "الأرشيف"
+    },
+    "card": {
+      "nodeCount": "{count, plural, =0 {لوحة فارغة} one {عنصر واحد} two {عنصران} few {# عناصر} other {# عنصرًا}}",
+      "restricted": "مقيدة"
+    },
+    "empty": {
+      "title": "لا توجد غرف بعد",
+      "bodyStaff": "أنشئ غرفة لتبدأ حملة مع عميلك — اللوحة والقرارات والموافقات كلها هنا.",
+      "bodyClient": "عندما تدعوك PMP إلى جلسة إبداعية ستظهر هنا."
+    },
+    "errors": {
+      "loadFailedTitle": "تعذّر تحميل الغرف",
+      "loadFailedBody": "فشل الاتصال. لم يُفقد شيء — أعد المحاولة.",
+      "noAccessTitle": "الغرفة غير متاحة",
+      "noAccessBody": "هذه الغرفة غير موجودة أو غير مشاركة معك.",
+      "roomFailedTitle": "تعذّر فتح الغرفة",
+      "roomFailedBody": "فشل الاتصال. عملك محفوظ — أعد المحاولة بعد قليل."
+    },
+    "create": {
+      "cta": "غرفة جديدة",
+      "title": "إنشاء غرفة إبداع",
+      "subtitle": "تحفظ الغرفة كل شيء: اللوحة والقرارات وسجل الموافقات.",
+      "roomName": "اسم الغرفة",
+      "roomNamePlaceholder": "حملة الصيف — عصف ذهني ٠١",
+      "brief": "الموجز",
+      "briefPlaceholder": "ما المشكلة التي نحلها؟ الهدف والجمهور والمخرجات…",
+      "client": "العميل",
+      "noClient": "بدون عميل بعد",
+      "project": "المشروع",
+      "noProject": "بدون مشروع بعد",
+      "participants": "المشاركون",
+      "restricted": "غرفة مقيدة",
+      "restrictedHint": "لا يفتحها إلا المدعوون. لن يراها بقية فريق PMP في القائمة.",
+      "submit": "إنشاء الغرفة",
+      "created": "تم إنشاء الغرفة",
+      "failed": "تعذّر إنشاء الغرفة. حاول مرة أخرى.",
+      "template": "القالب",
+      "blankHint": "لوحة فارغة",
+      "frameCount": "{count, plural, one {إطار واحد} two {إطاران} few {# إطارات} other {# إطارًا}}"
+    },
+    "roles": {
+      "team": "PMP",
+      "client": "عميل"
+    },
+    "roomRoles": {
+      "OWNER": "المضيف",
+      "EDITOR": "الفريق الإبداعي",
+      "APPROVER": "معتمِد",
+      "VIEWER": "مشاهد"
+    },
+    "mode": {
+      "studio": "الاستوديو — داخلي",
+      "client": "العميل — عرض"
+    },
+    "room": {
+      "backToRooms": "كل الغرف",
+      "loading": "جارٍ فتح الغرفة…",
+      "share": "مشاركة",
+      "invite": "دعوة أشخاص",
+      "showPanel": "إظهار لوحة الغرفة",
+      "hidePanel": "إخفاء لوحة الغرفة",
+      "noClient": "لا يوجد عميل مرتبط",
+      "canvasEmptyTitle": "هذه اللوحة فارغة",
+      "canvasEmptyStaff": "أدوات الإبداع تصل مع اللوحة في الإصدار القادم. أما بقية الغرفة — الأشخاص والمحادثة والقرارات — فتعمل الآن.",
+      "canvasEmptyClient": "لم تعرض PMP شيئًا هنا بعد. سترى الاتجاهات المختارة فور نشرها.",
+      "loadingCanvas": "جارٍ تحميل اللوحة",
+      "linkCopied": "تم نسخ رابط الغرفة",
+      "copyFailed": "انسخ الرابط يدويًا"
+    },
+    "toolbar": {
+      "label": "أدوات الإبداع",
+      "select": "تحديد",
+      "sticky": "ملاحظة",
+      "draw": "رسم",
+      "text": "نص",
+      "shape": "شكل",
+      "upload": "رفع",
+      "frame": "إطار",
+      "palette": "ألوان",
+      "ai": "ومضة AI",
+      "comingWithCanvas": "تتوفر مع إطلاق اللوحة",
+      "readOnly": "لديك صلاحية عرض فقط في هذه الغرفة",
+      "connect": "ربط"
+    },
+    "panel": {
+      "label": "الغرفة",
+      "people": "الأشخاص",
+      "chat": "المحادثة",
+      "decisions": "القرارات",
+      "you": "(أنت)",
+      "host": "المضيف",
+      "peopleEmptyTitle": "لا أحد هنا بعد",
+      "peopleEmptyBody": "ادعُ فريقك والعميل لبدء الجلسة.",
+      "chatEmptyTitle": "لا رسائل بعد",
+      "chatEmptyBody": "تُفتح محادثة الغرفة مع إصدار التعاون.",
+      "decisionsEmptyTitle": "لا قرارات مسجلة",
+      "decisionsEmptyBody": "ستُحفظ قرارات هذه الغرفة هنا، مع من قررها ومتى.",
+      "outline": "المخطط",
+      "activity": "النشاط",
+      "comments": "التعليقات"
+    },
+    "meeting": {
+      "label": "أدوات الاجتماع",
+      "mic": "الميكروفون",
+      "camera": "الكاميرا",
+      "share": "مشاركة الشاشة",
+      "react": "تفاعل",
+      "raise": "رفع اليد",
+      "leave": "مغادرة",
+      "notConfigured": "الفيديو المباشر غير مفعّل في مساحة العمل هذه"
+    },
+    "ai": {
+      "name": "PAX AI",
+      "placeholder": "حوّل هذه الفكرة إلى مسار حملة",
+      "expand": "توسيع PAX AI",
+      "collapse": "طي PAX AI",
+      "notConfigured": "لم يُضبط PAX AI بعد. بمجرد ربط مزود، حدّد عناصر من اللوحة واطلب اتجاهات أو عناوين أو قائمة لقطات.",
+      "contextSelected": "{count, plural, one {عنصر واحد محدد} two {عنصران محددان} few {# عناصر محددة} other {# عنصرًا محددًا}}",
+      "contextRoom": "الغرفة كاملة",
+      "withSelection": "مع تحديدك",
+      "sparks": "ومضات إبداعية",
+      "selectHint": "حدّد عناصر على اللوحة للعمل عليها مباشرة.",
+      "insert": "إدراج",
+      "regenerate": "إعادة توليد",
+      "copy": "نسخ",
+      "discard": "تجاهل",
+      "inserted": "أُضيف إلى اللوحة، للفريق فقط",
+      "copied": "تم النسخ",
+      "failed": "تعذّر على PAX AI الإجابة",
+      "tasks": {
+        "campaign_route": "مسار حملة",
+        "three_directions": "٣ اتجاهات",
+        "headline": "عناوين",
+        "script": "سيناريو",
+        "shot_list": "قائمة لقطات",
+        "challenge": "تحدَّ الفكرة",
+        "spark_visual": "ومضة بصرية",
+        "spark_story": "ومضة قصة",
+        "spark_headline": "ومضة عنوان",
+        "spark_camera": "ومضة كاميرا",
+        "spark_social": "ومضة سوشيال",
+        "spark_unexpected": "غير متوقع"
+      }
+    },
+    "canvas": {
+      "minimap": "نظرة عامة على اللوحة",
+      "zoomIn": "تكبير",
+      "zoomOut": "تصغير",
+      "resetZoom": "العودة إلى ١٠٠٪",
+      "fit": "ملاءمة اللوحة",
+      "fitAnnounce": "تمت ملاءمة {count} عنصرًا على الشاشة",
+      "selectionCleared": "تم إلغاء التحديد",
+      "deleted": "{count, plural, one {حُذف عنصر واحد} two {حُذف عنصران} few {حُذفت # عناصر} other {حُذف # عنصرًا}}",
+      "lockedTitle": "شخص آخر يحرّر الآن",
+      "lockedBody": "{name} يحرّر هذا العنصر. لم يُطبَّق تغييرك.",
+      "staleTitle": "تغيّر العنصر في مكان آخر",
+      "staleBody": "قام شخص بتحديث هذا العنصر قبلك. أعد التحميل لرؤية النسخة الحالية."
+    },
+    "outline": {
+      "emptyTitle": "لا شيء على اللوحة",
+      "emptyBody": "تُدرج هنا العناصر التي تضيفها إلى اللوحة بترتيب القراءة.",
+      "noContent": "بدون نص"
+    },
+    "visibility": {
+      "published": "منشور للعميل",
+      "teamOnly": "للفريق فقط"
+    },
+    "nodeKinds": {
+      "STICKY": "ملاحظة",
+      "TEXT": "نص",
+      "IMAGE": "صورة",
+      "FILE": "ملف",
+      "DRAWING": "رسم",
+      "SHAPE": "شكل",
+      "FRAME": "إطار",
+      "CAMPAIGN_ROUTE": "اتجاه",
+      "SCRIPT": "نص سيناريو",
+      "PALETTE": "لوحة ألوان",
+      "POLL": "تصويت",
+      "DECISION": "قرار",
+      "AI_CARD": "ذكاء اصطناعي"
+    },
+    "save": {
+      "pending": "غير محفوظ",
+      "saving": "جارٍ الحفظ…",
+      "offline": "غير متصل — التغييرات محفوظة",
+      "error": "رُفضت بعض التغييرات"
+    },
+    "stream": {
+      "reconnecting": "جارٍ إعادة الاتصال…",
+      "offline": "غير متصل"
+    },
+    "upload": {
+      "failed": "تعذّرت إضافة هذا الملف"
+    },
+    "chat": {
+      "team": "الفريق",
+      "shared": "مشترك",
+      "teamHint": "داخلي — العميل لا يرى هذه القناة.",
+      "sharedHint": "يستطيع العميل قراءة هذه القناة.",
+      "emptyTeam": "تبدأ المحادثة الداخلية هنا.",
+      "emptyShared": "لم تتم مشاركة شيء مع العميل بعد.",
+      "placeholderTeam": "راسل الفريق…",
+      "placeholderShared": "راسل الغرفة…",
+      "send": "إرسال",
+      "showOnCanvas": "إظهار على اللوحة"
+    },
+    "decisions": {
+      "record": "تسجيل قرار",
+      "latest": "أحدث قرار",
+      "titleLabel": "ما الذي تقرر",
+      "titlePlaceholder": "سنعتمد مسار لحظة البطل",
+      "outcomeLabel": "لماذا",
+      "outcomePlaceholder": "الأسباب والملاحظات والخطوة التالية…",
+      "citing": "{count, plural, one {يستند إلى عنصر محدد واحد} two {يستند إلى عنصرين محددين} few {يستند إلى # عناصر محددة} other {يستند إلى # عنصرًا محددًا}}",
+      "showOnCanvas": "{count, plural, one {إظهار العنصر المشار إليه} two {إظهار العنصرين} few {إظهار # عناصر} other {إظهار # عنصرًا}}"
+    },
+    "activity": {
+      "emptyTitle": "لم يحدث شيء بعد",
+      "emptyBody": "يُسجَّل هنا كل ما يجري في هذه الغرفة.",
+      "loadMore": "تحميل نشاط أقدم",
+      "show": "إظهار",
+      "types": {
+        "NODE_CREATE": "أضاف عنصرًا",
+        "NODE_TEXT": "عدّل نصًا",
+        "NODE_DATA": "حدّث عنصرًا",
+        "NODE_VISIBILITY": "غيّر من يمكنه رؤية عنصر",
+        "NODE_DELETE": "حذف عنصرًا",
+        "EDGE_CREATE": "ربط عنصرين",
+        "EDGE_UPDATE": "غيّر رابطًا",
+        "EDGE_DELETE": "أزال رابطًا",
+        "COMMENT_ADDED": "علّق",
+        "COMMENT_RESOLVED": "أغلق تعليقًا",
+        "MESSAGE": "أرسل رسالة",
+        "REACTION": "تفاعل",
+        "DECISION_RECORDED": "سجّل قرارًا",
+        "PUBLISHED_TO_CLIENT": "نشر للعميل",
+        "UNPUBLISHED_FROM_CLIENT": "ألغى النشر للعميل",
+        "APPROVAL_SUBMITTED": "طلب موافقة",
+        "APPROVAL_APPROVED": "وافق",
+        "APPROVAL_CHANGES_REQUESTED": "طلب تعديلات",
+        "APPROVAL_WITHDRAWN": "سحب طلب موافقة",
+        "MEMBER_ADDED": "انضم إلى الغرفة",
+        "MEMBER_REMOVED": "غادر الغرفة",
+        "ROOM_UPDATED": "حدّث الغرفة",
+        "FILE_UPLOADED": "أضاف ملفًا",
+        "AI_GENERATED": "استخدم PAX AI",
+        "SAVED_TO_PROJECT": "حفظ العمل في المشروع",
+        "NODE_MOVE": "حرّك عنصرًا",
+        "NODE_RESIZE": "غيّر حجم عنصر",
+        "NODE_STYLE": "غيّر تنسيق عنصر",
+        "NODE_ORDER": "أعاد ترتيب عنصر"
+      }
+    },
+    "publish": {
+      "visibleToClient": "مرئي للعميل",
+      "teamOnly": "للفريق فقط",
+      "partial": "نُشر {count} من {total}",
+      "presentToClient": "عرض على العميل",
+      "retract": "سحب",
+      "requestApproval": "طلب موافقة",
+      "published": "{count, plural, one {نُشر عنصر واحد} two {نُشر عنصران} few {نُشرت # عناصر} other {نُشر # عنصرًا}}",
+      "retracted": "{count, plural, one {سُحب عنصر واحد} two {سُحب عنصران} few {سُحبت # عناصر} other {سُحب # عنصرًا}}",
+      "someRefused": "لم تُنشر بعض العناصر",
+      "refusedBody": "{count, plural, one {عنصر واحد لا يمكن عرضه على العميل} two {عنصران لا يمكن عرضهما} few {# عناصر لا يمكن عرضها} other {# عنصرًا لا يمكن عرضه}}",
+      "failed": "تعذّر تغيير ما يراه العميل",
+      "approvalTitlePrompt": "ما الذي تطلب من العميل الموافقة عليه؟",
+      "approvalSent": "أُرسل إلى العميل للموافقة"
+    },
+    "approve": {
+      "eyebrow": "للموافقة",
+      "approve": "موافقة",
+      "requestChanges": "طلب تعديلات",
+      "notesLabel": "ملاحظات لـ PMP",
+      "notesPlaceholder": "ما الذي تودّ تغييره؟",
+      "approved": "تمت الموافقة — شكرًا لك",
+      "changesSent": "تم إرسال ملاحظاتك",
+      "failed": "تعذّر تسجيل ردّك",
+      "history": "السجل",
+      "unavailableTitle": "هذا الطلب غير متاح",
+      "unavailableBody": "ربما تم سحبه، أو أنه غير مشارك معك.",
+      "status": {
+        "APPROVED": "لقد وافقت على هذا",
+        "CHANGES_REQUESTED": "طلبت تعديلات",
+        "WITHDRAWN": "سحبت PMP هذا الطلب",
+        "PENDING": "بانتظار ردّك"
+      },
+      "actions": {
+        "SUBMITTED": "أرسل هذا للموافقة",
+        "APPROVED": "وافق",
+        "CHANGES_REQUESTED": "طلب تعديلات",
+        "WITHDRAWN": "سحب الطلب"
+      }
+    },
+    "comments": {
+      "noSelectionTitle": "اختر عنصرًا",
+      "noSelectionBody": "اختر عنصرًا على اللوحة لقراءة التعليقات وإضافتها.",
+      "multiSelectTitle": "عنصر واحد في كل مرة",
+      "multiSelectBody": "التعليقات تخص عنصرًا واحدًا. قلّص التحديد إلى عنصر واحد.",
+      "emptyTitle": "لا تعليقات بعد",
+      "emptyBody": "كن أول من يعلّق على هذا.",
+      "placeholder": "أضف تعليقًا…",
+      "post": "نشر",
+      "resolve": "وضع علامة كمحلول",
+      "reopen": "إعادة الفتح"
+    },
+    "preview": {
+      "enter": "معاينة كعميل",
+      "exit": "إنهاء معاينة العميل"
+    },
+    "templates": {
+      "BLANK": "فارغة",
+      "CAMPAIGN_BRAINSTORM": "عصف ذهني لحملة",
+      "BRAND_IDENTITY": "هوية العلامة",
+      "VIDEO_CONCEPT": "فكرة فيديو",
+      "SOCIAL_CAMPAIGN": "حملة تواصل",
+      "WEBSITE_EXPERIENCE": "تجربة موقع",
+      "PRODUCT_LAUNCH": "إطلاق منتج",
+      "CLIENT_PRESENTATION": "عرض للعميل",
+      "PRODUCTION_PLANNING": "تخطيط الإنتاج"
+    },
+    "templateFrames": {
+      "brief": "الموجز",
+      "references": "مراجع",
+      "insights": "رؤى",
+      "directions": "اتجاهات",
+      "moodboard": "لوحة إلهام",
+      "typography": "الخطوط",
+      "palette": "لوحة الألوان",
+      "applications": "تطبيقات",
+      "treatment": "المعالجة",
+      "storyboard": "القصة المصورة",
+      "shotList": "قائمة اللقطات",
+      "audience": "الجمهور",
+      "contentPillars": "ركائز المحتوى",
+      "executions": "التنفيذات",
+      "calendar": "التقويم",
+      "sitemap": "خريطة الموقع",
+      "wireframes": "مخططات أولية",
+      "visualDirection": "الاتجاه البصري",
+      "positioning": "التموضع",
+      "keyMessages": "الرسائل الأساسية",
+      "assets": "الأصول",
+      "timeline": "الجدول الزمني",
+      "theProblem": "المشكلة",
+      "theIdea": "الفكرة",
+      "theExecution": "التنفيذ",
+      "nextSteps": "الخطوات التالية",
+      "deliverables": "المخرجات",
+      "schedule": "الجدول",
+      "crew": "الطاقم",
+      "locations": "المواقع",
+      "budget": "الميزانية"
+    },
+    "produce": {
+      "review": "مراجعة",
+      "saveToProject": "حفظ في المشروع",
+      "saved": "{count, plural, =0 {حُفظ في المشروع} one {أُنشئت مهمة واحدة} two {أُنشئت مهمتان} few {أُنشئت # مهام} other {أُنشئت # مهمة}}",
+      "failed": "تعذّر الحفظ في المشروع"
+    },
+    "invite": {
+      "title": "أشخاص في هذه الغرفة",
+      "subtitle": "تُقيَّد الأدوار بما يسمح به حساب كل شخص.",
+      "inRoom": "في هذه الغرفة",
+      "addPeople": "إضافة أشخاص",
+      "search": "ابحث بالاسم",
+      "noMatches": "لا أحد آخر لإضافته",
+      "roleLabel": "دور الغرفة",
+      "remove": "إزالة من الغرفة",
+      "failed": "تعذّر تحديث الغرفة"
+    },
+    "inspector": {
+      "colour": "اللون",
+      "swatch": "لون {index}",
+      "addSwatch": "إضافة لون",
+      "removeSwatch": "إزالة اللون",
+      "shapes": {
+        "rect": "مستطيل",
+        "ellipse": "بيضاوي",
+        "triangle": "مثلث"
+      }
+    },
+    "summary": {
+      "title": "ملخص الجلسة",
+      "generate": "توليد",
+      "reviewed": "تمت المراجعة",
+      "unreviewed": "مسودة — لم تُراجع",
+      "draftWarning": "كتبه PAX AI من قرارات هذه الغرفة وموافقاتها. راجعه قبل مشاركة أي شيء منه مع العميل.",
+      "markReviewed": "وضع علامة كمراجَع",
+      "emptyTitle": "لا ملخصات بعد",
+      "emptyBody": "عندما تتضمن الغرفة قرارات أو موافقات، يمكن لـ PAX AI صياغة ملخص للجلسة.",
+      "failed": "تعذّر توليد الملخص",
+      "deniedTitle": "غير متاح",
+      "deniedBody": "ملخصات الجلسات داخلية لفريق PMP."
+    }
   }
 }

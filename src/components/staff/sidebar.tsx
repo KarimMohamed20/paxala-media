@@ -7,6 +7,7 @@ import {
     Folder,
     CheckSquare,
     ArrowLeft,
+    Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,9 @@ const navItems = [
     { href: "/staff", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/staff/projects", icon: Folder, label: "My Projects" },
     { href: "/staff/tasks", icon: CheckSquare, label: "My Tasks" },
+    // This sidebar is hardcoded English (no useTranslations here yet), so the
+    // label follows suit rather than being the one translated string.
+    { href: "/playground", icon: Sparkles, label: "Playground" },
 ];
 
 interface StaffSidebarProps {
