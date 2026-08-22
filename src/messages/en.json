@@ -8,7 +8,9 @@
       "services": "Hi Paxala Media 👋 I'm interested in your services. Could you share details and pricing?",
       "packages": "Hi Paxala Media 👋 I'd like more info about your monthly packages (Brand 360°).",
       "portfolio": "Hi Paxala Media 👋 I saw your portfolio and I'd like to discuss a project.",
-      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project."
+      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project.",
+      "support": "Hi Paxala Media 👋 I need help with my client portal.",
+      "passwordReset": "Hi, I need help resetting my client portal password."
     }
   },
   "nav": {
@@ -280,6 +282,7 @@
     "files": "Files",
     "settings": "Settings",
     "adminPanel": "Admin Panel",
+    "staffPanel": "Staff Panel",
     "signOut": "Sign Out",
     "welcome": "Welcome back",
     "activeProjects": "Active Projects",
@@ -1419,6 +1422,11 @@
       "failed": "Could not generate a summary",
       "deniedTitle": "Not available",
       "deniedBody": "Session summaries are internal to the PMP team."
+    },
+    "back": {
+      "admin": "Back to Admin Panel",
+      "staff": "Back to Staff Panel",
+      "portal": "Back to Portal"
     }
   }
 }
