@@ -600,6 +600,121 @@ export async function listApprovals(roomId: string) {
   });
 }
 
+/** Room title only — for outbound notifications that name the room. */
+export async function getRoomTitle(roomId: string): Promise<string | null> {
+  const room = await db.playgroundRoom.findUnique({
+    where: { id: roomId },
+    select: { title: true },
+  });
+  return room?.title ?? null;
+}
+
+/**
+ * Who should be told an approval awaits: the room's CLIENT-role members who
+ * can actually respond (VIEWER grants resolve to canRespond: false on the
+ * approve deck, so they get no CTA email), plus the room's client scope,
+ * deduped by email. Metadata only — no node content — so Client Mode
+ * filtering does not apply here.
+ */
+export async function listApprovalRecipients(
+  roomId: string
+): Promise<Array<{ email: string; name: string }>> {
+  const [room, clientMembers] = await Promise.all([
+    db.playgroundRoom.findUnique({
+      where: { id: roomId },
+      select: { client: { select: { email: true, name: true } } },
+    }),
+    db.playgroundMember.findMany({
+      // String literals, not Role.CLIENT / RoomMemberRole.VIEWER: this module
+      // imports the Prisma enums as types only.
+      where: {
+        roomId,
+        role: { not: "VIEWER" },
+        user: { role: "CLIENT", email: { not: null } },
+      },
+      select: { user: { select: { email: true, name: true } } },
+    }),
+  ]);
+
+  const byEmail = new Map<string, string>();
+  for (const m of clientMembers) {
+    if (m.user.email) byEmail.set(m.user.email, m.user.name || m.user.email);
+  }
+  const scoped = room?.client;
+  if (scoped?.email && !byEmail.has(scoped.email)) {
+    byEmail.set(scoped.email, scoped.name || scoped.email);
+  }
+  return [...byEmail].map(([email, name]) => ({ email, name }));
+}
+
+/**
+ * PENDING approvals across every room a client can respond in — their room
+ * memberships plus rooms scoped to them. Feeds the portal's unified approvals
+ * inbox. Approval metadata only; the payload stays behind the room routes.
+ *
+ * `viewer` is the CALLER: the target-client scope is ANDed with the caller's
+ * own room visibility so a staff viewer cannot use this to read approval
+ * metadata out of restricted rooms they are not a member of. For a client
+ * viewing their own queue the second term is a no-op.
+ */
+export async function listPendingApprovalsForClient(
+  targetClientId: string,
+  viewer: { userId: string; isStaff: boolean }
+) {
+  return db.playgroundApproval.findMany({
+    where: {
+      status: RoomApprovalStatus.PENDING,
+      room: {
+        AND: [
+          {
+            OR: [
+              { clientId: targetClientId },
+              { members: { some: { userId: targetClientId } } },
+            ],
+          },
+          roomListWhere(viewer),
+        ],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    select: {
+      id: true,
+      roomId: true,
+      title: true,
+      note: true,
+      createdAt: true,
+      dueAt: true,
+      requestedByName: true,
+      room: { select: { title: true } },
+    },
+  });
+}
+
+/**
+ * CLIENT users with at least one PENDING approval in their scope — feeds the
+ * admin client picker so a client with Playground work but no content plan is
+ * still selectable.
+ */
+export async function listClientIdsWithPendingApprovals(): Promise<string[]> {
+  const rooms = await db.playgroundRoom.findMany({
+    where: { approvals: { some: { status: RoomApprovalStatus.PENDING } } },
+    select: {
+      clientId: true,
+      members: {
+        where: { user: { role: "CLIENT" } },
+        select: { userId: true },
+      },
+    },
+  });
+  const ids = new Set<string>();
+  for (const room of rooms) {
+    if (room.clientId) ids.add(room.clientId);
+    for (const m of room.members) ids.add(m.userId);
+  }
+  return [...ids];
+}
+
 export async function getApproval(roomId: string, approvalId: string) {
   return db.playgroundApproval.findFirst({
     // Scoped by roomId as well as id: an approval id alone must not be a key to

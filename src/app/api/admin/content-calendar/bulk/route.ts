@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ContentApprovalAction, ContentStatus } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/constants";
 import { db } from "@/lib/db";
+import { sendContentAwaitingApproval } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 import { clampString } from "@/lib/security";
 import {
   canReview,
@@ -172,6 +175,58 @@ export async function POST(request: NextRequest) {
       }
       return count;
     });
+
+    // A bulk SUBMIT is a request to the client(s): one digest email per client
+    // with their item count, not one email per item.
+    if (action === "SUBMIT" && updated > 0) {
+      const submitted = await db.contentItem.findMany({
+        where: { id: { in: applicable.map((i) => i.id) } },
+        select: {
+          title: true,
+          plan: {
+            select: {
+              clientId: true,
+              client: { select: { email: true, name: true } },
+            },
+          },
+        },
+      });
+      const perClient = new Map<
+        string,
+        { email: string; name: string; count: number; itemTitle: string }
+      >();
+      for (const item of submitted) {
+        const client = item.plan.client;
+        if (!client.email) continue;
+        const entry = perClient.get(item.plan.clientId);
+        if (entry) entry.count += 1;
+        else
+          perClient.set(item.plan.clientId, {
+            email: client.email,
+            name: client.name || client.email,
+            count: 1,
+            itemTitle: item.title,
+          });
+      }
+      const locale = (request.cookies.get("NEXT_LOCALE")?.value ||
+        "en") as EmailLocale;
+      for (const { email, name, count, itemTitle } of perClient.values()) {
+        void sendContentAwaitingApproval(
+          email,
+          {
+            name,
+            count,
+            // A batch of one for this client reads like a single submission,
+            // not "1 content items".
+            ...(count === 1 && { itemTitle }),
+            link: `${getAppBaseUrl()}/portal/approvals`,
+          },
+          locale
+        ).catch((error) =>
+          console.error("Content awaiting email send failed:", error)
+        );
+      }
+    }
 
     return NextResponse.json({ updated, skipped });
   } catch (error) {

@@ -13,6 +13,19 @@ export const emailStyles = {
 
 export type EmailLocale = 'en' | 'ar' | 'he';
 
+/**
+ * Escape user-controlled strings (titles, names) before interpolating them
+ * into template HTML — outbound email must not be an HTML-injection surface.
+ */
+export function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export interface EmailTemplate {
     subject: string;
     html: string;

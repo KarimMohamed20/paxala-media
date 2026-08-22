@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getAppBaseUrl } from "@/lib/constants";
 import { createResetToken } from "@/lib/password-reset";
 import { sendPasswordReset } from "@/lib/email/service";
 import { EmailLocale } from "@/lib/email/styles";
@@ -60,9 +61,7 @@ export async function POST(req: NextRequest) {
           "NEXTAUTH_URL is not set — falling back to https://paxaland.com for the reset link"
         );
       }
-      const baseUrl = (
-        process.env.NEXTAUTH_URL || "https://paxaland.com"
-      ).replace(/\/+$/, "");
+      const baseUrl = getAppBaseUrl();
       const locale = (req.cookies.get("NEXT_LOCALE")?.value ||
         "en") as EmailLocale;
       // Fire-and-forget: awaiting the SMTP round-trip only on the match path

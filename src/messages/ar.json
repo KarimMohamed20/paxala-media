@@ -251,14 +251,15 @@
     "paymentReports": "تقارير المدفوعات",
     "portfolio": "معرض الأعمال",
     "blog": "المدونة",
-    "approvals": "الموافقات",
+    "approvals": "اعتمادات المهام",
     "bookings": "الحجوزات",
     "inquiries": "الاستفسارات",
     "testimonials": "آراء العملاء",
     "backToPortal": "العودة إلى البوابة",
     "contentCalendar": "تقويم المحتوى",
     "monthlyPlans": "الخطط الشهرية",
-    "playground": "غرفة الإبداع"
+    "playground": "غرفة الإبداع",
+    "clientApprovals": "موافقات العملاء"
   },
   "portal": {
     "panel": "بوابة العميل",
@@ -506,7 +507,9 @@
       },
       "assetCount": "{count} ملف",
       "imageCount": "{count} صورة",
-      "storyCount": "{count} ستوري"
+      "storyCount": "{count} ستوري",
+      "playgroundTitle": "غرفة الإبداع — بانتظار اعتمادك",
+      "playgroundReview": "مراجعة"
     }
   },
   "plan": {
@@ -858,7 +861,7 @@
     "totalProjects": "إجمالي المشاريع",
     "totalBookings": "إجمالي الحجوزات",
     "totalInquiries": "إجمالي الاستفسارات",
-    "pendingApprovals": "الموافقات المعلقة",
+    "pendingApprovals": "اعتمادات المهام المعلقة",
     "activeCount": "نشط",
     "inactiveCount": "غير نشط",
     "newCount": "جديد",
@@ -1005,7 +1008,11 @@
     "bulkApply": "تطبيق على المحدد",
     "selectedItems": "{count} محدد",
     "calendarView": "تقويم",
-    "listView": "قائمة"
+    "listView": "قائمة",
+    "clientApprovalsTitle": "موافقات العملاء",
+    "clientApprovalsSubtitle": "كل ما ينتظر رد العميل — مراجعات المحتوى واعتمادات غرفة الإبداع",
+    "clientApprovalsEmpty": "لا يوجد شيء بانتظار هذا العميل حالياً.",
+    "openInWorkspace": "فتح المراجعة"
   },
   "playground": {
     "title": "غرفة الإبداع",

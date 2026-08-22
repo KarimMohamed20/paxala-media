@@ -29,6 +29,14 @@ export function getWhatsAppUrl(message?: string): string {
 }
 
 /**
+ * Absolute origin for links placed in outbound emails. Server-side only —
+ * NEXTAUTH_URL is not exposed to the client bundle.
+ */
+export function getAppBaseUrl(): string {
+  return (process.env.NEXTAUTH_URL || "https://paxaland.com").replace(/\/+$/, "");
+}
+
+/**
  * Routes that render an authenticated *application* shell rather than the
  * marketing site.
  *

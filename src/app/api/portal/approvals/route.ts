@@ -14,6 +14,10 @@ import {
   parseContentStatus,
   resolveTargetClientId,
 } from "@/lib/content-authz";
+import {
+  listClientIdsWithPendingApprovals,
+  listPendingApprovalsForClient,
+} from "@/lib/playground/repo";
 
 /** Statuses that belong in a review queue at all. */
 const REVIEW_STATUSES: ContentStatus[] = [
@@ -45,14 +49,32 @@ export async function GET(request: NextRequest) {
     const requestedClientId = searchParams.get("clientId");
 
     // Same agency-user affordance as the calendar: staff own no plans, so give
-    // them the client list rather than an empty queue.
-    const clients = actor.isStaff
-      ? await db.user.findMany({
+    // them the client list rather than an empty queue. Union of clients with
+    // content plans and clients with pending Playground approvals — a client
+    // with Playground work but no plan must still be selectable.
+    let clients: Array<{ id: string; name: string | null; username: string | null }> = [];
+    if (actor.isStaff) {
+      const [planClients, pendingIds] = await Promise.all([
+        db.user.findMany({
           where: { role: Role.CLIENT, contentPlans: { some: {} } },
           orderBy: { name: "asc" },
           select: { id: true, name: true, username: true },
-        })
-      : [];
+        }),
+        listClientIdsWithPendingApprovals(),
+      ]);
+      const missing = pendingIds.filter(
+        (id) => !planClients.some((c) => c.id === id)
+      );
+      const extra = missing.length
+        ? await db.user.findMany({
+            where: { id: { in: missing }, role: Role.CLIENT },
+            select: { id: true, name: true, username: true },
+          })
+        : [];
+      clients = [...planClients, ...extra].sort((a, b) =>
+        (a.name ?? a.username ?? "").localeCompare(b.name ?? b.username ?? "")
+      );
+    }
 
     let clientId = await resolveTargetClientId(actor, requestedClientId);
     if (!clientId) {
@@ -84,7 +106,24 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [items, counts] = await Promise.all([
+    // A staff caller with no selectable client resolves to their OWN user id —
+    // their personal room memberships are not "a client's queue", so the
+    // playground scope is skipped for that fallback.
+    const staffSelfFallback = actor.isStaff && clientId === actor.userId;
+
+    // Playground sign-off requests belong in the same inbox: one place where a
+    // client sees EVERYTHING awaiting them. Scoped by the same clientId (with
+    // the caller's own room visibility enforced inside), so the staff
+    // client-picker view works too.
+    const [playgroundApprovals, items, counts] = await Promise.all([
+      staffSelfFallback
+        ? Promise.resolve(
+            [] as Awaited<ReturnType<typeof listPendingApprovalsForClient>>
+          )
+        : listPendingApprovalsForClient(clientId, {
+            userId: actor.userId,
+            isStaff: actor.isStaff,
+          }),
       db.contentItem.findMany({
         where,
         // Soonest review deadline first; items with no explicit due date fall
@@ -131,6 +170,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       items,
       selected,
+      playgroundApprovals,
       counts: {
         awaitingApproval: countOf(ContentStatus.AWAITING_APPROVAL),
         changesRequested: countOf(ContentStatus.REJECTED),

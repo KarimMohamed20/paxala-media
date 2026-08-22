@@ -1,4 +1,4 @@
-import { emailStyles, EmailLocale, EmailTemplate } from '../styles';
+import { emailStyles, escapeHtml, EmailLocale, EmailTemplate } from '../styles';
 
 interface PasswordResetData {
     name: string;
@@ -44,7 +44,7 @@ export function getPasswordResetEmail(data: PasswordResetData, locale: EmailLoca
       </div>
       <div style="${emailStyles.content}">
         <h2 style="margin-top: 0;">${t.title}</h2>
-        <p>${t.greeting} ${data.name},</p>
+        <p>${t.greeting} ${escapeHtml(data.name)},</p>
         <p>${t.message}</p>
 
         <div style="text-align: center; margin: 30px 0;">

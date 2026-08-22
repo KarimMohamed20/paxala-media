@@ -252,14 +252,15 @@
     "paymentReports": "דוחות תשלומים",
     "portfolio": "תיק עבודות",
     "blog": "בלוג",
-    "approvals": "אישורים",
+    "approvals": "אישורי משימות",
     "bookings": "הזמנות",
     "inquiries": "פניות",
     "testimonials": "המלצות",
     "backToPortal": "חזרה לפורטל",
     "contentCalendar": "לוח תוכן",
     "monthlyPlans": "תכניות חודשיות",
-    "playground": "חדר יצירה"
+    "playground": "חדר יצירה",
+    "clientApprovals": "אישורי לקוחות"
   },
   "portal": {
     "panel": "פורטל לקוח",
@@ -507,7 +508,9 @@
       },
       "assetCount": "{count} קבצים",
       "imageCount": "{count} תמונות",
-      "storyCount": "{count} סטוריז"
+      "storyCount": "{count} סטוריז",
+      "playgroundTitle": "חדר יצירה — ממתין לאישורך",
+      "playgroundReview": "סקירה"
     }
   },
   "plan": {
@@ -859,7 +862,7 @@
     "totalProjects": "סה\"כ פרויקטים",
     "totalBookings": "סה\"כ הזמנות",
     "totalInquiries": "סה\"כ פניות",
-    "pendingApprovals": "אישורים ממתינים",
+    "pendingApprovals": "אישורי משימות ממתינים",
     "activeCount": "פעילים",
     "inactiveCount": "לא פעילים",
     "newCount": "חדשים",
@@ -1006,7 +1009,11 @@
     "bulkApply": "החל על הנבחרים",
     "selectedItems": "{count} נבחרו",
     "calendarView": "לוח שנה",
-    "listView": "רשימה"
+    "listView": "רשימה",
+    "clientApprovalsTitle": "אישורי לקוחות",
+    "clientApprovalsSubtitle": "כל מה שממתין לתגובת לקוח — סקירות תוכן ואישורי חדר יצירה",
+    "clientApprovalsEmpty": "אין דבר שממתין ללקוח זה כרגע.",
+    "openInWorkspace": "פתח סקירה"
   },
   "playground": {
     "title": "חדר יצירה",
