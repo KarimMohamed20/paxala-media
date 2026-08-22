@@ -330,7 +330,9 @@
     "noProjectsYet": "אין פרויקטים עדיין",
     "noBookingsYet": "אין הזמנות עדיין",
     "noFilesYet": "אין קבצים זמינים עדיין",
-    "playground": "חדר יצירה"
+    "playground": "חדר יצירה",
+    "billingSubtitle": "החשבוניות וסטטוס התשלום שלך במקום אחד",
+    "billingEmptyBody": "חשבוניות יופיעו כאן לאחר שיונפקו עבור הפרויקטים שלך."
   },
   "content": {
     "platform": {

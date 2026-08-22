@@ -327,7 +327,9 @@
     "noProjectsYet": "No projects yet",
     "noBookingsYet": "No bookings yet",
     "noFilesYet": "No files available yet",
-    "playground": "Playground"
+    "playground": "Playground",
+    "billingSubtitle": "Your invoices and payment status in one place",
+    "billingEmptyBody": "Invoices will appear here once they are issued for your projects."
   },
   "content": {
     "platform": {

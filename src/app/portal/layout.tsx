@@ -19,7 +19,9 @@ export default function PortalLayout({
   // Must stay in sync with PUBLIC_PORTAL_PATHS in src/middleware.ts — these
   // pages exist precisely for visitors without a session.
   const isPublicPath =
-    pathname === "/portal/login" || pathname === "/portal/forgot-password";
+    pathname === "/portal/login" ||
+    pathname === "/portal/forgot-password" ||
+    pathname === "/portal/reset-password";
 
   useEffect(() => {
     if (status === "unauthenticated" && !isPublicPath) {

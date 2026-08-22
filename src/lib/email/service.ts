@@ -6,6 +6,7 @@ import { getTaskStatusEmail } from './templates/task-status';
 import { getMilestoneCompletedEmail } from './templates/milestone-completed';
 import { getTaskAssignedEmail } from './templates/task-assigned';
 import { getLeadCreatedEmail } from './templates/lead-created';
+import { getPasswordResetEmail } from './templates/password-reset';
 import { EmailLocale } from './styles';
 
 // Configure transporter
@@ -74,6 +75,15 @@ export async function sendMilestoneCompleted(to: string, data: any, locale: Emai
     return sendEmail({ to, subject, html });
 }
 
+export async function sendPasswordReset(
+    to: string,
+    data: { name: string; link: string },
+    locale: EmailLocale = 'en'
+) {
+    const { subject, html } = getPasswordResetEmail(data, locale);
+    return sendEmail({ to, subject, html });
+}
+
 export async function sendLeadCreatedNotification(data: any) {
     const { subject, html } = getLeadCreatedEmail(data);
     return sendEmail({ to: ADMIN_EMAIL, subject, html });
@@ -87,5 +97,6 @@ export const emailService = {
     sendContactInquiry,
     sendTaskStatusUpdate,
     sendMilestoneCompleted,
-    sendLeadCreatedNotification
+    sendLeadCreatedNotification,
+    sendPasswordReset
 };

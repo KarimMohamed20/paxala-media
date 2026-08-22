@@ -1,39 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
 import {
-  Mail,
+  Lock,
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  MessageCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getWhatsAppUrl } from "@/lib/constants";
 
-export default function ForgotPasswordPage() {
-  const tWhatsApp = useTranslations("whatsapp");
-  const [email, setEmail] = useState("");
+export default function ResetPasswordPage() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
-  const whatsAppHref = getWhatsAppUrl(tWhatsApp("messages.passwordReset"));
+  // Read via window.location instead of useSearchParams() so this client page
+  // needs no Suspense boundary for prerendering, then strip the token from the
+  // URL so it does not linger in browser history or leak via Referer.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("token");
+    if (fromUrl) {
+      setToken(fromUrl);
+      window.history.replaceState(null, "", "/portal/reset-password");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
 
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!token) {
+      setError(
+        "This reset link is incomplete — please use the link from your email."
+      );
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ token, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -65,11 +91,10 @@ export default function ForgotPasswordPage() {
             </span>
           </Link>
           <h1 className="text-2xl font-semibold text-white mt-6 mb-2">
-            Reset Password
+            Choose a New Password
           </h1>
           <p className="text-white/60">
-            Enter your email address and we&apos;ll send you a link to reset
-            your password
+            Enter and confirm your new client portal password
           </p>
         </div>
 
@@ -86,15 +111,15 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
               <h2 className="text-xl font-semibold text-white">
-                Check your email
+                Password updated
               </h2>
               <p className="text-white/60 text-sm">
-                If an account exists with that email, we&apos;ve sent you a
-                password reset link. It stays valid for 1 hour.
+                Your password has been changed. Sign in with your new password
+                to continue.
               </p>
               <Link href="/portal/login">
                 <Button className="w-full mt-6" size="lg">
-                  Back to Login
+                  Go to Login
                   <ArrowRight size={18} className="ms-2 rtl:rotate-180" />
                 </Button>
               </Link>
@@ -114,19 +139,49 @@ export default function ForgotPasswordPage() {
 
               <div>
                 <label className="block text-sm text-white/70 mb-2">
-                  Email Address
+                  New Password
                 </label>
                 <div className="relative">
-                  <Mail
+                  <Lock
                     size={18}
                     className="absolute start-4 top-1/2 -translate-y-1/2 text-white/40"
                   />
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    className="ps-12 pe-12"
+                    minLength={8}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute end-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-white/70 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={18}
+                    className="absolute start-4 top-1/2 -translate-y-1/2 text-white/40"
+                  />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="Repeat the new password"
                     className="ps-12"
+                    minLength={8}
                     required
                   />
                 </div>
@@ -138,32 +193,20 @@ export default function ForgotPasswordPage() {
                 size="lg"
                 disabled={isLoading}
               >
-                {isLoading ? "Sending reset link..." : "Send Reset Link"}
+                {isLoading ? "Updating password..." : "Update Password"}
               </Button>
 
               <p className="text-center text-white/50 text-xs">
-                No email on your account?{" "}
-                <a
-                  href={whatsAppHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-red-500 hover:text-red-400 transition-colors"
+                Link expired?{" "}
+                <Link
+                  href="/portal/forgot-password"
+                  className="text-red-500 hover:text-red-400 transition-colors"
                 >
-                  <MessageCircle size={12} />
-                  Message us on WhatsApp
-                </a>
+                  Request a new one
+                </Link>
               </p>
             </form>
           )}
-
-          <div className="mt-6 pt-6 border-t border-white/10 text-center">
-            <Link
-              href="/portal/login"
-              className="text-sm text-white/60 hover:text-white transition-colors"
-            >
-              &larr; Back to Login
-            </Link>
-          </div>
         </div>
 
         <p className="text-center text-white/40 text-sm mt-8">

@@ -3,7 +3,11 @@ import { getToken } from 'next-auth/jwt';
 import { defaultLocale, locales } from './i18n/config';
 
 // Portal pages that must stay reachable without a session
-const PUBLIC_PORTAL_PATHS = ['/portal/login', '/portal/forgot-password'];
+const PUBLIC_PORTAL_PATHS = [
+  '/portal/login',
+  '/portal/forgot-password',
+  '/portal/reset-password',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -47,7 +51,7 @@ export async function middleware(request: NextRequest) {
   // Validate locale or use default
   const locale =
     localeCookie &&
-    locales.includes(localeCookie.value as any)
+    locales.includes(localeCookie.value as (typeof locales)[number])
       ? localeCookie.value
       : defaultLocale;
 

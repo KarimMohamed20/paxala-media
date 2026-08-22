@@ -329,7 +329,9 @@
     "noProjectsYet": "لا توجد مشاريع بعد",
     "noBookingsYet": "لا توجد حجوزات بعد",
     "noFilesYet": "لا توجد ملفات متاحة بعد",
-    "playground": "غرفة الإبداع"
+    "playground": "غرفة الإبداع",
+    "billingSubtitle": "فواتيرك وحالة الدفع في مكان واحد",
+    "billingEmptyBody": "ستظهر الفواتير هنا بمجرد إصدارها لمشاريعك."
   },
   "content": {
     "platform": {

@@ -9,6 +9,7 @@ import {
   CalendarRange,
   CalendarCheck,
   CheckCircle2,
+  CreditCard,
   Folder,
   Image as ImageIcon,
   BarChart3,
@@ -35,6 +36,7 @@ const navItems = [
   { href: "/portal/bookings", icon: CalendarCheck, labelKey: "bookings", defaultLabel: "Bookings" },
   { href: "/portal/files", icon: ImageIcon, labelKey: "assetLibrary", defaultLabel: "Asset Library" },
   { href: "/portal/reports", icon: BarChart3, labelKey: "reports", defaultLabel: "Reports" },
+  { href: "/portal/billing", icon: CreditCard, labelKey: "billing", defaultLabel: "Billing" },
   { href: "/portal/settings", icon: Settings, labelKey: "settings", defaultLabel: "Settings" },
 ];
 

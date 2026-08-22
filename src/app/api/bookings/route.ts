@@ -22,9 +22,16 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Also match on the account email: bookings made while logged out carry no
+    // userId, and this keeps historical ones visible without a data backfill.
     const bookings = await db.booking.findMany({
       where: {
-        userId: session.user.id,
+        OR: [
+          { userId: session.user.id },
+          ...(session.user.email
+            ? [{ email: { equals: session.user.email, mode: "insensitive" as const } }]
+            : []),
+        ],
       },
       orderBy: {
         date: "desc",
@@ -112,6 +119,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Attach the booking to a client account: the session user when logged in,
+    // otherwise whichever account owns the email entered on the form — so the
+    // booking shows up in that client's portal. Accepted trade-off: an
+    // unauthenticated visitor who knows a client's email can surface a
+    // (clamped, escaped) booking row in that client's list; rate limiting and
+    // slot uniqueness keep the abuse window small.
+    let userId = session?.user?.id ?? null;
+    if (!userId) {
+      const owner = await db.user.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+        select: { id: true },
+      });
+      userId = owner?.id ?? null;
+    }
+
     // Create booking
     const booking = await db.booking.create({
       data: {
@@ -123,7 +145,7 @@ export async function POST(req: NextRequest) {
         date: new Date(date),
         timeSlot,
         notes: notes || null,
-        userId: session?.user?.id || null,
+        userId,
       },
     });
 
