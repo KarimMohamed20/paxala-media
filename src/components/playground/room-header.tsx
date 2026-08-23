@@ -77,7 +77,9 @@ export function RoomHeader({
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-neutral-950 px-3 md:px-4">
       <Link
-        href="/playground"
+        // `isStaff` is the real role, unaffected by a staff member previewing as
+        // client — so previewing does not bounce them into the portal.
+        href={viewer.isStaff ? "/playground" : "/portal/playground"}
         aria-label={t("room.backToRooms")}
         className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
       >

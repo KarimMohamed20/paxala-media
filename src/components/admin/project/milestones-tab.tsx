@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { TASK_STATUSES } from "@/lib/milestones";
 import { cn } from "@/lib/utils";
 
 interface Milestone {
@@ -81,6 +82,7 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
     deadline: "",
   });
   const [showNewTask, setShowNewTask] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState<{ milestoneId: string, status: "PARTIAL" | "PAID" | "PAYABLE" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [newTaskData, setNewTaskData] = useState({
@@ -308,6 +310,41 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
     } catch (error) {
       console.error("Error updating task visibility:", error);
       alert("Failed to update task visibility");
+    }
+  };
+
+  // Agency-side status override: any status, in any order, straight from the task
+  // row. Uses /api/tasks/[id]/status so approving here still runs the milestone
+  // and project completion cascades.
+  const handleTaskStatusChange = async (taskId: string, status: string) => {
+    // The assignee reads this on their own task list, so ask instead of
+    // rejecting with no explanation. Cancelling leaves the status alone.
+    let rejectionReason: string | undefined;
+    if (status === "REJECTED") {
+      const input = window.prompt("Why is this task being rejected?");
+      if (input === null) return;
+      rejectionReason = input;
+    }
+
+    setUpdatingTaskId(taskId);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, rejectionReason }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to update task status");
+      }
+
+      await fetchMilestones();
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      alert((error as Error).message);
+    } finally {
+      setUpdatingTaskId(null);
     }
   };
 
@@ -753,14 +790,39 @@ export function ProjectMilestonesTab({ projectId }: { projectId: string }) {
                                   <Circle size={16} />
                                 </div>
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1">
                                     <h5 className="font-medium text-white">{task.title}</h5>
-                                    <Badge className={getStatusColor(task.status)}>
-                                      {task.status.replace("_", " ")}
-                                    </Badge>
                                     <Badge variant="outline" className="capitalize">
                                       {task.priority.toLowerCase()}
                                     </Badge>
+                                    <Select
+                                      value={task.status}
+                                      onValueChange={(value) =>
+                                        handleTaskStatusChange(task.id, value)
+                                      }
+                                      disabled={updatingTaskId === task.id}
+                                    >
+                                      <SelectTrigger
+                                        className={cn(
+                                          "h-7 w-auto gap-1 border-0 px-2.5 text-xs font-medium text-white",
+                                          getStatusColor(task.status)
+                                        )}
+                                        aria-label="Task status"
+                                      >
+                                        {updatingTaskId === task.id ? (
+                                          <Loader2 className="animate-spin" size={12} />
+                                        ) : (
+                                          <SelectValue />
+                                        )}
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {TASK_STATUSES.map((s) => (
+                                          <SelectItem key={s} value={s}>
+                                            {s.replace("_", " ")}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   {task.description && (
                                     <p className="text-white/60 text-sm mb-2">

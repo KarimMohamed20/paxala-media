@@ -19,6 +19,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TASK_STATUSES } from "@/lib/milestones";
+import { cn } from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -48,12 +57,13 @@ interface Project {
   milestones: Milestone[];
 }
 
-const statusColors = {
-  TODO: "secondary",
-  IN_PROGRESS: "warning",
-  SUBMITTED: "default",
-  APPROVED: "success",
-  REJECTED: "destructive",
+// Status is a select now, not a badge, so these tint the trigger.
+const statusColors: Record<string, string> = {
+  TODO: "bg-gray-600 border-transparent text-white",
+  IN_PROGRESS: "bg-blue-600 border-transparent text-white",
+  SUBMITTED: "bg-yellow-600 border-transparent text-white",
+  APPROVED: "bg-green-600 border-transparent text-white",
+  REJECTED: "bg-red-600 border-transparent text-white",
 } as const;
 
 const priorityColors = {
@@ -108,12 +118,20 @@ export default function StaffProjectDetailPage({
   };
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    // The assignee reads this on their task, so never reject with no reason.
+    let rejectionReason: string | undefined;
+    if (newStatus === "REJECTED") {
+      const input = window.prompt("Why is this task being rejected?");
+      if (input === null) return;
+      rejectionReason = input;
+    }
+
     setUpdatingTask(taskId);
     try {
       const response = await fetch(`/api/tasks/${taskId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, rejectionReason }),
       });
 
       if (response.ok) {
@@ -335,13 +353,36 @@ export default function StaffProjectDetailPage({
                                 >
                                   {task.priority}
                                 </span>
-                                <Badge
-                                  variant={
-                                    statusColors[task.status as keyof typeof statusColors]
+                                {/* Any status, in any order — the buttons below
+                                    are shortcuts through the usual workflow. */}
+                                <Select
+                                  value={task.status}
+                                  onValueChange={(value) =>
+                                    updateTaskStatus(task.id, value)
                                   }
+                                  disabled={updatingTask === task.id}
                                 >
-                                  {task.status.replace("_", " ")}
-                                </Badge>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "h-7 w-auto gap-1 px-2.5 text-xs font-medium",
+                                      statusColors[task.status]
+                                    )}
+                                    aria-label="Task status"
+                                  >
+                                    {updatingTask === task.id ? (
+                                      <Loader2 className="animate-spin" size={12} />
+                                    ) : (
+                                      <SelectValue />
+                                    )}
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {TASK_STATUSES.map((s) => (
+                                      <SelectItem key={s} value={s}>
+                                        {s.replace("_", " ")}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </div>
 

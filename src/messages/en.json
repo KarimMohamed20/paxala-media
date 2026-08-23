@@ -425,7 +425,7 @@
       "platform": "Platform",
       "format": "Format",
       "status": "Status",
-      "publishDate": "Publish date",
+      "publishDate": "Date",
       "caption": "Caption / script copy",
       "captionPlaceholder": "Enter caption text or script notes…",
       "project": "Project",
@@ -440,7 +440,7 @@
       "submitCreate": "Create request",
       "submitSave": "Save changes",
       "titleRequired": "Title is required",
-      "dateRequired": "Publish date is required",
+      "dateRequired": "Date is required",
       "clientRequired": "Please select a client"
     },
     "projectTab": {
@@ -708,7 +708,7 @@
       "delivered": "Content Delivered",
       "deliveredHint": "of {planned} planned",
       "deliveredHintNoPlan": "No target set this month",
-      "deliveredTooltip": "Items approved, scheduled or published with this month's publish date.",
+      "deliveredTooltip": "Items approved, scheduled or published with a date in this month.",
       "turnaroundDays": "Approval Turnaround",
       "turnaroundDaysHint": "Median days to your approval",
       "turnaroundDaysTooltip": "Median time between us submitting an item for review and your decision. Agency self-approvals are excluded.",

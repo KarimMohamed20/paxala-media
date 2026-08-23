@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     // open image-proxy / SSRF surface — DEP-05). Add a host here if you serve
     // images from a CDN.
     remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "paxaland.com" },
       { protocol: "https", hostname: "www.paxaland.com" },
       { protocol: "https", hostname: "paxalamedia.com" },

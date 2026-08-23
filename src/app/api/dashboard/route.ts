@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { ContentStatus } from "@prisma/client";
+import { BookingStatus, ContentStatus, Prisma } from "@prisma/client";
+import { getActor } from "@/lib/content-authz";
+import { listRooms } from "@/lib/playground/repo";
 import { getDeliveryTrend } from "@/lib/reports-queries";
 import {
   DELIVERED_STATUSES,
@@ -26,14 +28,27 @@ export async function GET(request: NextRequest) {
     // The projects query that used to sit here fetched 6 projects with every
     // milestone and task, solely to compute `projects.length * 3` as a fake
     // deliverables count. Nothing consumed the rows, so it is gone.
-    const upcomingBookings = await db.booking.findMany({
-      where:
-        userRole === "ADMIN"
-          ? { date: { gte: new Date() } }
-          : { userId, date: { gte: new Date() } },
-      orderBy: { date: "asc" },
-      take: 3,
-    });
+    //
+    // A CANCELLED booking is not upcoming work. /portal/bookings — the page this
+    // card links to — defines upcoming as `date >= now && status !== CANCELLED`,
+    // and the overview has to agree with it: a client who cancelled a shoot was
+    // still being told it was their next production.
+    const upcomingBookingWhere: Prisma.BookingWhereInput = {
+      date: { gte: new Date() },
+      status: { not: BookingStatus.CANCELLED },
+      ...(userRole !== "ADMIN" && { userId }),
+    };
+
+    const [upcomingBookings, upcomingBookingCount] = await Promise.all([
+      db.booking.findMany({
+        where: upcomingBookingWhere,
+        orderBy: { date: "asc" },
+        take: 3,
+      }),
+      // Counted separately: the tile used to report `upcomingBookings.length`,
+      // which the `take: 3` above silently capped at 3 however many were booked.
+      db.booking.count({ where: upcomingBookingWhere }),
+    ]);
 
     // ---- Content approvals: the client's most recently reviewed items ----
     const approvalRows = await db.contentItem.findMany({
@@ -130,6 +145,8 @@ export async function GET(request: NextRequest) {
       year: number;
     } | null = null;
     let planPackage: { id: string; name: string; tier: string } | null = null;
+    // Delivered-against-target for the month, straight from the plan's own maths.
+    let planDeliverables: { done: number; target: number } | null = null;
 
     if (planRow) {
       const { startDate, endDate } = monthWindow(planYear, planMonth);
@@ -160,6 +177,7 @@ export async function GET(request: NextRequest) {
         deliverables,
       });
       planPackage = resolvePackage(planRow.packageId);
+      planDeliverables = progress.deliverables;
       monthlyPlan = {
         id: planRow.id,
         title: planRow.title,
@@ -174,16 +192,25 @@ export async function GET(request: NextRequest) {
     // client saw identically, permanently frozen in July.
     const deliveryTrend = await getDeliveryTrend(session.user.id, 6);
 
-    // Real deliverables: content actually delivered this month. The old value
-    // was `projects.length * 3`, which had no relationship to any record.
+    // Deliverables must mean the same thing here as on the Monthly Plan page and
+    // the progress ring beside this tile: work delivered AGAINST the month's
+    // deliverable targets — capped per row, manual rows included. Counting every
+    // delivered item in the month instead made the two disagree (10 delivered
+    // reels against a target of 4 read as "10" here and "4 of 4" there), and it
+    // dropped manual deliverables, which have no format to count.
+    //
+    // With no published plan there are no targets, so fall back to the raw count
+    // of what was delivered this month and render it without a denominator.
     const monthBounds = monthWindow(planYear, planMonth);
-    const deliveredThisMonth = await db.contentItem.count({
-      where: {
-        plan: { clientId: userId },
-        scheduledAt: { gte: monthBounds.startDate, lt: monthBounds.endDate },
-        status: { in: DELIVERED_STATUSES },
-      },
-    });
+    const deliveredThisMonth =
+      planDeliverables?.done ??
+      (await db.contentItem.count({
+        where: {
+          plan: { clientId: userId },
+          scheduledAt: { gte: monthBounds.startDate, lt: monthBounds.endDate },
+          status: { in: DELIVERED_STATUSES },
+        },
+      }));
 
     const awaitingApprovalCount = await db.contentItem.count({
       where: {
@@ -192,18 +219,45 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // ---- Playground: the rooms this actor may see, newest activity first ----
+    //
+    // listRooms() owns the scoping rule (roomListWhere): a CLIENT gets rooms
+    // assigned to them or ones they were invited to. Reused rather than
+    // re-expressed here so the dashboard card can never show a room the
+    // Playground page itself would hide.
+    const actor = getActor(session);
+    const allRooms = actor ? await listRooms(actor) : [];
+    const liveRooms = allRooms.filter((room) => room.status !== "ARCHIVED");
+
+    const playground = {
+      rooms: liveRooms.slice(0, 3).map((room) => ({
+        id: room.id,
+        title: room.title,
+        status: room.status,
+        awaitingClient: room.awaitingClient,
+        projectTitle: room.project?.title ?? null,
+        lastActiveAt: (room.lastActiveAt ?? room.updatedAt).toISOString(),
+      })),
+      total: liveRooms.length,
+      awaitingCount: liveRooms.filter((room) => room.awaitingClient).length,
+    };
+
     return NextResponse.json({
       // Resolved from the plan's package rather than a hardcoded string.
       userPlan: planPackage ? { name: planPackage.name, active: true } : null,
       monthlyPlan,
       stats: {
         deliverables: deliveredThisMonth,
+        // Null when the month has no plan targets — the tile then shows a bare
+        // count rather than an invented denominator.
+        deliverablesTarget: planDeliverables?.target ?? null,
         awaitingApproval: awaitingApprovalCount,
-        upcomingShoots: upcomingBookings.length,
+        upcomingShoots: upcomingBookingCount,
       },
       contentApprovals,
       upcomingProduction,
       deliveryTrend,
+      playground,
     });
   } catch (error) {
     console.error("Dashboard API error:", error);

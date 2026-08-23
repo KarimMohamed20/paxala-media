@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDateLocalized } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { ProgressRing } from "@/components/plan/progress-ring";
 import {
   Calendar,
@@ -17,9 +18,11 @@ import {
   Box,
   MoreVertical,
   Bell,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProjectRequestModal } from "@/components/portal/project-request-modal";
+import { PlaygroundStatusPill } from "@/components/playground/playground-status-pill";
 import { DeliveredTrendCard } from "@/components/reports/delivered-trend-card";
 
 interface DashboardData {
@@ -37,6 +40,8 @@ interface DashboardData {
   } | null;
   stats: {
     deliverables: number;
+    /** Null when the month has no plan targets. */
+    deliverablesTarget: number | null;
     awaitingApproval: number;
     upcomingShoots: number;
   };
@@ -61,12 +66,25 @@ interface DashboardData {
     key: string;
     value: number;
   }>;
+  playground: {
+    rooms: Array<{
+      id: string;
+      title: string;
+      status: "ACTIVE" | "DRAFT" | "ARCHIVED";
+      awaitingClient: boolean;
+      projectTitle: string | null;
+      lastActiveAt: string;
+    }>;
+    total: number;
+    awaitingCount: number;
+  } | null;
 }
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const tp = useTranslations("plan");
   const tcon = useTranslations("content");
+  const tpg = useTranslations("playground");
   const locale = useLocale();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +125,12 @@ export default function DashboardPage() {
     .join("")
     .substring(0, 2)
     .toUpperCase();
+
+  const playground = data?.playground ?? {
+    rooms: [],
+    total: 0,
+    awaitingCount: 0,
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -236,13 +260,21 @@ export default function DashboardPage() {
           <div>
             <div className="text-4xl font-extrabold text-white">
               {data?.stats?.deliverables ?? 0}
+              {/* The denominator is the month's plan target, so this tile reads
+                  the same as the Monthly Plan page it links to. */}
+              {data?.stats?.deliverablesTarget != null && (
+                <span className="text-xl font-bold text-white/35">
+                  {" "}
+                  / {data.stats.deliverablesTarget}
+                </span>
+              )}
             </div>
             <div className="text-xs text-white/50 font-medium mt-1">
               Deliverables
             </div>
           </div>
           <Link
-            href="/portal/files"
+            href="/portal/monthly-plan"
             className="inline-flex items-center gap-1 text-xs font-semibold text-white/60 hover:text-white transition-colors"
           >
             <span>View all</span>
@@ -416,9 +448,23 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="min-w-0 space-y-1 flex-1">
-                  <h4 className="text-sm font-bold text-white truncate">
-                    {data.upcomingProduction.serviceType}
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-white truncate">
+                      {data.upcomingProduction.serviceType}
+                    </h4>
+                    {/* A requested slot and a confirmed shoot used to look
+                        identical here. Same palette as /portal/bookings. */}
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                        data.upcomingProduction.status === "CONFIRMED"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                      )}
+                    >
+                      {data.upcomingProduction.status}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1 text-xs text-white/40">
                     <Clock size={12} />
                     <span>
@@ -442,6 +488,77 @@ export default function DashboardPage() {
                   <span>Book a session</span>
                   <ChevronRight size={13} />
                 </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Playground: the creative rooms PMP is running for this client. The
+              list is scoped server-side, so whatever appears here is a room the
+              /portal/playground page would also show. */}
+          <div className="bg-neutral-900/90 border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+                <Sparkles size={17} className="text-red-500" />
+                {tpg("title")}
+                {playground.awaitingCount > 0 && (
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-300">
+                    {playground.awaitingCount}
+                  </span>
+                )}
+              </h3>
+              <Link
+                href="/portal/playground"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-white/60 hover:text-white transition-colors"
+              >
+                <span>View all</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            {playground.rooms.length === 0 ? (
+              <div className="p-6 bg-neutral-950 rounded-xl border border-dashed border-white/10 text-center">
+                <Sparkles size={22} className="mx-auto mb-2 text-white/20" />
+                <p className="text-xs text-white/40">{tpg("empty.bodyClient")}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {playground.rooms.map((room) => {
+                  // A room is edge-to-edge and owns the viewport, so it opens
+                  // outside the portal shell — same target as the room cards.
+                  const pillStatus = room.awaitingClient
+                    ? "AWAITING_CLIENT"
+                    : room.status;
+                  return (
+                    <Link
+                      key={room.id}
+                      href={`/playground/${room.id}`}
+                      className="flex items-center gap-3 p-3 bg-neutral-950 rounded-xl border border-white/5 hover:border-white/15 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold text-white truncate">
+                          {room.title}
+                        </h4>
+                        <p className="mt-0.5 text-xs text-white/40 truncate">
+                          {room.projectTitle ??
+                            formatDateLocalized(room.lastActiveAt, locale, {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                        </p>
+                      </div>
+                      <PlaygroundStatusPill
+                        status={pillStatus}
+                        label={tpg(`status.${pillStatus}`)}
+                        size="xs"
+                      />
+                    </Link>
+                  );
+                })}
+                {playground.total > playground.rooms.length && (
+                  <p className="pt-1 text-center text-[11px] text-white/40">
+                    +{playground.total - playground.rooms.length}
+                  </p>
+                )}
               </div>
             )}
           </div>

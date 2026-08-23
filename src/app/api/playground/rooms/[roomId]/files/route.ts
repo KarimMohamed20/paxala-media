@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { rateLimit } from "@/lib/security";
 import { MAX_UPLOAD_BYTES, formatBytes } from "@/lib/assets";
 import { getFileUrl } from "@/lib/utils";
+import { getCloudinaryThumbUrl, uploadFile } from "@/lib/storage";
 import { resolveRoomActor } from "@/lib/playground/actors";
 import {
   createRoomFile,
@@ -18,8 +19,9 @@ import {
 /**
  * Room file uploads.
  *
- * Files land in `public/uploads/playground/<roomId>/`, consistent with the rest
- * of the platform's asset handling (the owner's explicit decision). The
+ * Files go through the storage adapter: Cloudinary for media within free-plan
+ * caps, `public/uploads/playground/<roomId>/` otherwise — consistent with the
+ * rest of the platform's asset handling (the owner's explicit decision). The
  * ACCEPTED trade-off: like every other asset here, a leaked URL is readable
  * without a session.
  *
@@ -175,43 +177,60 @@ export async function POST(
       );
     }
 
-    // Path derived entirely from ids and the VERIFIED mime — never from the
+    // Name derived entirely from ids and the VERIFIED mime — never from the
     // upload's own filename, so there is nothing to traverse with.
     const fileId = randomUUID();
     const extension = EXTENSION[file.type] ?? "";
-    const directory = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "playground",
-      roomId
-    );
-    await mkdir(directory, { recursive: true });
-    await writeFile(path.join(directory, `${fileId}${extension}`), buffer);
 
-    const url = getFileUrl(`/uploads/playground/${roomId}/${fileId}${extension}`);
+    const stored = await uploadFile(buffer, {
+      mime: file.type,
+      size: file.size,
+      cloudFolder: `paxala/playground/${roomId}`,
+      localDir: `playground/${roomId}`,
+      localName: `${fileId}${extension}`,
+    });
 
-    // The thumbnail is generated in the BROWSER before upload (canvas.toBlob)
-    // and posted alongside, so no image library enters the server image.
-    const thumb = formData.get("thumb");
     let thumbUrl: string | null = null;
-    if (thumb instanceof File && thumb.size > 0 && thumb.size < 2_000_000) {
-      const thumbBuffer = Buffer.from(await thumb.arrayBuffer());
-      if (signatureMatches(thumbBuffer, "image/webp")) {
-        await writeFile(path.join(directory, `${fileId}-thumb.webp`), thumbBuffer);
-        thumbUrl = getFileUrl(
-          `/uploads/playground/${roomId}/${fileId}-thumb.webp`
-        );
+    if (stored.publicId && stored.resourceType !== "raw") {
+      // Cloudinary master: derive the thumb from it instead of storing a second
+      // blob — no thumb orphan on delete, one transformation per unique URL.
+      thumbUrl = getCloudinaryThumbUrl(stored.publicId, stored.resourceType);
+    } else {
+      // Local fallback: the thumbnail generated in the BROWSER before upload
+      // (canvas.toBlob), posted alongside, so no image library enters the
+      // server image.
+      const thumb = formData.get("thumb");
+      if (thumb instanceof File && thumb.size > 0 && thumb.size < 2_000_000) {
+        const thumbBuffer = Buffer.from(await thumb.arrayBuffer());
+        if (signatureMatches(thumbBuffer, "image/webp")) {
+          const directory = path.join(
+            process.cwd(),
+            "public",
+            "uploads",
+            "playground",
+            roomId
+          );
+          await mkdir(directory, { recursive: true });
+          await writeFile(
+            path.join(directory, `${fileId}-thumb.webp`),
+            thumbBuffer
+          );
+          thumbUrl = getFileUrl(
+            `/uploads/playground/${roomId}/${fileId}-thumb.webp`
+          );
+        }
       }
     }
 
     const record = await createRoomFile({
       roomId,
       name: file.name.slice(0, 200),
-      url,
+      url: stored.url,
       mime: file.type,
       size: file.size,
       thumbUrl,
+      storagePublicId: stored.publicId,
+      storageResourceType: stored.resourceType,
       uploadedById: access.actor.userId,
       uploadedByName: access.actor.name,
     });

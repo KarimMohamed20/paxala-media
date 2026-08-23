@@ -302,6 +302,10 @@ model ProjectFile {
   usageRights       String?            @default("Approved for web and social.")
   formats           Json? // Array of available format objects [{ name, resolution, size }]
   versionHistory    Json? // Array of version history objects [{ version, date, status }]
+  /// Cloudinary public_id; null means the blob lives on local disk.
+  storagePublicId     String?
+  /// Cloudinary resource_type (image | video | raw), needed for destroy.
+  storageResourceType String?
   isShared          Boolean            @default(false)
   projectId         String
   project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1698,9 +1702,15 @@ model PlaygroundFile {
   mime     String
   /// Bytes. Float for parity with ProjectFile.size (supports > 2GB).
   size     Float?
-  /// Client-generated WebP thumbnail, so a board opening 40 references does not
-  /// pull 40 masters over the wire.
+  /// Thumbnail URL: a Cloudinary transformation URL for cloud-hosted files, or
+  /// a client-generated WebP on disk for local-fallback files — either way a
+  /// board opening 40 references does not pull 40 masters over the wire.
   thumbUrl String?
+
+  /// Cloudinary public_id; null means the blob lives on local disk.
+  storagePublicId     String?
+  /// Cloudinary resource_type (image | video | raw), needed for destroy.
+  storageResourceType String?
 
   /// Set when a room upload is deliberately promoted into the Asset Library.
   /// Null keeps brainstorm scraps out of the client's library.

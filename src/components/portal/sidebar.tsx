@@ -26,9 +26,9 @@ const navItems = [
   { href: "/portal/monthly-plan", icon: CalendarDays, labelKey: "monthlyPlan", defaultLabel: "Monthly Plan" },
   { href: "/portal/calendar", icon: CalendarRange, labelKey: "contentCalendar", defaultLabel: "Content Calendar" },
   { href: "/portal/approvals", icon: CheckCircle2, labelKey: "approvals", defaultLabel: "Approvals" },
-  // Top-level, not /portal/*: a room is edge-to-edge and owns the viewport, so
-  // it renders outside the portal's sidebar shell.
-  { href: "/playground", icon: Sparkles, labelKey: "playground", defaultLabel: "Playground" },
+  // The room list lives in the portal; a room itself is edge-to-edge at
+  // /playground/[roomId] and renders outside this sidebar shell.
+  { href: "/portal/playground", icon: Sparkles, labelKey: "playground", defaultLabel: "Playground" },
   { href: "/portal/projects", icon: Folder, labelKey: "projects", defaultLabel: "Projects" },
   { href: "/portal/files", icon: ImageIcon, labelKey: "assetLibrary", defaultLabel: "Asset Library" },
   { href: "/portal/reports", icon: BarChart3, labelKey: "reports", defaultLabel: "Reports" },

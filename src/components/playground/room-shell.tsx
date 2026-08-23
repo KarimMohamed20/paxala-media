@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Loader2, TriangleAlert } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -33,6 +34,11 @@ import type { RoomDetailData, RoomViewer } from "./types";
  */
 export function RoomShell({ roomId }: { roomId: string }) {
   const t = useTranslations("playground");
+  // Used only for the no-access screen, which renders before `viewer` exists:
+  // a client who cannot open this room belongs back in the portal.
+  const { data: session } = useSession();
+  const roomsHref =
+    session?.user?.role === "CLIENT" ? "/portal/playground" : "/playground";
 
   const [room, setRoom] = React.useState<RoomDetailData | null>(null);
   const [viewer, setViewer] = React.useState<RoomViewer | null>(null);
@@ -404,7 +410,7 @@ export function RoomShell({ roomId }: { roomId: string }) {
           description={denied ? t("errors.noAccessBody") : t("errors.roomFailedBody")}
           action={
             <Link
-              href="/playground"
+              href={roomsHref}
               className="inline-flex rounded-xl border border-white/15 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
             >
               {t("room.backToRooms")}

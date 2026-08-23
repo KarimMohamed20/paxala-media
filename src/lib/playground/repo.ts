@@ -818,6 +818,8 @@ export async function createRoomFile(input: {
   mime: string;
   size: number;
   thumbUrl: string | null;
+  storagePublicId: string | null;
+  storageResourceType: string | null;
   uploadedById: string;
   uploadedByName: string | null;
 }) {

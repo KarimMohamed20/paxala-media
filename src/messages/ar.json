@@ -427,7 +427,7 @@
       "platform": "المنصة",
       "format": "الصيغة",
       "status": "الحالة",
-      "publishDate": "تاريخ النشر",
+      "publishDate": "التاريخ",
       "caption": "النص / السكريبت",
       "captionPlaceholder": "اكتب نص المنشور أو ملاحظات السكريبت…",
       "project": "المشروع",
@@ -442,7 +442,7 @@
       "submitCreate": "إنشاء الطلب",
       "submitSave": "حفظ التغييرات",
       "titleRequired": "العنوان مطلوب",
-      "dateRequired": "تاريخ النشر مطلوب",
+      "dateRequired": "التاريخ مطلوب",
       "clientRequired": "من فضلك اختر عميلاً"
     },
     "projectTab": {
@@ -710,7 +710,7 @@
       "delivered": "المحتوى المُسلَّم",
       "deliveredHint": "من {planned} مخطط",
       "deliveredHintNoPlan": "لم يُحدَّد هدف لهذا الشهر",
-      "deliveredTooltip": "العناصر المعتمدة أو المجدولة أو المنشورة بتاريخ نشر ضمن هذا الشهر.",
+      "deliveredTooltip": "العناصر المعتمدة أو المجدولة أو المنشورة بتاريخ ضمن هذا الشهر.",
       "turnaroundDays": "زمن الموافقة",
       "turnaroundDaysHint": "وسيط الأيام حتى موافقتك",
       "turnaroundDaysTooltip": "وسيط المدة بين إرسالنا العنصر للمراجعة وقرارك. لا تُحتسب موافقات الوكالة الذاتية.",

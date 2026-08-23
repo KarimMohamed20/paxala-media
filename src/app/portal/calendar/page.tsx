@@ -44,6 +44,7 @@ import type {
 
 function ContentCalendarView() {
   const t = useTranslations("content");
+  const ta = useTranslations("adminUI");
   const tc = useTranslations("common");
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -75,6 +76,9 @@ function ContentCalendarView() {
 
   const [assets, setAssets] = useState<ContentAssetFile[]>([]);
   const [projects, setProjects] = useState<ContentProjectRef[]>([]);
+  // Which client the create form writes to. Tracks the switcher, except in the
+  // agency-wide view where there is no single client to infer.
+  const [formClientId, setFormClientId] = useState<string | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
@@ -99,10 +103,23 @@ function ContentCalendarView() {
     clientId: clientFilter,
   });
 
+  const allClients = resolvedClientId === "ALL";
+
+  // Follow the switcher, but keep whatever the form's own client select chose
+  // while the calendar shows every client at once.
+  useEffect(() => {
+    setFormClientId(allClients ? null : resolvedClientId);
+  }, [allClients, resolvedClientId]);
+
   // The asset library does not change per month, but it is per-client — reload it
   // whenever an agency user switches whose calendar they are viewing.
   useEffect(() => {
-    fetchAssetLibrary(resolvedClientId)
+    if (allClients && !formClientId) {
+      setAssets([]);
+      setProjects([]);
+      return;
+    }
+    fetchAssetLibrary(formClientId)
       .then(({ files, projects: p }) => {
         setAssets(files);
         setProjects(p);
@@ -110,7 +127,7 @@ function ContentCalendarView() {
       .catch(() => {
         /* picker simply stays empty */
       });
-  }, [resolvedClientId]);
+  }, [allClients, formClientId]);
 
   // Deep link: /portal/calendar?item=<id> opens that item's review drawer.
   const deepLinkId = searchParams.get("item");
@@ -129,11 +146,16 @@ function ContentCalendarView() {
     setDrawerOpen(true);
   }, []);
 
-  const openCreate = useCallback((scheduledAt?: string) => {
-    setActionError(null);
-    setFormInitial({ scheduledAt: scheduledAt ?? "" });
-    setFormOpen(true);
-  }, []);
+  const openCreate = useCallback(
+    (scheduledAt?: string) => {
+      setActionError(null);
+      // Without this an agency user filing content while viewing a client's
+      // calendar created the plan under their own user id.
+      setFormInitial({ scheduledAt: scheduledAt ?? "", clientId: formClientId });
+      setFormOpen(true);
+    },
+    [formClientId]
+  );
 
   const shiftMonth = (delta: number) =>
     setCurrentDate(new Date(year, month - 1 + delta, 1));
@@ -299,6 +321,7 @@ function ContentCalendarView() {
                   aria-label={t("form.client")}
                   className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 focus:border-amber-400/60 focus:outline-none"
                 >
+                  <option value="ALL">{ta("allClients")}</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name ?? c.username ?? c.id}
@@ -380,6 +403,7 @@ function ContentCalendarView() {
               items={items}
               onDayAdd={openCreate}
               onItemClick={openItem}
+              showClient={allClients}
             />
           )}
         </div>
@@ -411,6 +435,7 @@ function ContentCalendarView() {
                     item={item}
                     variant="card"
                     onClick={openItem}
+                    showClient={allClients}
                   />
                 ))}
                 {needsApprovalTotal > needsApproval.length && (
@@ -501,6 +526,11 @@ function ContentCalendarView() {
         initial={formInitial}
         projects={projects}
         assets={assets}
+        // Agency users pick who the content belongs to; clients get an empty
+        // list, so the field stays hidden and their own id is used server-side.
+        clients={clients}
+        showClientField={clients.length > 0}
+        onClientChange={setFormClientId}
         submitting={busy}
         error={actionError}
       />

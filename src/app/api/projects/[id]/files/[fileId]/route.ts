@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canAccessProject, getProjectForAccess } from "@/lib/authz";
-import { deleteLocalUpload } from "@/lib/storage";
+import { deleteUpload } from "@/lib/storage";
 
 // GET single file
 export async function GET(
@@ -167,9 +167,13 @@ export async function DELETE(
       where: { id: fileId },
     });
 
-    // Remove the underlying file from disk so "deleted" files are not left
-    // permanently downloadable (SEC-02). No-op for external/link-type files.
-    await deleteLocalUpload(existingFile.url);
+    // Remove the underlying blob (Cloudinary or disk) so "deleted" files are
+    // not left permanently downloadable (SEC-02). No-op for external links.
+    await deleteUpload({
+      publicId: existingFile.storagePublicId,
+      resourceType: existingFile.storageResourceType,
+      url: existingFile.url,
+    });
 
     return NextResponse.json({ message: "File deleted successfully" });
   } catch (error) {

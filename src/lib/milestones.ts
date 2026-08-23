@@ -85,8 +85,70 @@ export function canUserApproveTask(
   return task.assignee.managerId === userId;
 }
 
+/** Every status a task can hold, in workflow order. */
+export const TASK_STATUSES: Task["status"][] = [
+  "TODO",
+  "IN_PROGRESS",
+  "SUBMITTED",
+  "APPROVED",
+  "REJECTED",
+];
+
+export function isTaskStatus(value: unknown): value is Task["status"] {
+  return (
+    typeof value === "string" && TASK_STATUSES.includes(value as Task["status"])
+  );
+}
+
 /**
- * Get the valid next statuses for a task based on current status
+ * The stamp fields that must accompany a status change.
+ *
+ * ADMIN and STAFF set task status directly from the admin/staff panels, so any
+ * status can follow any other — a task may jump TODO -> APPROVED, or move back
+ * out of APPROVED, which used to be terminal. That makes clearing stale stamps
+ * mandatory: an approved task sent back to TODO must not keep its approval, and
+ * a reworked task must not keep the reason it was once rejected.
+ *
+ * `submittedAt` is preserved rather than recomputed, so an approval does not
+ * erase when the work was actually handed in; only a reset to TODO drops it.
+ */
+export function taskStatusStamps(input: {
+  status: Task["status"];
+  previousSubmittedAt: Date | null;
+  actorId: string;
+  rejectionReason?: unknown;
+}): {
+  submittedAt: Date | null;
+  approvedAt: Date | null;
+  approvedById: string | null;
+  rejectionReason: string | null;
+} {
+  const { status, previousSubmittedAt, actorId } = input;
+  const now = new Date();
+  const reason =
+    typeof input.rejectionReason === "string" && input.rejectionReason.trim()
+      ? input.rejectionReason.trim()
+      : null;
+
+  return {
+    submittedAt:
+      status === "SUBMITTED"
+        ? now
+        : status === "TODO"
+          ? null
+          : previousSubmittedAt,
+    approvedAt: status === "APPROVED" ? now : null,
+    approvedById: status === "APPROVED" ? actorId : null,
+    rejectionReason: status === "REJECTED" ? reason : null,
+  };
+}
+
+/**
+ * Get the valid next statuses for a task based on current status.
+ *
+ * Describes the intended workflow for self-service UI (which button to offer an
+ * assignee next). It is no longer an authorization gate: agency roles may set
+ * any status from the panels.
  */
 export function getValidNextStatuses(
   currentStatus: Task["status"],

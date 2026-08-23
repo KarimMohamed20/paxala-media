@@ -64,13 +64,89 @@ function PrintView() {
   return (
     <>
       <style>{`
-        @page { size: A4; margin: 14mm; }
+        /* Matches /portal/reports/print — the two documents are handed to the
+           same client and should not look like they came from different tools.
+           The deeper top and bottom margins reserve the strip the running header
+           and footer are positioned into. */
+        @page {
+          size: A4;
+          margin: 20mm 12mm 16mm;
+        }
+
+        /* Separate rule on purpose: Chrome and Safari do not implement @page
+           margin boxes, and keeping this out of the rule above guarantees the
+           size and margin declarations survive however a parser treats it.
+           In Chrome the page number comes from its own "Headers and footers"
+           checkbox in the print dialog. */
+        @page {
+          @bottom-right { content: counter(page) " / " counter(pages); }
+        }
+
+        .running-head, .running-foot { display: none; }
+
         @media print {
           .no-print { display: none !important; }
-          .plan-sheet { padding: 0 !important; }
-          section { break-inside: avoid; }
+
+          /* A4 minus the 12mm side margins. Without this the sheet is wider than
+             the printable area and Chrome silently shrinks the whole document to
+             fit, which makes the type land at an unpredictable size. */
+          .plan-sheet {
+            width: 186mm;
+            max-width: 186mm;
+            padding: 0 !important;
+            margin: 0 auto;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+
+          /* Fixed elements repeat on every printed page. The negative offsets
+             place them in the page margin reserved above, so they never overlap
+             the document body. */
+          .running-head, .running-foot {
+            position: fixed;
+            inset-inline: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8mm;
+            font-size: 8pt;
+            color: #737373;
+          }
+          .running-head {
+            top: -12mm;
+            padding-bottom: 2mm;
+            border-bottom: 0.3mm solid #e5e5e5;
+          }
+          .running-foot {
+            bottom: -10mm;
+            padding-top: 2mm;
+            border-top: 0.3mm solid #e5e5e5;
+          }
+
+          section, .avoid-break { break-inside: avoid; }
+          h1, h2, h3 { break-after: avoid; }
+          p { orphans: 3; widows: 3; }
+
+          /* A section that can outgrow a page must be allowed to flow, or the
+             browser pushes the whole thing to a fresh page and splits it there
+             anyway — with its heading stranded on the page before. The unit that
+             stays whole is the week column or the list row, not the section. */
+          .allow-break { break-inside: auto; }
+          li { break-inside: avoid; }
         }
       `}</style>
+
+      {/* Print-only running header and footer — see the @media print block. */}
+      <div className="running-head" aria-hidden="true">
+        <span className="font-bold uppercase tracking-widest text-red-600">
+          Paxala Media Production
+        </span>
+        <span>{[plan.client.name, monthLabel].filter(Boolean).join(" · ")}</span>
+      </div>
+      <div className="running-foot" aria-hidden="true">
+        <span>{t("title")}</span>
+        <span>{t("strip.updated", { date: d(plan.updatedAt) })}</span>
+      </div>
 
       <div className="min-h-screen bg-white text-neutral-900">
         <div className="plan-sheet mx-auto max-w-4xl p-10">
@@ -146,7 +222,7 @@ function PrintView() {
 
           {/* key dates */}
           {plan.keyDates.length > 0 && (
-            <section className="mb-6">
+            <section className="allow-break mb-6">
               <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
                 {t("keyDates.title")}
               </h2>
@@ -165,7 +241,7 @@ function PrintView() {
 
           {/* timeline */}
           {plan.weeks.length > 0 && (
-            <section className="mb-6">
+            <section className="allow-break mb-6">
               <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
                 {t("timeline.title", {
                   month: formatDateLocalized(new Date(year, month - 1, 1), locale, {
@@ -175,7 +251,7 @@ function PrintView() {
               </h2>
               <div className="grid grid-cols-4 gap-4">
                 {plan.weeks.map((w, i) => (
-                  <div key={w.id}>
+                  <div key={w.id} className="avoid-break">
                     <p className="mb-1.5 text-[11px] font-bold">
                       {t("timeline.week", { number: i + 1 })}
                       <span className="font-normal text-neutral-500"> · {w.title}</span>
@@ -202,7 +278,7 @@ function PrintView() {
 
           {/* client actions */}
           {plan.actions.length > 0 && (
-            <section className="mb-6">
+            <section className="allow-break mb-6">
               <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
                 {t("actions.title")}
               </h2>

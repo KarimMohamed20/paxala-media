@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { emailService } from "@/lib/email/service";
+import { isTaskStatus, taskStatusStamps } from "@/lib/milestones";
 
 // PUT update task status (with workflow validation)
 export async function PUT(
@@ -32,14 +33,7 @@ export async function PUT(
       );
     }
 
-    const validStatuses = [
-      "TODO",
-      "IN_PROGRESS",
-      "SUBMITTED",
-      "APPROVED",
-      "REJECTED",
-    ];
-    if (!validStatuses.includes(status)) {
+    if (!isTaskStatus(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
@@ -56,108 +50,21 @@ export async function PUT(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Validate workflow transitions
     const currentStatus = task.status;
 
-    // Check if user is the assignee's manager
-    const isManager = task.assignee?.managerId === session.user.id;
-    const isAssignee = task.assigneeId === session.user.id;
-    const isAdmin = userRole === "ADMIN";
-
-    // Workflow validation
-    const validTransitions: Record<string, string[]> = {
-      TODO: ["IN_PROGRESS"],
-      IN_PROGRESS: ["SUBMITTED"],
-      SUBMITTED: ["APPROVED", "REJECTED"],
-      REJECTED: ["IN_PROGRESS"],
-      APPROVED: [], // Terminal state
-    };
-
-    const allowedNextStatuses = validTransitions[currentStatus] || [];
-
-    if (!allowedNextStatuses.includes(status)) {
-      return NextResponse.json(
-        {
-          error: `Cannot transition from ${currentStatus} to ${status}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Permission checks for specific transitions
-    if (status === "IN_PROGRESS" && currentStatus === "TODO") {
-      // Only assignee or admin can start a task
-      if (!isAssignee && !isAdmin) {
-        return NextResponse.json(
-          { error: "Only the assignee can start this task" },
-          { status: 403 }
-        );
-      }
-    }
-
-    if (status === "SUBMITTED") {
-      // Only assignee or admin can submit for review
-      if (!isAssignee && !isAdmin) {
-        return NextResponse.json(
-          { error: "Only the assignee can submit this task for review" },
-          { status: 403 }
-        );
-      }
-    }
-
-    if (status === "APPROVED" || status === "REJECTED") {
-      // Only manager can approve/reject
-      if (!isManager && !isAdmin) {
-        return NextResponse.json(
-          { error: "Only the assignee's manager can approve or reject tasks" },
-          { status: 403 }
-        );
-      }
-
-      // Rejection requires a reason
-      if (status === "REJECTED" && !rejectionReason) {
-        return NextResponse.json(
-          { error: "Rejection reason is required" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (status === "IN_PROGRESS" && currentStatus === "REJECTED") {
-      // Only assignee or admin can rework a rejected task
-      if (!isAssignee && !isAdmin) {
-        return NextResponse.json(
-          { error: "Only the assignee can rework this task" },
-          { status: 403 }
-        );
-      }
-    }
-
-    // Build update data
+    // ADMIN and STAFF drive this endpoint from the admin/staff panels and may set
+    // any status directly — including TODO -> APPROVED and moving a task back out
+    // of APPROVED. The TODO -> IN_PROGRESS -> SUBMITTED -> APPROVED chain still
+    // shapes the buttons those panels offer; it is no longer enforced here.
     const updateData: Record<string, unknown> = {
       status,
+      ...taskStatusStamps({
+        status,
+        previousSubmittedAt: task.submittedAt,
+        actorId: session.user.id,
+        rejectionReason,
+      }),
     };
-
-    if (status === "SUBMITTED") {
-      updateData.submittedAt = new Date();
-      updateData.rejectionReason = null; // Clear previous rejection reason
-    }
-
-    if (status === "APPROVED") {
-      updateData.approvedAt = new Date();
-      updateData.approvedById = session.user.id;
-      updateData.rejectionReason = null;
-    }
-
-    if (status === "REJECTED") {
-      updateData.rejectionReason = rejectionReason;
-      updateData.approvedAt = null;
-      updateData.approvedById = null;
-    }
-
-    if (status === "IN_PROGRESS" && currentStatus === "REJECTED") {
-      updateData.submittedAt = null;
-    }
 
     const updatedTask = await db.task.update({
       where: { id },
@@ -256,6 +163,20 @@ export async function PUT(
 
         // Could also send Project Completed email here
       }
+    }
+
+    // The mirror case, now that APPROVED is no longer terminal: pulling a task
+    // back out of APPROVED means the project is no longer finished, so a project
+    // marked COMPLETED by the cascade above must not stay that way.
+    if (
+      currentStatus === "APPROVED" &&
+      status !== "APPROVED" &&
+      updatedTask.milestone?.projectId
+    ) {
+      await db.project.updateMany({
+        where: { id: updatedTask.milestone.projectId, status: "COMPLETED" },
+        data: { status: "IN_PROGRESS" },
+      });
     }
 
     return NextResponse.json(updatedTask);

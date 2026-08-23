@@ -4,7 +4,7 @@ import { ContentStatus, Prisma, Role } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clampString } from "@/lib/security";
-import { contentItemInclude } from "@/lib/content-queries";
+import { contentItemAdminInclude, contentItemInclude } from "@/lib/content-queries";
 import {
   getActor,
   parseContentFormat,
@@ -44,6 +44,10 @@ export async function GET(request: NextRequest) {
     }
 
     const requestedClientId = searchParams.get("clientId");
+    // "ALL" is the agency-wide view: every client's content in one calendar, the
+    // same sentinel /admin/content-calendar uses. Staff only — a CLIENT sending it
+    // falls through to resolveTargetClientId, which pins them to their own id.
+    const allClients = actor.isStaff && requestedClientId === "ALL";
 
     // Agency users have no content plans of their own, so scoping the calendar to
     // their own id would show an empty month with no hint why. Offer the client
@@ -56,14 +60,22 @@ export async function GET(request: NextRequest) {
         })
       : [];
 
-    let clientId = await resolveTargetClientId(actor, requestedClientId);
-    if (!clientId) {
-      return NextResponse.json({ error: "Unknown client" }, { status: 400 });
+    let clientId: string | null = null;
+    if (!allClients) {
+      clientId = await resolveTargetClientId(actor, requestedClientId);
+      if (!clientId) {
+        return NextResponse.json({ error: "Unknown client" }, { status: 400 });
+      }
+      if (actor.isStaff && !requestedClientId && clients.length > 0) {
+        const ownsPlans = clients.some((c) => c.id === clientId);
+        if (!ownsPlans) clientId = clients[0].id;
+      }
     }
-    if (actor.isStaff && !requestedClientId && clients.length > 0) {
-      const ownsPlans = clients.some((c) => c.id === clientId);
-      if (!ownsPlans) clientId = clients[0].id;
-    }
+
+    // Left empty in the agency-wide view so no client scope is applied at all.
+    const clientScope: Prisma.ContentItemWhereInput = allClients
+      ? {}
+      : { plan: { clientId: clientId as string } };
 
     // scheduledAt is stored in UTC, so the month window must be computed in UTC.
     // Using local-time boundaries put a 00:30Z item into the previous month on any
@@ -72,7 +84,7 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(Date.UTC(year, month, 1));
 
     const monthWhere: Prisma.ContentItemWhereInput = {
-      plan: { clientId },
+      ...clientScope,
       scheduledAt: { gte: startDate, lt: endDate },
     };
 
@@ -87,16 +99,20 @@ export async function GET(request: NextRequest) {
     if (projectId) itemsWhere.projectId = projectId;
 
     const awaitingWhere: Prisma.ContentItemWhereInput = {
-      plan: { clientId },
+      ...clientScope,
       status: ContentStatus.AWAITING_APPROVAL,
     };
+
+    // Cross-client listings carry the owning client so every chip can be labelled;
+    // a single-client month does not need the extra join.
+    const include = allClients ? contentItemAdminInclude : contentItemInclude;
 
     const [items, statusGroups, platformGroups, needsApproval, needsApprovalTotal] =
       await Promise.all([
         db.contentItem.findMany({
           where: itemsWhere,
           orderBy: { scheduledAt: "asc" },
-          include: contentItemInclude,
+          include,
         }),
         // Aggregate in the database rather than refetching the whole month and
         // filtering in memory (the previous version fetched every item twice).
@@ -119,7 +135,7 @@ export async function GET(request: NextRequest) {
           where: awaitingWhere,
           orderBy: { scheduledAt: "asc" },
           take: 5,
-          include: contentItemInclude,
+          include,
         }),
         db.contentItem.count({ where: awaitingWhere }),
       ]);
@@ -159,7 +175,9 @@ export async function GET(request: NextRequest) {
       year,
       // Empty for clients; drives the agency-side client switcher.
       clients,
-      clientId,
+      // Echoes the "ALL" sentinel back so the switcher stays on the agency-wide
+      // option instead of snapping to whichever client sorted first.
+      clientId: allClients ? "ALL" : clientId,
     });
   } catch (error) {
     console.error("Content calendar GET error:", error);

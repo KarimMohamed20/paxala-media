@@ -64,3 +64,6 @@ last updates.md
 
 # runtime logs from docker nginx
 docker/nginx/logs/
+
+# Runtime playground uploads (local-fallback storage)
+public/uploads/playground/

@@ -69,7 +69,9 @@ function buildUrl(args: UseContentCalendarArgs): string {
   if (args.platform && args.platform !== "ALL") qs.set("platform", args.platform);
   if (args.status && args.status !== "ALL") qs.set("status", args.status);
   if (args.format && args.format !== "ALL") qs.set("format", args.format);
-  if (args.clientId && args.clientId !== "ALL") qs.set("clientId", args.clientId);
+  // "ALL" is a real value to the calendar endpoint (the agency-wide view), not a
+  // "no filter" sentinel — forward it instead of dropping it.
+  if (args.clientId) qs.set("clientId", args.clientId);
   if (args.projectId) qs.set("projectId", args.projectId);
   return `/api/portal/content-calendar?${qs.toString()}`;
 }

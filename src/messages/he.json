@@ -428,7 +428,7 @@
       "platform": "פלטפורמה",
       "format": "פורמט",
       "status": "סטטוס",
-      "publishDate": "תאריך פרסום",
+      "publishDate": "תאריך",
       "caption": "טקסט / תסריט",
       "captionPlaceholder": "הזן את טקסט הפוסט או הערות תסריט…",
       "project": "פרויקט",
@@ -443,7 +443,7 @@
       "submitCreate": "צור בקשה",
       "submitSave": "שמור שינויים",
       "titleRequired": "כותרת היא שדה חובה",
-      "dateRequired": "תאריך פרסום הוא שדה חובה",
+      "dateRequired": "תאריך הוא שדה חובה",
       "clientRequired": "אנא בחר לקוח"
     },
     "projectTab": {
@@ -711,7 +711,7 @@
       "delivered": "תוכן שסופק",
       "deliveredHint": "מתוך {planned} מתוכננים",
       "deliveredHintNoPlan": "לא הוגדר יעד החודש",
-      "deliveredTooltip": "פריטים שאושרו, תוזמנו או פורסמו עם תאריך פרסום בחודש הזה.",
+      "deliveredTooltip": "פריטים שאושרו, תוזמנו או פורסמו עם תאריך בחודש הזה.",
       "turnaroundDays": "זמן אישור",
       "turnaroundDaysHint": "חציון ימים עד האישור שלך",
       "turnaroundDaysTooltip": "חציון הזמן בין שליחת הפריט לסקירה לבין ההחלטה שלך. אישורים עצמיים של הסוכנות אינם נכללים.",

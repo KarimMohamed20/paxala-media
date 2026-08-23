@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { Prisma, type TaskStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { emailService } from "@/lib/email/service";
-import { getValidNextStatuses } from "@/lib/milestones";
+import { isTaskStatus, taskStatusStamps } from "@/lib/milestones";
 
 // GET - Fetch single task
 export async function GET(
@@ -94,55 +94,25 @@ export async function PUT(
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
     if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId || null;
 
-    // Validate + authorize status transitions.
+    // Status is set directly from the admin/staff panel: ADMIN and STAFF may move
+    // a task to any status, including straight from TODO to APPROVED, and back
+    // out of APPROVED. The workflow chain still drives the self-service buttons,
+    // it just no longer blocks an agency-side correction.
     if (data.status !== undefined && data.status !== existing.status) {
-      const VALID_STATUSES: TaskStatus[] = [
-        "TODO",
-        "IN_PROGRESS",
-        "SUBMITTED",
-        "APPROVED",
-        "REJECTED",
-      ];
-      if (!VALID_STATUSES.includes(data.status)) {
+      if (!isTaskStatus(data.status)) {
         return NextResponse.json({ error: "Invalid task status" }, { status: 400 });
       }
 
-      // Only an ADMIN, or the assignee's manager, may approve/reject submitted
-      // work — this closes the STAFF self-approval bypass (CORR-02).
-      const isManager =
-        session.user.role === "ADMIN" ||
-        (!!existing.assignee?.managerId &&
-          existing.assignee.managerId === session.user.id);
-
-      const allowed = getValidNextStatuses(existing.status, isManager);
-      if (!allowed.includes(data.status)) {
-        return NextResponse.json(
-          {
-            error: `Invalid status transition from ${existing.status} to ${data.status}`,
-          },
-          { status: 403 }
-        );
-      }
-
       updateData.status = data.status;
-
-      if (data.status === "SUBMITTED") {
-        updateData.submittedAt = new Date();
-      }
-      if (data.status === "APPROVED") {
-        updateData.approvedAt = new Date();
-        updateData.approvedById = session.user.id;
-      }
-      if (data.status === "REJECTED") {
-        updateData.rejectionReason = data.rejectionReason || null;
-      }
-      // APPROVED is terminal in getValidNextStatuses, so there is no valid
-      // transition away from it here (un-approving would mean adding it to the
-      // transition graph — a deliberate product decision). Clear the stale
-      // rejection reason when a task leaves REJECTED.
-      if (existing.status === "REJECTED" && data.status !== "REJECTED") {
-        updateData.rejectionReason = null;
-      }
+      Object.assign(
+        updateData,
+        taskStatusStamps({
+          status: data.status,
+          previousSubmittedAt: existing.submittedAt,
+          actorId: session.user.id,
+          rejectionReason: data.rejectionReason,
+        })
+      );
     }
 
     const task = await db.task.update({

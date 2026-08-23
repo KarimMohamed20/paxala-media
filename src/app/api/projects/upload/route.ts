@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
-import { existsSync } from 'fs'
-import { getFileUrl } from '@/lib/utils'
+import { uploadFile } from '@/lib/storage'
 
 export const maxDuration = 300 // 5 minutes — large video uploads need time
 
@@ -59,30 +57,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create upload directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'portfolio')
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Generate unique filename
     const timestamp = Date.now()
     const fileExtension = path.extname(file.name)
     const fileName = `${type}-${timestamp}${fileExtension}`
-    const filePath = path.join(uploadDir, fileName)
 
-    // Convert file to buffer and write
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
 
-    // Return the full public URL
-    const relativePath = `/uploads/portfolio/${fileName}`
-    const fullUrl = getFileUrl(relativePath)
+    const result = await uploadFile(buffer, {
+      mime: file.type,
+      size: file.size,
+      cloudFolder: 'paxala/portfolio',
+      localDir: 'portfolio',
+      localName: fileName,
+    })
 
     return NextResponse.json({
       success: true,
-      url: fullUrl,
+      url: result.url,
       fileName,
       type: file.type,
       size: file.size,

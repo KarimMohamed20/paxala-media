@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getFileUrl } from "@/lib/utils";
 import { canAccessProject } from "@/lib/authz";
 import { resolveAssetScope } from "@/lib/asset-scope";
-import { deleteLocalUpload } from "@/lib/storage";
+import { deleteUpload, uploadFile } from "@/lib/storage";
 import {
   ASSET_CATEGORIES,
   ASSET_STATUSES,
@@ -308,9 +305,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadDir = join(process.cwd(), "public", "uploads", projectId);
-    await mkdir(uploadDir, { recursive: true });
-
     const timestamp = Date.now();
     const originalName = file.name;
     const safeName = originalName
@@ -320,8 +314,14 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
+
+    const stored = await uploadFile(buffer, {
+      mime: file.type,
+      size: file.size,
+      cloudFolder: `paxala/${projectId}`,
+      localDir: projectId,
+      localName: filename,
+    });
 
     const mimeType = file.type;
     let fileType = "other";
@@ -374,13 +374,12 @@ export async function POST(request: NextRequest) {
       folderId = await resolveFolderId(folder, projectId, project.clientId);
     }
 
-    const relativePath = `/uploads/${projectId}/${filename}`;
-    const fullUrl = getFileUrl(relativePath);
-
     const fileRecord = await db.projectFile.create({
       data: {
         name: originalName,
-        url: fullUrl,
+        url: stored.url,
+        storagePublicId: stored.publicId,
+        storageResourceType: stored.resourceType,
         type: fileType,
         size: file.size,
         category,
@@ -637,7 +636,11 @@ export async function DELETE(request: NextRequest) {
       where: { id: fileId },
     });
 
-    await deleteLocalUpload(file.url);
+    await deleteUpload({
+      publicId: file.storagePublicId,
+      resourceType: file.storageResourceType,
+      url: file.url,
+    });
 
     return NextResponse.json({ message: "File deleted successfully" });
   } catch (error) {
