@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { User, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,27 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid username or password");
       } else {
-        router.push("/portal/dashboard");
+        // Honor the callbackUrl set by the middleware bounce when it is a safe
+        // in-app path; otherwise staff land in their own workspace and clients
+        // and admins in the portal.
+        const callbackUrl = new URLSearchParams(window.location.search).get(
+          "callbackUrl"
+        );
+        let target =
+          callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+            ? callbackUrl
+            : null;
+        if (!target) {
+          try {
+            const session = await getSession();
+            target = session?.user?.role === "STAFF" ? "/staff" : "/portal/dashboard";
+          } catch {
+            // Sign-in already succeeded; a failed session fetch must not
+            // surface as a login error.
+            target = "/portal/dashboard";
+          }
+        }
+        router.push(target);
         router.refresh();
       }
     } catch {
@@ -172,10 +192,10 @@ export default function LoginPage() {
             <p className="text-white/60 text-sm">
               Don&apos;t have an account?{" "}
               <Link
-                href="/portal/register"
+                href="/contact"
                 className="text-red-500 hover:text-red-400 font-medium transition-colors"
               >
-                Create one
+                Contact us for access
               </Link>
             </p>
           </div>

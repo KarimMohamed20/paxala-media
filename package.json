@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -16,7 +18,8 @@
     "db:seed:content:reset": "npx tsx scripts/seed-content.ts --reset",
     "db:seed:all": "npm run db:seed && npm run db:seed:content",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "lint:rtl": "node scripts/check-rtl.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -65,6 +68,7 @@
     "nodemailer": "^7.0.12",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

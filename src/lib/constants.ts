@@ -28,6 +28,41 @@ export function getWhatsAppUrl(message?: string): string {
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
+/**
+ * Absolute origin for links placed in outbound emails. Server-side only —
+ * NEXTAUTH_URL is not exposed to the client bundle.
+ */
+export function getAppBaseUrl(): string {
+  return (process.env.NEXTAUTH_URL || "https://paxaland.com").replace(/\/+$/, "");
+}
+
+/**
+ * Routes that render an authenticated *application* shell rather than the
+ * marketing site.
+ *
+ * These surfaces supply their own chrome (sidebar, header), so the public
+ * navbar, footer and WhatsApp CTA must not render on top of them — the footer
+ * previously had no guard at all and was appearing under the whole portal.
+ *
+ * `/playground` additionally runs a full-viewport canvas, so smooth scrolling is
+ * disabled here too: Lenis installs a NON-PASSIVE wheel listener and
+ * preventDefaults native scroll, which would swallow every wheel event the
+ * canvas needs for pan and ctrl+wheel zoom. See ScrollProvider.
+ */
+export const APP_SHELL_PREFIXES = [
+  "/portal",
+  "/admin",
+  "/staff",
+  "/playground",
+] as const;
+
+/** Is `pathname` inside an app shell? Matches the prefix itself and its subtree. */
+export function isAppShellRoute(pathname: string): boolean {
+  return APP_SHELL_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 export const services = [
   {
     id: "concept-strategy",

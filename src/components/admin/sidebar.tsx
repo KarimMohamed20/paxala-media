@@ -11,7 +11,6 @@ import {
     CalendarCheck,
     CalendarRange,
     MessageSquare,
-    Settings,
     ArrowLeft,
     ClipboardCheck,
     Image,
@@ -19,11 +18,12 @@ import {
     Briefcase,
     FileText,
     BarChart3,
-    Shield,
     MessageSquareQuote,
     LogOut,
     Target,
     Receipt,
+    Sparkles,
+    UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -40,12 +40,16 @@ const navItems = [
     { href: "/admin/content-calendar", icon: CalendarRange, labelKey: "contentCalendar" },
     // CalendarCheck: Calendar (bookings) and CalendarRange (content) are taken.
     { href: "/admin/monthly-plans", icon: CalendarCheck, labelKey: "monthlyPlans" },
+    // Top-level route: a Playground room is edge-to-edge and renders outside
+    // the admin shell, so it is not under /admin/*.
+    { href: "/playground", icon: Sparkles, labelKey: "playground" },
     { href: "/admin/invoices", icon: Receipt, labelKey: "invoices" },
     { href: "/admin/reports/payments", icon: BarChart3, labelKey: "paymentReports" },
     { href: "/admin/portfolio", icon: Image, labelKey: "portfolio" },
     { href: "/admin/testimonials", icon: MessageSquareQuote, labelKey: "testimonials" },
     { href: "/admin/blog", icon: FileText, labelKey: "blog" },
     { href: "/admin/approvals", icon: ClipboardCheck, labelKey: "approvals" },
+    { href: "/admin/client-approvals", icon: UserCheck, labelKey: "clientApprovals" },
     { href: "/admin/bookings", icon: Calendar, labelKey: "bookings" },
     { href: "/admin/inquiries", icon: MessageSquare, labelKey: "inquiries" },
 ];

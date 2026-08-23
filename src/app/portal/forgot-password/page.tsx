@@ -3,27 +3,44 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import {
+  Mail,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  MessageCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getWhatsAppUrl } from "@/lib/constants";
 
 export default function ForgotPasswordPage() {
+  const tWhatsApp = useTranslations("whatsapp");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const whatsAppHref = getWhatsAppUrl(tWhatsApp("messages.passwordReset"));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
     setIsLoading(true);
 
     try {
-      // TODO: Implement password reset API endpoint
-      // For now, show success message
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccess(true);
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Something went wrong. Please try again.");
+      } else {
+        setSuccess(true);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -51,11 +68,11 @@ export default function ForgotPasswordPage() {
             Reset Password
           </h1>
           <p className="text-white/60">
-            Enter your email address and we&apos;ll send you a link to reset your password
+            Enter your email address and we&apos;ll send you a link to reset
+            your password
           </p>
         </div>
 
-        {/* Form */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
           {success ? (
             <motion.div
@@ -72,12 +89,13 @@ export default function ForgotPasswordPage() {
                 Check your email
               </h2>
               <p className="text-white/60 text-sm">
-                If an account exists with that email, we&apos;ve sent you a password reset link.
+                If an account exists with that email, we&apos;ve sent you a
+                password reset link. It stays valid for 1 hour.
               </p>
               <Link href="/portal/login">
                 <Button className="w-full mt-6" size="lg">
                   Back to Login
-                  <ArrowRight size={18} className="ml-2" />
+                  <ArrowRight size={18} className="ms-2 rtl:rotate-180" />
                 </Button>
               </Link>
             </motion.div>
@@ -101,14 +119,14 @@ export default function ForgotPasswordPage() {
                 <div className="relative">
                   <Mail
                     size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40"
+                    className="absolute start-4 top-1/2 -translate-y-1/2 text-white/40"
                   />
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email address"
-                    className="pl-12"
+                    className="ps-12"
                     required
                   />
                 </div>
@@ -120,18 +138,21 @@ export default function ForgotPasswordPage() {
                 size="lg"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    Sending reset link...
-                  </>
-                ) : (
-                  <>
-                    Send Reset Link
-                    <ArrowRight size={18} className="ml-2" />
-                  </>
-                )}
+                {isLoading ? "Sending reset link..." : "Send Reset Link"}
               </Button>
+
+              <p className="text-center text-white/50 text-xs">
+                No email on your account?{" "}
+                <a
+                  href={whatsAppHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-red-500 hover:text-red-400 transition-colors"
+                >
+                  <MessageCircle size={12} />
+                  Message us on WhatsApp
+                </a>
+              </p>
             </form>
           )}
 
@@ -154,4 +175,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-

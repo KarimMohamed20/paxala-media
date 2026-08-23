@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/constants";
 import { db } from "@/lib/db";
+import { sendPlanPublished } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 import { getActor } from "@/lib/content-authz";
 
 /**
@@ -32,7 +35,13 @@ export async function PATCH(
 
     const existing = await db.contentPlan.findUnique({
       where: { id },
-      select: { id: true, publishedAt: true },
+      select: {
+        id: true,
+        publishedAt: true,
+        isPublished: true,
+        title: true,
+        client: { select: { email: true, name: true } },
+      },
     });
     if (!existing) return NextResponse.json({ error: "Plan not found" }, { status: 404 });
 
@@ -47,6 +56,25 @@ export async function PATCH(
       },
       select: { id: true, isPublished: true, publishedAt: true, contentUpdatedAt: true },
     });
+
+    // Publishing is the act that makes the plan visible to the client — tell
+    // them, or the review cycle waits on them noticing. Only on the
+    // unpublished → published transition, so toggles don't spam.
+    if (body.isPublished && !existing.isPublished && existing.client.email) {
+      const locale = (request.cookies.get("NEXT_LOCALE")?.value ||
+        "en") as EmailLocale;
+      void sendPlanPublished(
+        existing.client.email,
+        {
+          name: existing.client.name || existing.client.email,
+          planTitle: existing.title,
+          link: `${getAppBaseUrl()}/portal/monthly-plan`,
+        },
+        locale
+      ).catch((error) =>
+        console.error("Plan published email send failed:", error)
+      );
+    }
 
     return NextResponse.json(plan);
   } catch (error) {

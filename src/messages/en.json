@@ -8,7 +8,9 @@
       "services": "Hi Paxala Media 👋 I'm interested in your services. Could you share details and pricing?",
       "packages": "Hi Paxala Media 👋 I'd like more info about your monthly packages (Brand 360°).",
       "portfolio": "Hi Paxala Media 👋 I saw your portfolio and I'd like to discuss a project.",
-      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project."
+      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project.",
+      "support": "Hi Paxala Media 👋 I need help with my client portal.",
+      "passwordReset": "Hi, I need help resetting my client portal password."
     }
   },
   "nav": {
@@ -247,13 +249,15 @@
     "paymentReports": "Payment Reports",
     "portfolio": "Portfolio",
     "blog": "Blog",
-    "approvals": "Approvals",
+    "approvals": "Task Sign-offs",
     "bookings": "Bookings",
     "inquiries": "Inquiries",
     "testimonials": "Testimonials",
     "backToPortal": "Back to Portal",
     "contentCalendar": "Content Calendar",
-    "monthlyPlans": "Monthly Plans"
+    "monthlyPlans": "Monthly Plans",
+    "playground": "Playground",
+    "clientApprovals": "Client Approvals"
   },
   "portal": {
     "panel": "Client Portal",
@@ -279,6 +283,7 @@
     "files": "Files",
     "settings": "Settings",
     "adminPanel": "Admin Panel",
+    "staffPanel": "Staff Panel",
     "signOut": "Sign Out",
     "welcome": "Welcome back",
     "activeProjects": "Active Projects",
@@ -322,7 +327,10 @@
     "nothingHere": "Nothing here yet",
     "noProjectsYet": "No projects yet",
     "noBookingsYet": "No bookings yet",
-    "noFilesYet": "No files available yet"
+    "noFilesYet": "No files available yet",
+    "playground": "Playground",
+    "billingSubtitle": "Your invoices and payment status in one place",
+    "billingEmptyBody": "Invoices will appear here once they are issued for your projects."
   },
   "content": {
     "platform": {
@@ -497,7 +505,9 @@
       },
       "assetCount": "{count} files",
       "imageCount": "{count} Images",
-      "storyCount": "{count} Stories"
+      "storyCount": "{count} Stories",
+      "playgroundTitle": "Playground — awaiting your sign-off",
+      "playgroundReview": "Review"
     }
   },
   "plan": {
@@ -847,7 +857,7 @@
     "totalProjects": "Total Projects",
     "totalBookings": "Total Bookings",
     "totalInquiries": "Total Inquiries",
-    "pendingApprovals": "Pending Approvals",
+    "pendingApprovals": "Pending Task Sign-offs",
     "allCaughtUp": "You're all caught up!",
     "noApprovals": "No pending approvals",
     "activeCount": "Active",
@@ -880,7 +890,7 @@
     "dueDate": "Due",
     "invoiceTotal": "Total",
     "downloadPdf": "Download PDF",
-    "allClients": "All clients",
+    "allClients": "All Clients",
     "clearFilters": "Clear filters",
     "kpiLeadsThisMonth": "New Leads (Month)",
     "kpiProposalsThisMonth": "Proposals (Month)",
@@ -985,7 +995,6 @@
     "contentCalendar": "Content Calendar",
     "manageContent": "Plan, review and publish content across all clients",
     "newContentItem": "New Content",
-    "allClients": "All Clients",
     "contentItems": "Content Items",
     "noContentItems": "No content items match your filters",
     "sendForApproval": "Send for approval",
@@ -997,7 +1006,436 @@
     "bulkApply": "Apply to selected",
     "selectedItems": "{count} selected",
     "calendarView": "Calendar",
-    "tableView": "Table",
-    "listView": "List"
+    "listView": "List",
+    "clientApprovalsTitle": "Client Approvals",
+    "clientApprovalsSubtitle": "Everything waiting on a client response — content reviews and Playground sign-offs",
+    "clientApprovalsEmpty": "Nothing is waiting on this client right now.",
+    "openInWorkspace": "Open review"
+  },
+  "playground": {
+    "title": "Playground",
+    "productName": "PMP Playground",
+    "tagline": "Ideas become real",
+    "subtitle": "Persistent creative rooms where the team and the client build campaigns together.",
+    "common": {
+      "loading": "Loading…",
+      "retry": "Try again",
+      "cancel": "Cancel",
+      "close": "Close",
+      "unnamed": "Unnamed",
+      "someone": "someone else"
+    },
+    "status": {
+      "LIVE": "Live",
+      "ACTIVE": "Active",
+      "AWAITING_CLIENT": "Awaiting client",
+      "DRAFT": "Draft",
+      "ARCHIVED": "Archived"
+    },
+    "sections": {
+      "awaitingClient": "Waiting for client approval",
+      "active": "Active rooms",
+      "drafts": "Drafts",
+      "archived": "Archived"
+    },
+    "card": {
+      "nodeCount": "{count, plural, =0 {Empty canvas} one {# item} other {# items}}",
+      "restricted": "Restricted"
+    },
+    "empty": {
+      "title": "No rooms yet",
+      "bodyStaff": "Create a room to start a campaign with your client — the canvas, the decisions and the approvals all live here.",
+      "bodyClient": "When PMP invites you to a creative session, it will appear here."
+    },
+    "errors": {
+      "loadFailedTitle": "Could not load your rooms",
+      "loadFailedBody": "The connection failed. Nothing has been lost — try again.",
+      "noAccessTitle": "Room not available",
+      "noAccessBody": "This room does not exist, or it is not shared with you.",
+      "roomFailedTitle": "Could not open this room",
+      "roomFailedBody": "The connection failed. Your work is saved — try again in a moment."
+    },
+    "create": {
+      "cta": "New Playground",
+      "title": "Create a Playground",
+      "subtitle": "A room keeps everything: the canvas, the decisions and the approval record.",
+      "roomName": "Room name",
+      "roomNamePlaceholder": "Summer Campaign — Brainstorm 01",
+      "brief": "Brief",
+      "briefPlaceholder": "What are we solving? Objective, audience, deliverables…",
+      "client": "Client",
+      "noClient": "No client yet",
+      "project": "Project",
+      "noProject": "No project yet",
+      "participants": "Participants",
+      "restricted": "Restricted room",
+      "restrictedHint": "Only invited people can open it. Other PMP team members will not see it listed.",
+      "submit": "Create room",
+      "created": "Room created",
+      "failed": "Could not create the room. Please try again.",
+      "template": "Template",
+      "blankHint": "Empty canvas",
+      "frameCount": "{count, plural, one {# frame} other {# frames}}"
+    },
+    "roles": {
+      "team": "PMP",
+      "client": "Client"
+    },
+    "roomRoles": {
+      "OWNER": "Host",
+      "EDITOR": "Creative team",
+      "APPROVER": "Approver",
+      "VIEWER": "Viewer"
+    },
+    "mode": {
+      "studio": "Studio — internal",
+      "client": "Client — presentation"
+    },
+    "room": {
+      "backToRooms": "All rooms",
+      "loading": "Opening the room…",
+      "share": "Share",
+      "invite": "Invite people",
+      "showPanel": "Show room panel",
+      "hidePanel": "Hide room panel",
+      "noClient": "No client linked",
+      "canvasEmptyTitle": "This canvas is empty",
+      "canvasEmptyStaff": "Creative tools arrive with the canvas in the next release. Everything else in this room — people, chat and decisions — is already live.",
+      "canvasEmptyClient": "PMP has not presented anything here yet. You will see the selected directions as soon as they are published.",
+      "loadingCanvas": "Loading the canvas",
+      "linkCopied": "Room link copied",
+      "copyFailed": "Copy the link manually"
+    },
+    "toolbar": {
+      "label": "Creative tools",
+      "select": "Select",
+      "sticky": "Sticky",
+      "draw": "Draw",
+      "text": "Text",
+      "shape": "Shape",
+      "upload": "Upload",
+      "frame": "Frame",
+      "palette": "Palette",
+      "ai": "AI Spark",
+      "comingWithCanvas": "Available once the canvas ships",
+      "readOnly": "You have view-only access to this room",
+      "connect": "Connect"
+    },
+    "panel": {
+      "label": "Room",
+      "people": "People",
+      "chat": "Chat",
+      "decisions": "Decisions",
+      "you": "(you)",
+      "host": "Host",
+      "peopleEmptyTitle": "No one here yet",
+      "peopleEmptyBody": "Invite your team and the client to start the session.",
+      "chatEmptyTitle": "No messages yet",
+      "chatEmptyBody": "Room chat opens with the collaboration release.",
+      "decisionsEmptyTitle": "No decisions recorded",
+      "decisionsEmptyBody": "Decisions made in this room will be kept here, with who decided and when.",
+      "outline": "Outline",
+      "activity": "Activity",
+      "comments": "Comments"
+    },
+    "meeting": {
+      "label": "Meeting controls",
+      "mic": "Microphone",
+      "camera": "Camera",
+      "share": "Share screen",
+      "react": "React",
+      "raise": "Raise hand",
+      "leave": "Leave",
+      "notConfigured": "Live video is not enabled for this workspace"
+    },
+    "ai": {
+      "name": "PAX AI",
+      "placeholder": "Turn this idea into a campaign route",
+      "expand": "Expand PAX AI",
+      "collapse": "Collapse PAX AI",
+      "notConfigured": "PAX AI is not configured yet. Once a provider is connected, select canvas items and ask for directions, headlines or a shot list.",
+      "contextSelected": "{count, plural, one {# item selected} other {# items selected}}",
+      "contextRoom": "whole room",
+      "withSelection": "With your selection",
+      "sparks": "Creative sparks",
+      "selectHint": "Select items on the board to work from them directly.",
+      "insert": "Insert",
+      "regenerate": "Regenerate",
+      "copy": "Copy",
+      "discard": "Discard",
+      "inserted": "Added to the board, team only",
+      "copied": "Copied",
+      "failed": "PAX AI could not answer that",
+      "tasks": {
+        "campaign_route": "Campaign route",
+        "three_directions": "3 directions",
+        "headline": "Headlines",
+        "script": "Script",
+        "shot_list": "Shot list",
+        "challenge": "Challenge it",
+        "spark_visual": "Visual spark",
+        "spark_story": "Story spark",
+        "spark_headline": "Headline spark",
+        "spark_camera": "Camera spark",
+        "spark_social": "Social spark",
+        "spark_unexpected": "Unexpected"
+      }
+    },
+    "canvas": {
+      "minimap": "Board overview",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetZoom": "Reset to 100%",
+      "fit": "Fit board",
+      "fitAnnounce": "Fitted {count} items on screen",
+      "selectionCleared": "Selection cleared",
+      "deleted": "{count, plural, one {# item deleted} other {# items deleted}}",
+      "lockedTitle": "Someone else is editing",
+      "lockedBody": "{name} is editing this item. Your change was not applied.",
+      "staleTitle": "Item changed elsewhere",
+      "staleBody": "Someone updated this item first. Reload to see the current version."
+    },
+    "outline": {
+      "emptyTitle": "Nothing on the board",
+      "emptyBody": "Items you add to the canvas are listed here in reading order.",
+      "noContent": "No text"
+    },
+    "visibility": {
+      "published": "Published to client",
+      "teamOnly": "Team only"
+    },
+    "nodeKinds": {
+      "STICKY": "Sticky",
+      "TEXT": "Text",
+      "IMAGE": "Image",
+      "FILE": "File",
+      "DRAWING": "Drawing",
+      "SHAPE": "Shape",
+      "FRAME": "Frame",
+      "CAMPAIGN_ROUTE": "Direction",
+      "SCRIPT": "Script",
+      "PALETTE": "Palette",
+      "POLL": "Poll",
+      "DECISION": "Decision",
+      "AI_CARD": "AI"
+    },
+    "save": {
+      "pending": "Unsaved",
+      "saving": "Saving…",
+      "offline": "Offline — changes kept",
+      "error": "Some changes were refused"
+    },
+    "stream": {
+      "reconnecting": "Reconnecting…",
+      "offline": "Offline"
+    },
+    "upload": {
+      "failed": "Could not add that file"
+    },
+    "chat": {
+      "team": "Team",
+      "shared": "Shared",
+      "teamHint": "Internal — the client cannot see this channel.",
+      "sharedHint": "The client can read this channel.",
+      "emptyTeam": "Internal conversation starts here.",
+      "emptyShared": "Nothing shared with the client yet.",
+      "placeholderTeam": "Message the team…",
+      "placeholderShared": "Message the room…",
+      "send": "Send",
+      "showOnCanvas": "Show on canvas"
+    },
+    "decisions": {
+      "record": "Record a decision",
+      "latest": "Latest decision",
+      "titleLabel": "What was decided",
+      "titlePlaceholder": "We're going with the hero-moment route",
+      "outcomeLabel": "Why",
+      "outcomePlaceholder": "Reasoning, caveats, what happens next…",
+      "citing": "{count, plural, one {Citing # selected item} other {Citing # selected items}}",
+      "showOnCanvas": "{count, plural, one {Show the cited item} other {Show # cited items}}"
+    },
+    "activity": {
+      "emptyTitle": "Nothing has happened yet",
+      "emptyBody": "Everything that happens in this room is recorded here.",
+      "loadMore": "Load earlier activity",
+      "show": "Show",
+      "types": {
+        "NODE_CREATE": "added an item",
+        "NODE_TEXT": "edited some text",
+        "NODE_DATA": "updated an item",
+        "NODE_VISIBILITY": "changed who can see an item",
+        "NODE_DELETE": "deleted an item",
+        "EDGE_CREATE": "connected two items",
+        "EDGE_UPDATE": "changed a connector",
+        "EDGE_DELETE": "removed a connector",
+        "COMMENT_ADDED": "commented",
+        "COMMENT_RESOLVED": "resolved a comment",
+        "MESSAGE": "sent a message",
+        "REACTION": "reacted",
+        "DECISION_RECORDED": "recorded a decision",
+        "PUBLISHED_TO_CLIENT": "published to the client",
+        "UNPUBLISHED_FROM_CLIENT": "unpublished from the client",
+        "APPROVAL_SUBMITTED": "requested approval",
+        "APPROVAL_APPROVED": "approved",
+        "APPROVAL_CHANGES_REQUESTED": "requested changes",
+        "APPROVAL_WITHDRAWN": "withdrew an approval request",
+        "MEMBER_ADDED": "joined the room",
+        "MEMBER_REMOVED": "left the room",
+        "ROOM_UPDATED": "updated the room",
+        "FILE_UPLOADED": "added a file",
+        "AI_GENERATED": "used PAX AI",
+        "SAVED_TO_PROJECT": "saved work to the project",
+        "NODE_MOVE": "moved an item",
+        "NODE_RESIZE": "resized an item",
+        "NODE_STYLE": "restyled an item",
+        "NODE_ORDER": "reordered an item"
+      }
+    },
+    "publish": {
+      "visibleToClient": "Visible to client",
+      "teamOnly": "Team only",
+      "partial": "{count} of {total} published",
+      "presentToClient": "Present to client",
+      "retract": "Retract",
+      "requestApproval": "Ask for approval",
+      "published": "{count, plural, one {# item published} other {# items published}}",
+      "retracted": "{count, plural, one {# item retracted} other {# items retracted}}",
+      "someRefused": "Some items were not published",
+      "refusedBody": "{count, plural, one {# item cannot be shown to a client} other {# items cannot be shown to a client}}",
+      "failed": "Could not change what the client sees",
+      "approvalTitlePrompt": "What are you asking the client to approve?",
+      "approvalSent": "Sent to the client for approval"
+    },
+    "approve": {
+      "eyebrow": "For your approval",
+      "approve": "Approve",
+      "requestChanges": "Request changes",
+      "notesLabel": "Notes for PMP",
+      "notesPlaceholder": "What would you like changed?",
+      "approved": "Approved — thank you",
+      "changesSent": "Your notes have been sent",
+      "failed": "Could not record your response",
+      "history": "History",
+      "unavailableTitle": "This request is not available",
+      "unavailableBody": "It may have been withdrawn, or it is not shared with you.",
+      "status": {
+        "APPROVED": "You approved this",
+        "CHANGES_REQUESTED": "You asked for changes",
+        "WITHDRAWN": "PMP withdrew this request",
+        "PENDING": "Awaiting your response"
+      },
+      "actions": {
+        "SUBMITTED": "sent this for approval",
+        "APPROVED": "approved",
+        "CHANGES_REQUESTED": "requested changes",
+        "WITHDRAWN": "withdrew the request"
+      }
+    },
+    "comments": {
+      "noSelectionTitle": "Select something",
+      "noSelectionBody": "Pick an item on the board to read and add comments.",
+      "multiSelectTitle": "One at a time",
+      "multiSelectBody": "Comments belong to a single item. Narrow your selection to one.",
+      "emptyTitle": "No comments yet",
+      "emptyBody": "Be the first to say something about this.",
+      "placeholder": "Add a comment…",
+      "post": "Post",
+      "resolve": "Mark resolved",
+      "reopen": "Reopen"
+    },
+    "preview": {
+      "enter": "Preview as client",
+      "exit": "Exit client preview"
+    },
+    "templates": {
+      "BLANK": "Blank",
+      "CAMPAIGN_BRAINSTORM": "Campaign brainstorm",
+      "BRAND_IDENTITY": "Brand identity",
+      "VIDEO_CONCEPT": "Video concept",
+      "SOCIAL_CAMPAIGN": "Social campaign",
+      "WEBSITE_EXPERIENCE": "Website experience",
+      "PRODUCT_LAUNCH": "Product launch",
+      "CLIENT_PRESENTATION": "Client presentation",
+      "PRODUCTION_PLANNING": "Production planning"
+    },
+    "templateFrames": {
+      "brief": "Brief",
+      "references": "References",
+      "insights": "Insights",
+      "directions": "Directions",
+      "moodboard": "Moodboard",
+      "typography": "Typography",
+      "palette": "Palette",
+      "applications": "Applications",
+      "treatment": "Treatment",
+      "storyboard": "Storyboard",
+      "shotList": "Shot list",
+      "audience": "Audience",
+      "contentPillars": "Content pillars",
+      "executions": "Executions",
+      "calendar": "Calendar",
+      "sitemap": "Sitemap",
+      "wireframes": "Wireframes",
+      "visualDirection": "Visual direction",
+      "positioning": "Positioning",
+      "keyMessages": "Key messages",
+      "assets": "Assets",
+      "timeline": "Timeline",
+      "theProblem": "The problem",
+      "theIdea": "The idea",
+      "theExecution": "The execution",
+      "nextSteps": "Next steps",
+      "deliverables": "Deliverables",
+      "schedule": "Schedule",
+      "crew": "Crew",
+      "locations": "Locations",
+      "budget": "Budget"
+    },
+    "produce": {
+      "review": "Review",
+      "saveToProject": "Save to Project",
+      "saved": "{count, plural, =0 {Saved to the project} one {# task created} other {# tasks created}}",
+      "failed": "Could not save to the project"
+    },
+    "invite": {
+      "title": "People in this room",
+      "subtitle": "Roles are clamped to what each person's account allows.",
+      "inRoom": "In this room",
+      "addPeople": "Add people",
+      "search": "Search by name",
+      "noMatches": "No one else to add",
+      "roleLabel": "Room role",
+      "remove": "Remove from room",
+      "failed": "Could not update the room"
+    },
+    "inspector": {
+      "colour": "Colour",
+      "swatch": "Swatch {index}",
+      "addSwatch": "Add colour",
+      "removeSwatch": "Remove colour",
+      "shapes": {
+        "rect": "Rectangle",
+        "ellipse": "Ellipse",
+        "triangle": "Triangle"
+      }
+    },
+    "summary": {
+      "title": "Session summary",
+      "generate": "Generate",
+      "reviewed": "Reviewed",
+      "unreviewed": "Draft — not reviewed",
+      "draftWarning": "Written by PAX AI from this room's decisions and approvals. Check it before sharing anything from it with the client.",
+      "markReviewed": "Mark as reviewed",
+      "emptyTitle": "No summaries yet",
+      "emptyBody": "Once this room has decisions or client approvals, PAX AI can draft a summary of the session.",
+      "failed": "Could not generate a summary",
+      "deniedTitle": "Not available",
+      "deniedBody": "Session summaries are internal to the PMP team."
+    },
+    "back": {
+      "admin": "Back to Admin Panel",
+      "staff": "Back to Staff Panel",
+      "portal": "Back to Portal"
+    }
   }
 }

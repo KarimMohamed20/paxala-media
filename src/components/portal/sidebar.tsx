@@ -7,29 +7,37 @@ import {
   LayoutGrid,
   CalendarDays,
   CalendarRange,
+  CalendarCheck,
   CheckCircle2,
+  CreditCard,
   Folder,
   Image as ImageIcon,
   BarChart3,
-  CreditCard,
+  Briefcase,
   Headphones,
   Settings,
   LogOut,
   Shield,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { getWhatsAppUrl } from "@/lib/constants";
 
 const navItems = [
   { href: "/portal/dashboard", icon: LayoutGrid, labelKey: "overview", defaultLabel: "Overview" },
   { href: "/portal/monthly-plan", icon: CalendarDays, labelKey: "monthlyPlan", defaultLabel: "Monthly Plan" },
   { href: "/portal/calendar", icon: CalendarRange, labelKey: "contentCalendar", defaultLabel: "Content Calendar" },
   { href: "/portal/approvals", icon: CheckCircle2, labelKey: "approvals", defaultLabel: "Approvals" },
+  // Top-level, not /portal/*: a room is edge-to-edge and owns the viewport, so
+  // it renders outside the portal's sidebar shell.
+  { href: "/playground", icon: Sparkles, labelKey: "playground", defaultLabel: "Playground" },
   { href: "/portal/projects", icon: Folder, labelKey: "projects", defaultLabel: "Projects" },
+  { href: "/portal/bookings", icon: CalendarCheck, labelKey: "bookings", defaultLabel: "Bookings" },
   { href: "/portal/files", icon: ImageIcon, labelKey: "assetLibrary", defaultLabel: "Asset Library" },
   { href: "/portal/reports", icon: BarChart3, labelKey: "reports", defaultLabel: "Reports" },
   { href: "/portal/billing", icon: CreditCard, labelKey: "billing", defaultLabel: "Billing" },
-  { href: "/portal/support", icon: Headphones, labelKey: "support", defaultLabel: "Support" },
+  { href: "/portal/settings", icon: Settings, labelKey: "settings", defaultLabel: "Settings" },
 ];
 
 interface PortalSidebarProps {
@@ -41,8 +49,22 @@ export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const t = useTranslations("portal");
+  const tWhatsApp = useTranslations("whatsapp");
 
   const isAdmin = session?.user?.role === "ADMIN";
+  const isStaff = session?.user?.role === "STAFF";
+
+  const labelFor = (labelKey: string, defaultLabel: string) => {
+    try {
+      const translated = t(labelKey);
+      if (translated && !translated.startsWith("portal.")) {
+        return translated;
+      }
+    } catch {
+      // fall through to default
+    }
+    return defaultLabel;
+  };
 
   return (
     <aside className={cn("bg-neutral-950 border-e border-white/10 w-64 shrink-0 flex flex-col justify-between h-full", className)}>
@@ -65,16 +87,8 @@ export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
             const isActive =
               pathname === item.href ||
               (item.href !== "/portal/dashboard" && pathname.startsWith(item.href));
-            
-            let label = item.defaultLabel;
-            try {
-              const translated = t(item.labelKey);
-              if (translated && !translated.startsWith("portal.")) {
-                label = translated;
-              }
-            } catch {
-              label = item.defaultLabel;
-            }
+
+            const label = labelFor(item.labelKey, item.defaultLabel);
 
             return (
               <Link
@@ -99,6 +113,18 @@ export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
               </Link>
             );
           })}
+
+          {/* Support goes straight to WhatsApp — no in-portal support page exists. */}
+          <a
+            href={getWhatsAppUrl(tWhatsApp("messages.support"))}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+          >
+            <Headphones size={18} className="text-white/40 transition-colors" />
+            <span>{labelFor("support", "Support")}</span>
+          </a>
         </nav>
 
         {/* Sidebar Footer & REC Indicator */}
@@ -110,7 +136,18 @@ export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
               className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-amber-400/90 hover:bg-amber-500/10 transition-colors"
             >
               <Shield size={18} />
-              <span>Admin Panel</span>
+              <span>{labelFor("adminPanel", "Admin Panel")}</span>
+            </Link>
+          )}
+
+          {isStaff && (
+            <Link
+              href="/staff"
+              onClick={onClose}
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-sky-400/90 hover:bg-sky-500/10 transition-colors"
+            >
+              <Briefcase size={18} />
+              <span>{labelFor("staffPanel", "Staff Panel")}</span>
             </Link>
           )}
 
@@ -119,7 +156,7 @@ export function PortalSidebar({ className, onClose }: PortalSidebarProps) {
             className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-white/40 hover:text-red-400 hover:bg-white/5 transition-colors w-full"
           >
             <LogOut size={16} />
-            <span>Sign Out</span>
+            <span>{labelFor("signOut", "Sign Out")}</span>
           </button>
 
           {/* PMP Tagline & REC Indicator */}

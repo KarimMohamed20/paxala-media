@@ -3,7 +3,11 @@ import { getToken } from 'next-auth/jwt';
 import { defaultLocale, locales } from './i18n/config';
 
 // Portal pages that must stay reachable without a session
-const PUBLIC_PORTAL_PATHS = ['/portal/login', '/portal/forgot-password'];
+const PUBLIC_PORTAL_PATHS = [
+  '/portal/login',
+  '/portal/forgot-password',
+  '/portal/reset-password',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,9 +15,14 @@ export async function middleware(request: NextRequest) {
   // ---- Server-side protection for /admin, /staff, /portal ----
   const needsAdmin = pathname === '/admin' || pathname.startsWith('/admin/');
   const needsStaff = pathname === '/staff' || pathname.startsWith('/staff/');
+  // /playground needs a session but no particular role — a CLIENT reaches rooms
+  // they were invited to. Per-room membership is authorized server-side; see
+  // src/lib/playground/actors.ts. Middleware only proves "signed in".
   const needsSession =
-    (pathname === '/portal' || pathname.startsWith('/portal/')) &&
-    !PUBLIC_PORTAL_PATHS.some((p) => pathname.startsWith(p));
+    ((pathname === '/portal' || pathname.startsWith('/portal/')) &&
+      !PUBLIC_PORTAL_PATHS.some((p) => pathname.startsWith(p))) ||
+    pathname === '/playground' ||
+    pathname.startsWith('/playground/');
 
   if (needsAdmin || needsStaff || needsSession) {
     const token = await getToken({
@@ -42,7 +51,7 @@ export async function middleware(request: NextRequest) {
   // Validate locale or use default
   const locale =
     localeCookie &&
-    locales.includes(localeCookie.value as any)
+    locales.includes(localeCookie.value as (typeof locales)[number])
       ? localeCookie.value
       : defaultLocale;
 
