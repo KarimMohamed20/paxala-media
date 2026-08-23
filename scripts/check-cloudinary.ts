@@ -11,13 +11,16 @@
 import { v2 as cloudinary } from "cloudinary";
 import { isCloudinaryConfigured } from "../src/lib/storage";
 
-// tsx does not load .env the way `next dev` does. Node's loader never
-// overrides variables already exported in the shell, so this is a no-op
-// wherever the environment is set up properly (e.g. the VPS).
-try {
-  process.loadEnvFile(".env");
-} catch {
-  // No .env here — rely on the exported environment.
+// tsx does not load env files the way `next dev` does. Node's loader never
+// overrides variables already exported in the shell, so these are no-ops
+// wherever the environment is set up properly. `.env` is the local dev file,
+// `.env.production` is what the VPS uses (see scripts/deploy.sh).
+for (const file of [".env", ".env.production"]) {
+  try {
+    process.loadEnvFile(file);
+  } catch {
+    // File absent — rely on the exported environment.
+  }
 }
 
 // 1x1 transparent PNG — small enough to cost nothing, real enough to upload.
