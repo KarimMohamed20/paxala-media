@@ -31,6 +31,15 @@ import {
   type StorageResourceType,
 } from "../src/lib/storage";
 
+// tsx does not load .env the way `next dev` does. Node's loader never
+// overrides variables already exported in the shell, so this is a no-op
+// wherever the environment is set up properly (e.g. the VPS).
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // No .env here — rely on the exported environment.
+}
+
 const db = new PrismaClient();
 
 const DRY_RUN = process.argv.includes("--dry-run");
