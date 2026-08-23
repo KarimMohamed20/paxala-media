@@ -1,10 +1,9 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { PortalSidebar } from "@/components/portal/sidebar";
 import { PortalMobileNav } from "@/components/portal/mobile-nav";
 
@@ -16,16 +15,22 @@ export default function PortalLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations("portal");
+
+  // Must stay in sync with PUBLIC_PORTAL_PATHS in src/middleware.ts — these
+  // pages exist precisely for visitors without a session.
+  const isPublicPath =
+    pathname === "/portal/login" ||
+    pathname === "/portal/forgot-password" ||
+    pathname === "/portal/reset-password";
 
   useEffect(() => {
-    if (status === "unauthenticated" && pathname !== "/portal/login") {
+    if (status === "unauthenticated" && !isPublicPath) {
       router.push("/portal/login");
     }
-  }, [status, pathname, router]);
+  }, [status, isPublicPath, router]);
 
-  // Don't show layout on login page
-  if (pathname === "/portal/login") {
+  // Public pages render as bare documents — no sidebar shell, no auth gate.
+  if (isPublicPath) {
     return <>{children}</>;
   }
 

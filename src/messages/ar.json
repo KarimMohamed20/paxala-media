@@ -8,7 +8,9 @@
       "services": "مرحباً Paxala Media 👋 أنا مهتم بخدماتكم، هل يمكنكم مشاركة التفاصيل والأسعار؟",
       "packages": "مرحباً Paxala Media 👋 أرغب بمزيد من المعلومات عن باقاتكم الشهرية (Brand 360°).",
       "portfolio": "مرحباً Paxala Media 👋 شاهدت أعمالكم وأرغب بمناقشة مشروع.",
-      "contact": "مرحباً Paxala Media 👋 أرغب بالتواصل بخصوص مشروع."
+      "contact": "مرحباً Paxala Media 👋 أرغب بالتواصل بخصوص مشروع.",
+      "support": "مرحباً باكسالا ميديا 👋 أحتاج مساعدة في بوابة العميل الخاصة بي.",
+      "passwordReset": "مرحباً، أحتاج مساعدة في إعادة تعيين كلمة مرور بوابة العميل."
     }
   },
   "nav": {
@@ -249,14 +251,15 @@
     "paymentReports": "تقارير المدفوعات",
     "portfolio": "معرض الأعمال",
     "blog": "المدونة",
-    "approvals": "الموافقات",
+    "approvals": "اعتمادات المهام",
     "bookings": "الحجوزات",
     "inquiries": "الاستفسارات",
     "testimonials": "آراء العملاء",
     "backToPortal": "العودة إلى البوابة",
     "contentCalendar": "تقويم المحتوى",
     "monthlyPlans": "الخطط الشهرية",
-    "playground": "غرفة الإبداع"
+    "playground": "غرفة الإبداع",
+    "clientApprovals": "موافقات العملاء"
   },
   "portal": {
     "panel": "بوابة العميل",
@@ -266,6 +269,7 @@
     "files": "الملفات",
     "settings": "الإعدادات",
     "adminPanel": "لوحة الإدارة",
+    "staffPanel": "لوحة الموظفين",
     "signOut": "تسجيل الخروج",
     "welcome": "مرحباً بعودتك",
     "activeProjects": "المشاريع النشطة",
@@ -326,7 +330,9 @@
     "noProjectsYet": "لا توجد مشاريع بعد",
     "noBookingsYet": "لا توجد حجوزات بعد",
     "noFilesYet": "لا توجد ملفات متاحة بعد",
-    "playground": "غرفة الإبداع"
+    "playground": "غرفة الإبداع",
+    "billingSubtitle": "فواتيرك وحالة الدفع في مكان واحد",
+    "billingEmptyBody": "ستظهر الفواتير هنا بمجرد إصدارها لمشاريعك."
   },
   "content": {
     "platform": {
@@ -501,7 +507,9 @@
       },
       "assetCount": "{count} ملف",
       "imageCount": "{count} صورة",
-      "storyCount": "{count} ستوري"
+      "storyCount": "{count} ستوري",
+      "playgroundTitle": "غرفة الإبداع — بانتظار اعتمادك",
+      "playgroundReview": "مراجعة"
     }
   },
   "plan": {
@@ -853,7 +861,7 @@
     "totalProjects": "إجمالي المشاريع",
     "totalBookings": "إجمالي الحجوزات",
     "totalInquiries": "إجمالي الاستفسارات",
-    "pendingApprovals": "الموافقات المعلقة",
+    "pendingApprovals": "اعتمادات المهام المعلقة",
     "activeCount": "نشط",
     "inactiveCount": "غير نشط",
     "newCount": "جديد",
@@ -1000,7 +1008,11 @@
     "bulkApply": "تطبيق على المحدد",
     "selectedItems": "{count} محدد",
     "calendarView": "تقويم",
-    "listView": "قائمة"
+    "listView": "قائمة",
+    "clientApprovalsTitle": "موافقات العملاء",
+    "clientApprovalsSubtitle": "كل ما ينتظر رد العميل — مراجعات المحتوى واعتمادات غرفة الإبداع",
+    "clientApprovalsEmpty": "لا يوجد شيء بانتظار هذا العميل حالياً.",
+    "openInWorkspace": "فتح المراجعة"
   },
   "playground": {
     "title": "غرفة الإبداع",
@@ -1421,6 +1433,11 @@
       "failed": "تعذّر توليد الملخص",
       "deniedTitle": "غير متاح",
       "deniedBody": "ملخصات الجلسات داخلية لفريق PMP."
+    },
+    "back": {
+      "admin": "العودة للوحة الإدارة",
+      "staff": "العودة للوحة الموظفين",
+      "portal": "العودة للبوابة"
     }
   }
 }

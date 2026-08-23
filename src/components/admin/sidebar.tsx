@@ -11,7 +11,6 @@ import {
     CalendarCheck,
     CalendarRange,
     MessageSquare,
-    Settings,
     ArrowLeft,
     ClipboardCheck,
     Image,
@@ -19,12 +18,12 @@ import {
     Briefcase,
     FileText,
     BarChart3,
-    Shield,
     MessageSquareQuote,
     LogOut,
     Target,
     Receipt,
     Sparkles,
+    UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -50,6 +49,7 @@ const navItems = [
     { href: "/admin/testimonials", icon: MessageSquareQuote, labelKey: "testimonials" },
     { href: "/admin/blog", icon: FileText, labelKey: "blog" },
     { href: "/admin/approvals", icon: ClipboardCheck, labelKey: "approvals" },
+    { href: "/admin/client-approvals", icon: UserCheck, labelKey: "clientApprovals" },
     { href: "/admin/bookings", icon: Calendar, labelKey: "bookings" },
     { href: "/admin/inquiries", icon: MessageSquare, labelKey: "inquiries" },
 ];

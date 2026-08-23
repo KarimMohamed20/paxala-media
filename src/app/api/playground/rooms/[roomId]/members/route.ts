@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { RoomMemberRole } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/constants";
 import { db } from "@/lib/db";
+import { sendPlaygroundInvite } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 import { rateLimit } from "@/lib/security";
 import { resolveRoomActor } from "@/lib/playground/actors";
 import {
   countOwners,
   getMembership,
   getRoomForAccess,
+  getRoomTitle,
   listMembers,
   removeMember,
   upsertMember,
@@ -109,11 +113,15 @@ export async function POST(
 
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true },
+      select: { id: true, name: true, email: true },
     });
     if (!user) {
       return NextResponse.json({ error: "Unknown user" }, { status: 400 });
     }
+
+    // A pre-existing membership means this POST is a role change, not an
+    // invitation — only genuinely new members get the email.
+    const existingMembership = await getMembership(roomId, userId);
 
     const member = await upsertMember({
       roomId,
@@ -121,6 +129,22 @@ export async function POST(
       role,
       invitedById: access.actor.userId,
     });
+
+    if (!existingMembership && user.email) {
+      const roomTitle = await getRoomTitle(roomId);
+      const locale = (request.cookies.get("NEXT_LOCALE")?.value ||
+        "en") as EmailLocale;
+      void sendPlaygroundInvite(
+        user.email,
+        {
+          name: user.name || user.email,
+          inviterName: access.actor.name || "The PMP team",
+          roomTitle: roomTitle ?? "Playground",
+          link: `${getAppBaseUrl()}/playground/${roomId}`,
+        },
+        locale
+      ).catch((error) => console.error("Invite email send failed:", error));
+    }
 
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {

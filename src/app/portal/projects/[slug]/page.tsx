@@ -25,6 +25,7 @@ import {
   Target,
   CheckCircle,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -277,7 +278,7 @@ export default function ProjectDetailPage() {
           {error || tc('noResults')}
         </h3>
         <p className="text-white/60 mb-6">
-          The project you're looking for doesn't exist or you don't have access.
+          The project you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.
         </p>
         <Link href="/portal/projects">
           <Button>{tc('back')} to {t('projects')}</Button>
@@ -338,15 +339,24 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           </div>
-          <Badge
-            variant={
-              statusColors[project.status as keyof typeof statusColors] ||
-              "secondary"
-            }
-            className="text-sm px-4 py-1"
-          >
-            {project.status.replace("_", " ")}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/portal/projects/${project.slug}/playground`}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Sparkles size={16} className="text-red-500" />
+              {t('playground')}
+            </Link>
+            <Badge
+              variant={
+                statusColors[project.status as keyof typeof statusColors] ||
+                "secondary"
+              }
+              className="text-sm px-4 py-1"
+            >
+              {project.status.replace("_", " ")}
+            </Badge>
+          </div>
         </div>
       </motion.div>
 

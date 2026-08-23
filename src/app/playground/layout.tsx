@@ -44,8 +44,11 @@ export default function PlaygroundLayout({
 
   if (status === "unauthenticated") return null;
 
-  // A room id route: /playground/<id> and anything under it.
-  const isRoom = /^\/playground\/[^/]+/.test(pathname);
+  // A room id route: /playground/<id> and anything under it. /playground/new
+  // is the create-room deep link, which is the dashboard, not a room.
+  const isRoom =
+    /^\/playground\/[^/]+/.test(pathname) &&
+    !/^\/playground\/new\/?$/.test(pathname);
 
   if (isRoom) {
     return <div className="fixed inset-0 z-30 bg-black">{children}</div>;

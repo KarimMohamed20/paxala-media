@@ -5,12 +5,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import {
+  ArrowRight,
   CheckCircle2,
   Clock,
   MapPin,
   RefreshCw,
   Search,
   Send,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateLocalized } from "@/lib/format";
@@ -35,9 +37,21 @@ import type {
 
 const REVIEW_STATUSES = ["AWAITING_APPROVAL", "REJECTED", "APPROVED"] as const;
 
+interface PlaygroundApprovalRef {
+  id: string;
+  roomId: string;
+  title: string;
+  note: string | null;
+  createdAt: string;
+  dueAt: string | null;
+  requestedByName: string | null;
+  room: { title: string };
+}
+
 interface ApprovalsResponse {
   items: ContentItem[];
   selected: ContentItem | null;
+  playgroundApprovals: PlaygroundApprovalRef[];
   counts: {
     awaitingApproval: number;
     changesRequested: number;
@@ -317,6 +331,54 @@ function ApprovalsView() {
         <p className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-300">
           {error}
         </p>
+      )}
+
+      {/* Playground sign-off requests share this inbox so a client has ONE
+          place to see everything awaiting them. */}
+      {(data?.playgroundApprovals.length ?? 0) > 0 && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-5">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.15em] text-red-300">
+            <Sparkles size={15} aria-hidden="true" />
+            {t("approvals.playgroundTitle")}
+          </h2>
+          <div className="mt-4 space-y-3">
+            {data?.playgroundApprovals.map((approval) => (
+              <div
+                key={approval.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-white">{approval.title}</p>
+                  <p className="mt-0.5 text-xs text-white/45">
+                    {approval.room.title}
+                    {approval.requestedByName
+                      ? ` · ${approval.requestedByName}`
+                      : ""}
+                    {" · "}
+                    {approval.dueAt
+                      ? t("approvals.dueOn", {
+                          date: formatDateLocalized(approval.dueAt, locale, {
+                            month: "short",
+                            day: "numeric",
+                          }),
+                        })
+                      : formatDateLocalized(approval.createdAt, locale, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                  </p>
+                </div>
+                <Link
+                  href={`/playground/${approval.roomId}/approve/${approval.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-red-500"
+                >
+                  {t("approvals.playgroundReview")}
+                  <ArrowRight size={13} aria-hidden="true" className="rtl:rotate-180" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">

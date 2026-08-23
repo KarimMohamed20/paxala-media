@@ -8,7 +8,9 @@
       "services": "שלום Paxala Media 👋 אני מעוניין/ת בשירותים שלכם, אפשר לקבל פרטים ומחירים?",
       "packages": "שלום Paxala Media 👋 אשמח לפרטים על החבילות החודשיות שלכם (Brand 360°).",
       "portfolio": "שלום Paxala Media 👋 ראיתי את העבודות שלכם ואשמח להתייעץ על פרויקט.",
-      "contact": "שלום Paxala Media 👋 אשמח ליצור קשר בנוגע לפרויקט."
+      "contact": "שלום Paxala Media 👋 אשמח ליצור קשר בנוגע לפרויקט.",
+      "support": "שלום פקסלה מדיה 👋 אני צריך עזרה עם פורטל הלקוח שלי.",
+      "passwordReset": "שלום, אני צריך עזרה באיפוס סיסמת פורטל הלקוח."
     }
   },
   "nav": {
@@ -250,14 +252,15 @@
     "paymentReports": "דוחות תשלומים",
     "portfolio": "תיק עבודות",
     "blog": "בלוג",
-    "approvals": "אישורים",
+    "approvals": "אישורי משימות",
     "bookings": "הזמנות",
     "inquiries": "פניות",
     "testimonials": "המלצות",
     "backToPortal": "חזרה לפורטל",
     "contentCalendar": "לוח תוכן",
     "monthlyPlans": "תכניות חודשיות",
-    "playground": "חדר יצירה"
+    "playground": "חדר יצירה",
+    "clientApprovals": "אישורי לקוחות"
   },
   "portal": {
     "panel": "פורטל לקוח",
@@ -267,6 +270,7 @@
     "files": "קבצים",
     "settings": "הגדרות",
     "adminPanel": "פאנל ניהול",
+    "staffPanel": "פאנל צוות",
     "signOut": "התנתק",
     "welcome": "ברוך שובך",
     "activeProjects": "פרויקטים פעילים",
@@ -327,7 +331,9 @@
     "noProjectsYet": "אין פרויקטים עדיין",
     "noBookingsYet": "אין הזמנות עדיין",
     "noFilesYet": "אין קבצים זמינים עדיין",
-    "playground": "חדר יצירה"
+    "playground": "חדר יצירה",
+    "billingSubtitle": "החשבוניות וסטטוס התשלום שלך במקום אחד",
+    "billingEmptyBody": "חשבוניות יופיעו כאן לאחר שיונפקו עבור הפרויקטים שלך."
   },
   "content": {
     "platform": {
@@ -502,7 +508,9 @@
       },
       "assetCount": "{count} קבצים",
       "imageCount": "{count} תמונות",
-      "storyCount": "{count} סטוריז"
+      "storyCount": "{count} סטוריז",
+      "playgroundTitle": "חדר יצירה — ממתין לאישורך",
+      "playgroundReview": "סקירה"
     }
   },
   "plan": {
@@ -854,7 +862,7 @@
     "totalProjects": "סה\"כ פרויקטים",
     "totalBookings": "סה\"כ הזמנות",
     "totalInquiries": "סה\"כ פניות",
-    "pendingApprovals": "אישורים ממתינים",
+    "pendingApprovals": "אישורי משימות ממתינים",
     "activeCount": "פעילים",
     "inactiveCount": "לא פעילים",
     "newCount": "חדשים",
@@ -1001,7 +1009,11 @@
     "bulkApply": "החל על הנבחרים",
     "selectedItems": "{count} נבחרו",
     "calendarView": "לוח שנה",
-    "listView": "רשימה"
+    "listView": "רשימה",
+    "clientApprovalsTitle": "אישורי לקוחות",
+    "clientApprovalsSubtitle": "כל מה שממתין לתגובת לקוח — סקירות תוכן ואישורי חדר יצירה",
+    "clientApprovalsEmpty": "אין דבר שממתין ללקוח זה כרגע.",
+    "openInWorkspace": "פתח סקירה"
   },
   "playground": {
     "title": "חדר יצירה",
@@ -1422,6 +1434,11 @@
       "failed": "לא ניתן ליצור סיכום",
       "deniedTitle": "לא זמין",
       "deniedBody": "סיכומי מפגש הם פנימיים לצוות PMP."
+    },
+    "back": {
+      "admin": "חזרה לפאנל ניהול",
+      "staff": "חזרה לפאנל צוות",
+      "portal": "חזרה לפורטל"
     }
   }
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { RoomApprovalAction, RoomApprovalStatus } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/constants";
+import { sendPlaygroundApprovalRequest } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 import { clampString, rateLimit } from "@/lib/security";
 import { requireStudioActor, resolveRoomActor } from "@/lib/playground/actors";
 import { roomBus } from "@/lib/playground/bus";
@@ -11,6 +14,7 @@ import {
   getMembership,
   getRoomDetail,
   getRoomForAccess,
+  listApprovalRecipients,
   listApprovals,
   readPublishSource,
   respondToApproval,
@@ -151,6 +155,29 @@ export async function POST(
 
     void touchRoom(roomId);
     roomBus.broadcast(roomId, { type: "decision", decisionId: approval.id });
+
+    // Tell the people who can actually sign off: client members of the room,
+    // plus the room's client scope. The approve page was built to be opened
+    // from exactly this email. Fully detached so the 201 does not wait on the
+    // recipient lookup or SMTP.
+    const locale = (request.cookies.get("NEXT_LOCALE")?.value ||
+      "en") as EmailLocale;
+    const roomTitle = room?.title ?? "Playground";
+    const link = `${getAppBaseUrl()}/playground/${roomId}/approve/${approval.id}`;
+    void (async () => {
+      const recipients = await listApprovalRecipients(roomId);
+      await Promise.all(
+        recipients.map(({ email, name }) =>
+          sendPlaygroundApprovalRequest(
+            email,
+            { name, roomTitle, approvalTitle: title, link },
+            locale
+          )
+        )
+      );
+    })().catch((error) =>
+      console.error("Approval request email send failed:", error)
+    );
 
     return NextResponse.json(
       { approval, excluded: payload.excluded },

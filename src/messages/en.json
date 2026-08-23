@@ -8,7 +8,9 @@
       "services": "Hi Paxala Media 👋 I'm interested in your services. Could you share details and pricing?",
       "packages": "Hi Paxala Media 👋 I'd like more info about your monthly packages (Brand 360°).",
       "portfolio": "Hi Paxala Media 👋 I saw your portfolio and I'd like to discuss a project.",
-      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project."
+      "contact": "Hi Paxala Media 👋 I'd like to get in touch about a project.",
+      "support": "Hi Paxala Media 👋 I need help with my client portal.",
+      "passwordReset": "Hi, I need help resetting my client portal password."
     }
   },
   "nav": {
@@ -247,14 +249,15 @@
     "paymentReports": "Payment Reports",
     "portfolio": "Portfolio",
     "blog": "Blog",
-    "approvals": "Approvals",
+    "approvals": "Task Sign-offs",
     "bookings": "Bookings",
     "inquiries": "Inquiries",
     "testimonials": "Testimonials",
     "backToPortal": "Back to Portal",
     "contentCalendar": "Content Calendar",
     "monthlyPlans": "Monthly Plans",
-    "playground": "Playground"
+    "playground": "Playground",
+    "clientApprovals": "Client Approvals"
   },
   "portal": {
     "panel": "Client Portal",
@@ -280,6 +283,7 @@
     "files": "Files",
     "settings": "Settings",
     "adminPanel": "Admin Panel",
+    "staffPanel": "Staff Panel",
     "signOut": "Sign Out",
     "welcome": "Welcome back",
     "activeProjects": "Active Projects",
@@ -324,7 +328,9 @@
     "noProjectsYet": "No projects yet",
     "noBookingsYet": "No bookings yet",
     "noFilesYet": "No files available yet",
-    "playground": "Playground"
+    "playground": "Playground",
+    "billingSubtitle": "Your invoices and payment status in one place",
+    "billingEmptyBody": "Invoices will appear here once they are issued for your projects."
   },
   "content": {
     "platform": {
@@ -499,7 +505,9 @@
       },
       "assetCount": "{count} files",
       "imageCount": "{count} Images",
-      "storyCount": "{count} Stories"
+      "storyCount": "{count} Stories",
+      "playgroundTitle": "Playground — awaiting your sign-off",
+      "playgroundReview": "Review"
     }
   },
   "plan": {
@@ -849,7 +857,7 @@
     "totalProjects": "Total Projects",
     "totalBookings": "Total Bookings",
     "totalInquiries": "Total Inquiries",
-    "pendingApprovals": "Pending Approvals",
+    "pendingApprovals": "Pending Task Sign-offs",
     "allCaughtUp": "You're all caught up!",
     "noApprovals": "No pending approvals",
     "activeCount": "Active",
@@ -998,7 +1006,11 @@
     "bulkApply": "Apply to selected",
     "selectedItems": "{count} selected",
     "calendarView": "Calendar",
-    "listView": "List"
+    "listView": "List",
+    "clientApprovalsTitle": "Client Approvals",
+    "clientApprovalsSubtitle": "Everything waiting on a client response — content reviews and Playground sign-offs",
+    "clientApprovalsEmpty": "Nothing is waiting on this client right now.",
+    "openInWorkspace": "Open review"
   },
   "playground": {
     "title": "Playground",
@@ -1419,6 +1431,11 @@
       "failed": "Could not generate a summary",
       "deniedTitle": "Not available",
       "deniedBody": "Session summaries are internal to the PMP team."
+    },
+    "back": {
+      "admin": "Back to Admin Panel",
+      "staff": "Back to Staff Panel",
+      "portal": "Back to Portal"
     }
   }
 }

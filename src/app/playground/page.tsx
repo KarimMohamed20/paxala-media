@@ -1,3 +1,4 @@
+import { PlaygroundBackLink } from "@/components/playground/back-link";
 import { PlaygroundDashboard } from "@/components/playground/playground-dashboard";
 
 export const metadata = {
@@ -6,5 +7,10 @@ export const metadata = {
 };
 
 export default function PlaygroundPage() {
-  return <PlaygroundDashboard />;
+  return (
+    <>
+      <PlaygroundBackLink />
+      <PlaygroundDashboard />
+    </>
+  );
 }

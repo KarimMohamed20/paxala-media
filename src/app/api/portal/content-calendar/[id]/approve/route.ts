@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ContentApprovalAction } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/constants";
 import { db } from "@/lib/db";
+import { sendContentAwaitingApproval } from "@/lib/email/service";
+import { EmailLocale } from "@/lib/email/styles";
 import { clampString, rateLimit } from "@/lib/security";
 import {
   approvalThreadArgs,
@@ -124,6 +127,35 @@ export async function POST(
         { error: "This item was updated by someone else. Please reload." },
         { status: 409 }
       );
+    }
+
+    // Submitting for review is a request TO the client — tell them, or the
+    // approval sits unseen until they happen to open the portal.
+    if (action === "SUBMIT") {
+      const withClient = await db.contentItem.findUnique({
+        where: { id },
+        select: {
+          title: true,
+          plan: { select: { client: { select: { email: true, name: true } } } },
+        },
+      });
+      const client = withClient?.plan.client;
+      if (withClient && client?.email) {
+        const locale = (request.cookies.get("NEXT_LOCALE")?.value ||
+          "en") as EmailLocale;
+        void sendContentAwaitingApproval(
+          client.email,
+          {
+            name: client.name || client.email,
+            count: 1,
+            itemTitle: withClient.title,
+            link: `${getAppBaseUrl()}/portal/approvals`,
+          },
+          locale
+        ).catch((error) =>
+          console.error("Content awaiting email send failed:", error)
+        );
+      }
     }
 
     // Spread the item so existing callers keep the same top-level shape.
