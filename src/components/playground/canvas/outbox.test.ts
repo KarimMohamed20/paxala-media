@@ -186,3 +186,61 @@ describe("offline behaviour", () => {
     outbox.dispose();
   });
 });
+
+describe("connectionId in the request body", () => {
+  // These DO exercise the network path, with fetch stubbed: the echo-exclusion
+  // bug was precisely that the body never carried the connection id, so the
+  // author's own ops came back over SSE and forced a board reload.
+  function goOnline() {
+    vi.stubGlobal("navigator", { onLine: true, sendBeacon: () => true });
+  }
+
+  function stubFetch() {
+    const calls: Array<Record<string, unknown>> = [];
+    const fetchMock = vi.fn(async (_url: unknown, init?: { body?: unknown }) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      calls.push(body);
+      const ops = (body.ops ?? []) as OutboxOp[];
+      return {
+        ok: true,
+        json: async () => ({
+          results: ops.map((o) => ({ clientOpId: o.clientOpId, ok: true })),
+        }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return calls;
+  }
+
+  it("sends the getter's current value, and omits the field when null", async () => {
+    goOnline();
+    const calls = stubFetch();
+    let id: string | null = null;
+    const outbox = new Outbox("room", { getConnectionId: () => id });
+
+    outbox.push(op("NODE_MOVE", NODE_A, { x: 1, y: 1 }));
+    await outbox.flushNow();
+    expect(calls[0]).not.toHaveProperty("connectionId");
+
+    // The SSE hello arrived between flushes — the reconnect case.
+    id = "conn-1";
+    outbox.push(op("NODE_MOVE", NODE_A, { x: 2, y: 2 }));
+    await outbox.flushNow();
+    expect(calls[1]).toMatchObject({ connectionId: "conn-1" });
+
+    id = "conn-2";
+    outbox.push(op("NODE_MOVE", NODE_A, { x: 3, y: 3 }));
+    await outbox.flushNow();
+    expect(calls[2]).toMatchObject({ connectionId: "conn-2" });
+  });
+
+  it("works without a getter at all", async () => {
+    goOnline();
+    const calls = stubFetch();
+    const outbox = new Outbox("room", {});
+    outbox.push(op("NODE_MOVE", NODE_A, { x: 1, y: 1 }));
+    await outbox.flushNow();
+    expect(calls[0]).not.toHaveProperty("connectionId");
+    expect(calls[0]).toHaveProperty("ops");
+  });
+});

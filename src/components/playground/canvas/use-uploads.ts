@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import type { PlaygroundNodeKind } from "@prisma/client";
 import { formatBytes } from "@/lib/assets";
+import { MAX_ROOM_UPLOAD_BYTES } from "@/lib/playground/room-files";
 
 /**
  * Dropping files onto the canvas.
@@ -122,6 +124,7 @@ export function useUploads({
   ) => void;
   onError?: (message: string) => void;
 }) {
+  const t = useTranslations("playground");
   const [uploading, setUploading] = React.useState(0);
 
   const uploadOne = React.useCallback(
@@ -161,9 +164,27 @@ export function useUploads({
     async (files: File[], at: { x: number; y: number }) => {
       if (!enabled || files.length === 0) return;
 
-      setUploading((n) => n + files.length);
+      // Reject oversize files BEFORE the network: pushing 60MB up a mobile
+      // connection just to receive the server's 413 wastes minutes. Same cap
+      // as the route — both read MAX_ROOM_UPLOAD_BYTES.
+      const accepted: File[] = [];
+      for (const file of files) {
+        if (file.size > MAX_ROOM_UPLOAD_BYTES) {
+          onError?.(
+            t("upload.tooLarge", {
+              name: file.name,
+              limit: formatBytes(MAX_ROOM_UPLOAD_BYTES),
+            })
+          );
+        } else {
+          accepted.push(file);
+        }
+      }
+      if (accepted.length === 0) return;
 
-      const queue = files.map((file, index) => ({
+      setUploading((n) => n + accepted.length);
+
+      const queue = accepted.map((file, index) => ({
         file,
         at: { x: at.x + (index % 4) * 40, y: at.y + Math.floor(index / 4) * 40 },
       }));
@@ -191,7 +212,7 @@ export function useUploads({
 
       await Promise.all(workers);
     },
-    [enabled, onError, uploadOne]
+    [enabled, onError, t, uploadOne]
   );
 
   return { upload, uploading, formatBytes };

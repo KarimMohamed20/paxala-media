@@ -1146,7 +1146,21 @@
       "react": "React",
       "raise": "Raise hand",
       "leave": "Leave",
-      "notConfigured": "Live video is not enabled for this workspace"
+      "notConfigured": "Live video is not enabled for this workspace",
+      "start": "Start call",
+      "join": "Join call",
+      "unmute": "Unmute",
+      "you": "You",
+      "muted": "Muted",
+      "handRaised": "Hand raised",
+      "sharing": "Sharing screen",
+      "participants": "Call participants",
+      "permissionDenied": "PMP needs microphone access to join the call",
+      "deviceError": "No microphone or camera was available",
+      "full": "This call is full (5 people maximum)",
+      "staffOnlyStart": "The PMP team starts the call — you can join once it is live",
+      "joinFailed": "Could not join the call. Please try again.",
+      "reactSoon": "Reactions are not ready yet"
     },
     "ai": {
       "name": "PAX AI",
@@ -1193,7 +1207,10 @@
       "lockedTitle": "Someone else is editing",
       "lockedBody": "{name} is editing this item. Your change was not applied.",
       "staleTitle": "Item changed elsewhere",
-      "staleBody": "Someone updated this item first. Reload to see the current version."
+      "staleBody": "Someone updated this item first. Reload to see the current version.",
+      "connectorFailedTitle": "Couldn't connect those items",
+      "connectorFailedBody": "One of the items is gone or the link was invalid, so the connector was removed.",
+      "disconnect": "Remove connector"
     },
     "outline": {
       "emptyTitle": "Nothing on the board",
@@ -1230,7 +1247,8 @@
       "offline": "Offline"
     },
     "upload": {
-      "failed": "Could not add that file"
+      "failed": "Could not add that file",
+      "tooLarge": "{name} is over the {limit} canvas limit. Put masters in the Asset Library instead."
     },
     "chat": {
       "team": "Team",
@@ -1413,6 +1431,21 @@
       "swatch": "Swatch {index}",
       "addSwatch": "Add colour",
       "removeSwatch": "Remove colour",
+      "title": "Title",
+      "name": "Name",
+      "altText": "Alt text",
+      "strokeWidth": "Line thickness",
+      "textColour": "Text colour",
+      "customColour": "Custom colour",
+      "fontSize": "Font size",
+      "smallerText": "Smaller text",
+      "largerText": "Larger text",
+      "bold": "Bold",
+      "align": {
+        "start": "Align start",
+        "center": "Align centre",
+        "end": "Align end"
+      },
       "shapes": {
         "rect": "Rectangle",
         "ellipse": "Ellipse",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EDIT_LOCK_TTL_MS, canEditText, isGeometryOp, parseOp } from "./ops";
+import { EDIT_LOCK_TTL_MS, canEditText, firstAppliedSeq, isGeometryOp, parseOp } from "./ops";
 import {
   MAX_NODE_TEXT,
   MAX_WORLD_COORD,
@@ -256,5 +256,32 @@ describe("parseNodeId", () => {
   it("rejects non-strings", () => {
     expect(parseNodeId(42)).toBeUndefined();
     expect(parseNodeId(null)).toBeUndefined();
+  });
+});
+
+describe("firstAppliedSeq", () => {
+  it("returns the lowest seq among applied results", () => {
+    expect(
+      firstAppliedSeq([
+        { clientOpId: "a", ok: true, seq: 7 },
+        { clientOpId: "b", ok: true, seq: 5 },
+        { clientOpId: "c", ok: true, seq: 6 },
+      ])
+    ).toBe(5);
+  });
+
+  it("ignores failed and seq-less results", () => {
+    expect(
+      firstAppliedSeq([
+        { clientOpId: "a", ok: false, code: "STALE", seq: 2 },
+        { clientOpId: "b", ok: true },
+        { clientOpId: "c", ok: true, seq: 9 },
+      ])
+    ).toBe(9);
+  });
+
+  it("is undefined when nothing was applied", () => {
+    expect(firstAppliedSeq([])).toBeUndefined();
+    expect(firstAppliedSeq([{ clientOpId: "a", ok: false }])).toBeUndefined();
   });
 });

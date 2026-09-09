@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { shouldResync } from "@/lib/playground/stream-protocol";
 import type { Participant } from "@/lib/playground/bus";
+import type { CallSnapshot } from "@/lib/playground/call/types";
 
 /**
  * The live channel: subscribe to a room's SSE stream and keep presence current.
@@ -37,6 +39,10 @@ export type RoomStreamOptions = {
   onOps: (ops: unknown[], seq: number, actorId: string) => void;
   /** The board is stale beyond repair — refetch the snapshot. */
   onResync: () => void;
+  /** The call roster changed. Absent when the caller does not do calls. */
+  onCall?: (call: CallSnapshot) => void;
+  /** A WebRTC signal addressed to this connection specifically. */
+  onRtc?: (from: string, fromUserId: string, signal: unknown) => void;
 };
 
 export function useRoomStream({
@@ -46,15 +52,17 @@ export function useRoomStream({
   getSeq,
   onOps,
   onResync,
+  onCall,
+  onRtc,
 }: RoomStreamOptions) {
   const [status, setStatus] = React.useState<StreamStatus>("connecting");
   const [participants, setParticipants] = React.useState<Participant[]>([]);
   const [connectionId, setConnectionId] = React.useState<string | null>(null);
 
   const lastSeqRef = React.useRef(0);
-  const handlersRef = React.useRef({ onOps, onResync, getSeq });
+  const handlersRef = React.useRef({ onOps, onResync, getSeq, onCall, onRtc });
   React.useEffect(() => {
-    handlersRef.current = { onOps, onResync, getSeq };
+    handlersRef.current = { onOps, onResync, getSeq, onCall, onRtc };
   });
 
   React.useEffect(() => {
@@ -116,25 +124,51 @@ export function useRoomStream({
           const data = JSON.parse(message.data);
           const seq = typeof data.seq === "number" ? data.seq : 0;
 
-          // Gap detection. `lastEventId` is the id the server stamped on this
-          // frame; if it has jumped past what we last applied by more than one
-          // step, frames were dropped and the board is now wrong.
-          const stamped = Number.parseInt(message.lastEventId ?? "", 10);
-          const expected = lastSeqRef.current;
-          if (
-            Number.isFinite(stamped) &&
-            expected > 0 &&
-            stamped > expected + 1
-          ) {
+          // Gap detection. The frame is stamped with the seq AFTER its whole
+          // batch; `firstSeq` says where the batch started, so a multi-op
+          // frame is not mistaken for dropped frames. Decision logic lives in
+          // stream-protocol.ts where it is unit-tested.
+          const parsedStamp = Number.parseInt(message.lastEventId ?? "", 10);
+          const stamped = Number.isFinite(parsedStamp) ? parsedStamp : null;
+          const firstSeq =
+            typeof data.firstSeq === "number" ? data.firstSeq : null;
+          if (shouldResync(lastSeqRef.current, stamped, firstSeq)) {
             handlersRef.current.onResync();
           } else {
             handlersRef.current.onOps(data.ops ?? [], seq, data.actorId ?? "");
           }
 
-          if (Number.isFinite(stamped)) lastSeqRef.current = stamped;
+          if (stamped !== null) lastSeqRef.current = stamped;
           else if (seq > lastSeqRef.current) lastSeqRef.current = seq;
         } catch {
           handlersRef.current.onResync();
+        }
+      });
+
+      // Call frames carry no SSE `id:`, so they never touch lastSeqRef and
+      // cannot be mistaken for a gap in the op sequence.
+      source.addEventListener("call", (event) => {
+        try {
+          const data = JSON.parse((event as MessageEvent).data);
+          if (data.call) handlersRef.current.onCall?.(data.call as CallSnapshot);
+        } catch {
+          // A malformed roster frame is not worth tearing the stream down;
+          // the next state change re-broadcasts the whole roster anyway.
+        }
+      });
+
+      source.addEventListener("rtc", (event) => {
+        try {
+          const data = JSON.parse((event as MessageEvent).data);
+          if (typeof data.from === "string") {
+            handlersRef.current.onRtc?.(
+              data.from,
+              typeof data.fromUserId === "string" ? data.fromUserId : "",
+              data.signal
+            );
+          }
+        } catch {
+          // Dropping one malformed signal costs at most one renegotiation.
         }
       });
 
@@ -180,5 +214,15 @@ export function useRoomStream({
     };
   }, [enabled, mode, roomId]);
 
-  return { status, participants, connectionId };
+  /**
+   * Advance the gap detector from OUTSIDE the stream — the ops POST response.
+   * The author is excluded from their own broadcast, so without this their
+   * own writes leave lastSeq behind and the next remote frame false-positives
+   * as a gap, forcing a needless resync after every local edit.
+   */
+  const noteSeq = React.useCallback((seq: number) => {
+    if (seq > lastSeqRef.current) lastSeqRef.current = seq;
+  }, []);
+
+  return { status, participants, connectionId, noteSeq };
 }

@@ -84,6 +84,22 @@ export type OutboxCallbacks = {
   onStatus?: (status: OutboxStatus, queued: number) => void;
   /** Per-op server verdicts, so the caller can reconcile stale or locked ops. */
   onResults?: (results: OpResult[]) => void;
+  /**
+   * The room sequence after this batch committed. The author is EXCLUDED from
+   * their own broadcast, so without this their gap detector lags behind their
+   * own writes and misreads the next remote frame as lost frames.
+   */
+  onRoomSeq?: (seq: number) => void;
+  /**
+   * The room stream's connection id, so the server can EXCLUDE this tab from
+   * its own broadcast. Without it every op echoes back over SSE and triggers a
+   * full canvas reload that wipes optimistic state — the "my connector vanished
+   * when I moved the note" bug.
+   *
+   * A getter rather than a constructor value: the id only exists once the SSE
+   * `hello` arrives, and it changes on every reconnect.
+   */
+  getConnectionId?: () => string | null;
 };
 
 export class Outbox {
@@ -200,7 +216,7 @@ export class Outbox {
       const res = await fetch(`/api/playground/rooms/${this.roomId}/ops`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ops: batch }),
+        body: JSON.stringify(this.body(batch)),
       });
 
       if (!res.ok) {
@@ -208,14 +224,31 @@ export class Outbox {
         // retrying forever would wedge the queue and block every later op.
         if (res.status >= 400 && res.status < 500 && res.status !== 429) {
           this.retire(batch.map((op) => op.clientOpId));
+          // Synthetic per-op failures: dropped ops must reconcile through the
+          // SAME path as server-rejected ones, or an optimistic edge whose
+          // create died on a 403/404 lingers as a phantom and the pending-op
+          // maps leak for the rest of the session.
+          this.callbacks.onResults?.(
+            batch.map((op) => ({
+              clientOpId: op.clientOpId,
+              ok: false,
+              code: "INVALID",
+            }))
+          );
           this.emit("error");
           return;
         }
         throw new Error(`ops failed: ${res.status}`);
       }
 
-      const data = (await res.json()) as { results?: OpResult[] };
+      const data = (await res.json()) as {
+        results?: OpResult[];
+        roomSeq?: number;
+      };
       const results = data.results ?? [];
+      if (typeof data.roomSeq === "number") {
+        this.callbacks.onRoomSeq?.(data.roomSeq);
+      }
 
       // Retire exactly what the server acknowledged. An op with no result stays
       // queued and is retried — losing a response must not lose the work.
@@ -248,6 +281,17 @@ export class Outbox {
       this.inFlight = false;
       if (!this.disposed && this.queue.length > 0 && !this.timer) this.schedule();
     }
+  }
+
+  /**
+   * Request body for a batch. `connectionId` is included whenever the stream
+   * has one, including for a localStorage queue replayed from a previous
+   * session — the exclusion is about THIS tab's current subscription, and by
+   * the time anything flushes the getter reflects it.
+   */
+  private body(batch: OutboxOp[]): Record<string, unknown> {
+    const connectionId = this.callbacks.getConnectionId?.() ?? null;
+    return connectionId ? { ops: batch, connectionId } : { ops: batch };
   }
 
   private retire(ids: string[]): void {
@@ -297,7 +341,7 @@ export class Outbox {
     // clientOpId makes double delivery harmless.
     try {
       const blob = new Blob(
-        [JSON.stringify({ ops: this.queue.slice(0, MAX_BATCH) })],
+        [JSON.stringify(this.body(this.queue.slice(0, MAX_BATCH)))],
         { type: "application/json" }
       );
       navigator.sendBeacon(`/api/playground/rooms/${this.roomId}/ops`, blob);

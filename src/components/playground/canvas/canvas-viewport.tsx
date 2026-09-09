@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { CanvasNode } from "./canvas-node";
 import { NodeEditor, isEditable } from "./node-editor";
 import { ConnectorLayer, type ConnectorLayerHandle } from "./connector-layer";
+import { EdgeActions } from "./edge-actions";
 import { SelectionOverlay } from "./selection-overlay";
 import {
   MIN_NODE_SIZE,
@@ -108,6 +109,8 @@ export const CanvasViewport = React.forwardRef<
     /** Called when a gesture commits, so the caller can push an undo entry. */
     onBeforeMove?: (ids: readonly string[]) => void;
     onBeforeResize?: (ids: readonly string[]) => void;
+    /** Nodes the viewport itself created (pen strokes), for the undo stack. */
+    onCreated?: (ids: readonly string[]) => void;
     className?: string;
   }
 >(function CanvasViewport(
@@ -130,6 +133,7 @@ export const CanvasViewport = React.forwardRef<
     cursorLayer,
     onBeforeMove,
     onBeforeResize,
+    onCreated,
     className,
   },
   ref
@@ -157,6 +161,13 @@ export const CanvasViewport = React.forwardRef<
   const strokePathRef = React.useRef<SVGPathElement>(null);
   /** First node picked with the connect tool, awaiting a second. */
   const connectFromRef = React.useRef<string | null>(null);
+  /** Previous pointerdown on a node, for capture-proof double-press detection. */
+  const lastNodePressRef = React.useRef<{
+    id: string;
+    time: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const toolRef = useLatest(tool);
 
   const nodesRef = useLatest(api.nodes);
@@ -396,6 +407,9 @@ export const CanvasViewport = React.forwardRef<
       }
 
       if (handle && !readOnly) {
+        // A handle press is not a node press; without this a press-resize-press
+        // sequence inside 400ms could read as a double-press on the node.
+        lastNodePressRef.current = null;
         const ids = [...selectionRef.current];
         if (ids.length === 0) return;
         container.setPointerCapture(event.pointerId);
@@ -418,9 +432,55 @@ export const CanvasViewport = React.forwardRef<
 
       if (nodeElement) {
         const id = nodeElement.dataset.nodeId!;
-        // The editor owns its own pointer events; a drag started here would
-        // fight text selection inside the textarea.
+        // Belt and braces: the editing node is no longer rendered (the editor
+        // replaces it) and the editor stops its own pointerdown, so this
+        // should be unreachable — but a drag starting on it would fight text
+        // selection, so it stays cheap insurance.
         if (id === editingId) return;
+
+        // Double-press opens the inline editor. Detected HERE rather than in
+        // onDoubleClick because the drag below takes pointer capture on the
+        // container, and capture retargets the browser's compat dblclick at
+        // the container — where closest("[data-node-id]") finds nothing and
+        // the edit silently never starts. Two presses on the same node within
+        // 400ms and 6 screen px reads as deliberate on mouse and touch alike.
+        const previous = lastNodePressRef.current;
+        lastNodePressRef.current = {
+          id,
+          time: performance.now(),
+          x: event.clientX,
+          y: event.clientY,
+        };
+        if (
+          !readOnly &&
+          !additive &&
+          onEditStart &&
+          previous &&
+          previous.id === id &&
+          performance.now() - previous.time < 400 &&
+          // Fingers drift far more than mice between the taps of a double-tap.
+          Math.hypot(event.clientX - previous.x, event.clientY - previous.y) <
+            (event.pointerType === "touch" ? 24 : 6)
+        ) {
+          const node = api.byId.get(id);
+          if (node && isEditable(node)) {
+            // No capture, no onBeforeMove undo entry, no drag: the second
+            // press is the edit gesture, not the start of a move.
+            lastNodePressRef.current = null;
+            dragRef.current = { kind: "none" };
+            onEditStart(id);
+            return;
+          }
+        }
+
+        // Read BEFORE the selection updates: a press on the node that is
+        // already the sole selection arms tap-to-edit — if this gesture ends
+        // without movement, the release opens the inline editor. The
+        // unhurried click…click-to-write pattern (FigJam, PowerPoint), immune
+        // to double-click timing.
+        const wasSoleSelection =
+          selectionRef.current.size === 1 && selectionRef.current.has(id);
+
         let next: Set<string>;
         if (additive) {
           next = new Set(selectionRef.current);
@@ -460,11 +520,15 @@ export const CanvasViewport = React.forwardRef<
               .filter((entry): entry is [string, CanvasNodeData] => !!entry[1])
               .map(([nodeId, node]) => [nodeId, { x: node.x, y: node.y }])
           ),
+          editNodeId:
+            wasSoleSelection && !additive && onEditStart ? id : null,
         };
         return;
       }
 
-      // Empty canvas: marquee.
+      // Empty canvas: marquee. Also resets the double-press tracker — a press
+      // elsewhere means the next node press is a FIRST press.
+      lastNodePressRef.current = null;
       if (!additive) onSelectionChange(new Set());
       container.setPointerCapture(event.pointerId);
       dragRef.current = {
@@ -487,6 +551,7 @@ export const CanvasViewport = React.forwardRef<
       selectionRef,
       toolRef,
       editingId,
+      onEditStart,
     ]
   );
 
@@ -637,6 +702,21 @@ export const CanvasViewport = React.forwardRef<
         clearTransforms(dragElementsRef.current);
         dragElementsRef.current.clear();
 
+        // A tap (sub-3-screen-px "drag") on the node that was already the
+        // sole selection opens the editor instead of committing a micro-move.
+        // The threshold is screen-space so zoom level cannot change the feel.
+        if (
+          drag.editNodeId &&
+          onEditStart &&
+          Math.hypot(dx, dy) * cameraRef.current.z < 3
+        ) {
+          const node = api.byId.get(drag.editNodeId);
+          if (node && isEditable(node)) {
+            onEditStart(drag.editNodeId);
+            return;
+          }
+        }
+
         if (dx !== 0 || dy !== 0) {
           const moving = new Set(drag.origin.keys());
           const next = new Map<
@@ -685,11 +765,10 @@ export const CanvasViewport = React.forwardRef<
         strokeRef.current = [];
         strokePathRef.current?.setAttribute("d", "");
 
-        // A tap with no movement is not a stroke.
-        if (raw.length < 2) {
-          onToolDone?.();
-          return;
-        }
+        // A tap with no movement is not a stroke. Either way the pen STAYS
+        // armed — a tool that has to be re-picked after every stroke cannot
+        // sketch. Escape, V or the toolbar disarms it.
+        if (raw.length < 2) return;
 
         const simplified = simplifyStroke(raw, 1.2);
         const bounds = strokeBounds(simplified, 3);
@@ -707,11 +786,17 @@ export const CanvasViewport = React.forwardRef<
               x: Math.round((point.x - bounds.x) * 100) / 100,
               y: Math.round((point.y - bounds.y) * 100) / 100,
             })),
+            // The box the points are relative to. Rendering keeps the viewBox
+            // here forever so a later resize stretches the artwork.
+            baseW: Math.max(1, bounds.w),
+            baseH: Math.max(1, bounds.h),
           },
           style: { stroke: "#E20C0C", strokeWidth: 3 },
         });
-        onSelectionChange(new Set([node.id]));
-        onToolDone?.();
+        // Deliberately NOT selected: with the pen still armed, selecting each
+        // stroke would pop the inspector over the board between strokes and
+        // its pointer-events-auto panel could swallow the next stroke's start.
+        onCreated?.([node.id]);
         return;
       }
 
@@ -738,7 +823,16 @@ export const CanvasViewport = React.forwardRef<
         onAnnounce?.(`${next.size} selected`);
       }
     },
-    [api, localPoint, nodesRef, onAnnounce, onSelectionChange, onToolDone, selectionRef]
+    [
+      api,
+      localPoint,
+      nodesRef,
+      onAnnounce,
+      onCreated,
+      onEditStart,
+      onSelectionChange,
+      selectionRef,
+    ]
   );
 
   // ---- imperative handle ---------------------------------------------------
@@ -862,17 +956,31 @@ export const CanvasViewport = React.forwardRef<
       >
         <ConnectorLayer ref={connectorRef} edges={edges} nodes={api.byId} />
 
-        {visible.map((node) => (
-          <CanvasNode
-            key={node.id}
-            node={node}
-            selected={selection.has(node.id)}
-            lod={lod}
-            tabIndex={node.id === activeId ? 0 : -1}
-            onPointerDown={onNodePointerDown}
-            onFocus={setFocusedId}
-          />
-        ))}
+        {visible.map((node) => {
+          // The node being edited is not rendered: the editor replaces it.
+          // Rendering both used to be harmless because the textarea was
+          // opaque; TEXT and SHAPE now edit through a transparent one, and the
+          // stale body underneath would show through as doubled text.
+          //
+          // SHAPE is the exception — the shape itself must stay visible while
+          // its label is typed, so it renders with the committed label
+          // stripped instead of disappearing. The fresh object defeats the
+          // memo for exactly one node, only while it is being edited.
+          if (node.id === editingId && node.kind !== "SHAPE") return null;
+          const rendered =
+            node.id === editingId ? { ...node, text: null } : node;
+          return (
+            <CanvasNode
+              key={node.id}
+              node={rendered}
+              selected={selection.has(node.id)}
+              lod={lod}
+              tabIndex={node.id === activeId ? 0 : -1}
+              onPointerDown={onNodePointerDown}
+              onFocus={setFocusedId}
+            />
+          );
+        })}
 
         {editingId &&
           (() => {
@@ -917,6 +1025,18 @@ export const CanvasViewport = React.forwardRef<
           camera={camera}
           nodes={api.nodes}
           selection={selection}
+        />
+      )}
+
+      {/* Disconnect buttons for connectors on the selected node(s). This is the
+          only way to remove a connector without deleting an endpoint. */}
+      {!readOnly && (
+        <EdgeActions
+          camera={camera}
+          edges={edges}
+          nodes={api.byId}
+          selection={selection}
+          onDisconnect={(edgeId) => api.deleteEdges([edgeId])}
         />
       )}
 

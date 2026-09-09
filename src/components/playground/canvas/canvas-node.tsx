@@ -19,7 +19,7 @@ import {
   TextBody,
   VideoBody,
 } from "./node-bodies";
-import type { CanvasNodeData } from "./types";
+import { STICKY_FALLBACK_BACKGROUND, type CanvasNodeData } from "./types";
 
 /**
  * One object on the canvas.
@@ -110,7 +110,7 @@ function lodColour(node: CanvasNodeData): string {
   if (node.kind === "STICKY") {
     return typeof node.style.background === "string"
       ? node.style.background
-      : "#F5E6A8";
+      : STICKY_FALLBACK_BACKGROUND;
   }
   if (node.kind === "IMAGE") return "rgba(255,255,255,0.22)";
   if (node.kind === "FRAME") return "rgba(255,255,255,0.04)";

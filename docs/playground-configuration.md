@@ -33,11 +33,45 @@ GEMINI_MODEL=gemini-3.6-flash
 AI_MONTHLY_CALL_CAP=5000
 ```
 
-### Live video
+### Live calls
 
-Not built. `src/lib/playground/video/provider.ts` is a seam with a null
-implementation and the meeting controls render visibly disabled. If LiveKit is
-added later, its credentials are server-side only — never `NEXT_PUBLIC_*`.
+Built, and **works with no configuration at all**. Calls are peer-to-peer
+(mesh, five participants maximum): the browsers connect directly and media
+never touches this server. Signalling rides the room's existing SSE stream
+plus `POST /api/playground/rooms/[roomId]/call`, because an App Router handler
+cannot accept a WebSocket upgrade.
+
+Staff start a call; anyone with `VIEW` — clients included — can join one that
+is already running.
+
+The optional part is TURN. Roughly one peer pair in five cannot reach the
+other directly (carrier-grade NAT, which is most mobile data in this market)
+and needs a relay. Unset, calls fall back to public STUN and those pairs
+simply fail to connect; set, `coturn` relays them at the cost of VPS
+bandwidth.
+
+```bash
+# Optional. Leave unset for STUN-only.
+TURN_URL=turn:paxaland.com:3478
+TURN_SECRET=<openssl rand -hex 32>
+TURN_REALM=paxaland.com
+TURN_EXTERNAL_IP=<vps public ip>
+```
+
+`TURN_SECRET` is server-side only — never `NEXT_PUBLIC_*`. It is never sent to
+a browser: `src/lib/playground/call/ice.ts` derives a per-user credential that
+expires in four hours, and eslint forbids components from importing that
+module at all.
+
+Starting the relay is opt-in, and it needs firewall rules of its own because
+UFW currently allows TCP 22/80/443 only:
+
+```bash
+docker compose --profile calls up -d coturn
+ufw allow 3478/tcp && ufw allow 3478/udp
+ufw allow 49160:49200/udp   # must match min-port/max-port in
+                            # docker/coturn/turnserver.conf
+```
 
 ---
 

@@ -191,6 +191,8 @@ export type ConnectorRoute = {
   end: Point;
   /** Direction at the end point, in radians — used to orient the arrowhead. */
   endAngle: number;
+  /** The curve's point at t=0.5 — where UI chrome (the disconnect button) sits. */
+  mid: Point;
 };
 
 /**
@@ -223,6 +225,12 @@ export function routeConnector(from: Rect, to: Rect): ConnectorRoute {
     // The tangent at t=1 of a cubic points from the last control point to the
     // end point, which is exactly the arrowhead's direction.
     endAngle: Math.atan2(end.y - c2.y, end.x - c2.x),
+    // De Casteljau at t=0.5 collapses to this weighted sum — ON the curve, not
+    // the midpoint of the endpoints (which sits off-curve on any bowed route).
+    mid: {
+      x: (start.x + 3 * c1.x + 3 * c2.x + end.x) / 8,
+      y: (start.y + 3 * c1.y + 3 * c2.y + end.y) / 8,
+    },
   };
 }
 

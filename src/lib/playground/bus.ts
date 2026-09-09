@@ -21,6 +21,8 @@
  * connection.
  */
 
+import type { CallSnapshot } from "./call/types";
+
 export type PresenceState = {
   cursor: { x: number; y: number } | null;
   /** World-space viewport, so "follow me" can match another person's view. */
@@ -39,7 +41,14 @@ export type Participant = {
 };
 
 export type BusEvent =
-  | { type: "ops"; seq: number; ops: unknown[]; actorId: string }
+  | {
+      type: "ops";
+      seq: number;
+      /** Seq of the batch's FIRST op, so clients can gap-check multi-op frames. */
+      firstSeq?: number;
+      ops: unknown[];
+      actorId: string;
+    }
   | { type: "message"; channel: "TEAM" | "SHARED"; messageId: string }
   | { type: "comment"; nodeId: string | null; commentId: string }
   | { type: "reaction"; nodeId: string }
@@ -48,6 +57,14 @@ export type BusEvent =
   | { type: "joined"; participant: Participant }
   | { type: "left"; connectionId: string; userId: string }
   | { type: "room"; reason: "updated" | "archived" }
+  /** The call roster changed — someone joined, left, muted, raised a hand. */
+  | { type: "call"; call: CallSnapshot }
+  /**
+   * One peer's WebRTC signal for one other peer. The ONLY unicast event:
+   * an SDP offer broadcast to the room would be answered by everybody.
+   * `from` is stamped server-side so a participant cannot impersonate a peer.
+   */
+  | { type: "rtc"; from: string; fromUserId: string; signal: unknown }
   | { type: "resync" };
 
 type Subscriber = {
@@ -82,9 +99,24 @@ const PRESENCE_FLUSH_MS = 100;
 /** A cursor older than this is dropped — the tab probably went away. */
 const PRESENCE_TTL_MS = 60_000;
 
+/**
+ * Told when a connection goes away, so a feature holding per-connection state
+ * (the call roster) can react without the bus importing that feature — which
+ * would be a cycle, since the feature broadcasts through the bus.
+ *
+ * Keyed by name rather than a plain Set: a hot reload re-evaluates the
+ * registering module, and a Set would accumulate a stale handler per edit.
+ */
+export type DisconnectHandler = (
+  roomId: string,
+  connectionId: string,
+  userId: string
+) => void;
+
 class RoomBus {
   private rooms = new Map<string, Map<string, Subscriber>>();
   private presenceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private disconnectHandlers = new Map<string, DisconnectHandler>();
 
   subscribe(roomId: string, subscriber: Subscriber): () => void {
     let room = this.rooms.get(roomId);
@@ -107,6 +139,17 @@ class RoomBus {
       const current = this.rooms.get(roomId);
       if (!current) return;
       current.delete(subscriber.connectionId);
+
+      // Before the room-empty shortcut below: a call's last participant
+      // dropping still has to be recorded, and that path deletes the room map.
+      for (const handler of this.disconnectHandlers.values()) {
+        try {
+          handler(roomId, subscriber.connectionId, subscriber.userId);
+        } catch {
+          // A misbehaving listener must not strand the unsubscribe.
+        }
+      }
+
       if (current.size === 0) {
         this.rooms.delete(roomId);
         const timer = this.presenceTimers.get(roomId);
@@ -144,6 +187,44 @@ class RoomBus {
         // event. The stream's own abort handler removes it.
       }
     }
+  }
+
+  /**
+   * Send to exactly ONE connection.
+   *
+   * WebRTC signaling is the reason this exists: an SDP offer is addressed to a
+   * single peer, and `broadcast(..., exceptConnectionId)` is the inverse —
+   * everyone BUT one. Returns false when the target is gone, which the caller
+   * reports as a dead peer rather than silently dropping the negotiation.
+   */
+  sendTo(roomId: string, connectionId: string, event: BusEvent): boolean {
+    const subscriber = this.rooms.get(roomId)?.get(connectionId);
+    if (!subscriber) return false;
+    try {
+      subscriber.send(event);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Register (or replace, by name) a listener for connection teardown. */
+  onDisconnect(name: string, handler: DisconnectHandler): void {
+    this.disconnectHandlers.set(name, handler);
+  }
+
+  /**
+   * Does this connection belong to this user?
+   *
+   * A client tells the server which connection it is acting as, and a
+   * connection id is not a secret — it is broadcast to the whole room inside
+   * every presence roster. Without this check, quoting somebody else's id
+   * would be enough to act as them: mute them, drop them from a call, or send
+   * signalling in their name. Ownership is decided here, against the session
+   * that opened the stream, and never from the request body.
+   */
+  ownsConnection(roomId: string, connectionId: string, userId: string): boolean {
+    return this.rooms.get(roomId)?.get(connectionId)?.userId === userId;
   }
 
   /**

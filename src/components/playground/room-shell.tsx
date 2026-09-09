@@ -15,12 +15,21 @@ import { usePresenceSender } from "./canvas/use-presence-sender";
 import { kindForMime, useUploads } from "./canvas/use-uploads";
 import { useRoomStream } from "./canvas/use-room-stream";
 import { CreativeToolbar, type ToolId } from "./creative-toolbar";
+import { matchToolShortcut } from "./toolbar-shortcuts";
+import { DEFAULT_SIZE } from "./canvas/use-canvas-nodes";
+import { ROOM_UPLOAD_ACCEPT } from "@/lib/playground/room-files";
+import { formatBytes } from "@/lib/assets";
 import { MeetingPill } from "./meeting-pill";
+import { CallTiles } from "./call/call-tiles";
+import { useRoomCall } from "./call/use-room-call";
+import type { CallSnapshot } from "@/lib/playground/call/types";
 import { ModeIndicator } from "./mode-indicator";
 import { PaxAiDock } from "./pax-ai-dock";
 import { RoomHeader } from "./room-header";
 import { InviteDialog } from "./invite-dialog";
 import { NodeInspector } from "./node-inspector";
+import { clampFontSize, resolveTextStyle } from "./canvas/text-style";
+import { planEditCommit } from "./canvas/edit-commit";
 import { RoomPanel } from "./room-panel";
 import { VisibilityBar } from "./visibility-bar";
 import type { RoomDetailData, RoomViewer } from "./types";
@@ -67,14 +76,48 @@ export function RoomShell({ roomId }: { roomId: string }) {
   const captureCreateRef = React.useRef<((ids: readonly string[]) => void) | null>(
     null
   );
+  /** Set by CanvasBoard: the world point at the middle of the current view. */
+  const viewCenterRef = React.useRef<(() => { x: number; y: number }) | null>(
+    null
+  );
   const [canvasReady, setCanvasReady] = React.useState(false);
 
   const { toast } = useToast();
 
   const canEdit = !!viewer?.can.edit;
 
+  /**
+   * Reload discipline. A snapshot refetch REPLACES the whole board, so one that
+   * lands while our own writes are still unacknowledged rolls the user's work
+   * back in front of them. Three guards below:
+   *  - saveStatusRef + pendingReloadRef defer a reload while the outbox is
+   *    pending/saving, with a 2s force-timer so a wedged outbox cannot keep a
+   *    live meeting stale;
+   *  - reloadingRef/reloadAgainRef collapse concurrent requests into
+   *    single-flight with one trailing rerun;
+   *  - reloadTokenRef drops a response that was superseded by a newer request.
+   */
+  const saveStatusRef = React.useRef<OutboxStatus>("idle");
+  const pendingReloadRef = React.useRef(false);
+  const forceReloadTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadingRef = React.useRef(false);
+  const reloadAgainRef = React.useRef(false);
+  const reloadTokenRef = React.useRef(0);
+  const requestReloadRef = React.useRef<((force?: boolean) => void) | null>(null);
+
   const onStatus = React.useCallback((status: OutboxStatus) => {
     setSaveStatus(status);
+    saveStatusRef.current = status;
+    // The moment our writes settle (acked, failed, or offline), run the reload
+    // that was deferred while they were in flight.
+    if (pendingReloadRef.current && status !== "pending" && status !== "saving") {
+      pendingReloadRef.current = false;
+      if (forceReloadTimerRef.current) {
+        clearTimeout(forceReloadTimerRef.current);
+        forceReloadTimerRef.current = null;
+      }
+      requestReloadRef.current?.();
+    }
   }, []);
 
   // A refused write is told to the user in their own terms. Swallowing it would
@@ -100,36 +143,158 @@ export function RoomShell({ roomId }: { roomId: string }) {
     [t, toast]
   );
 
+  /** Current SSE connection id, readable by the outbox at flush time. */
+  const connectionIdRef = React.useRef<string | null>(null);
+  /** Room seq we know we are current to; the stream replays from here. */
+  const seqRef = React.useRef(0);
+  /** Filled once useRoomStream (declared below) exists; called post-flush only. */
+  const noteSeqRef = React.useRef<((seq: number) => void) | null>(null);
+  /** Same bridge for the call hook, which needs the stream's connectionId. */
+  const callHandlersRef = React.useRef<{
+    onCall: (call: CallSnapshot) => void;
+    onRtc: (from: string, signal: unknown) => void;
+  } | null>(null);
+
+  // The optimistic edge is already rolled back by the hook; this only explains
+  // to the user why the arrow they drew has gone.
+  const onEdgeRejected = React.useCallback(() => {
+    toast({
+      variant: "warning",
+      title: t("canvas.connectorFailedTitle"),
+      description: t("canvas.connectorFailedBody"),
+    });
+  }, [t, toast]);
+
   const api = useCanvasNodes({
     roomId,
     readOnly: !canEdit,
     onStatus,
     onRejected,
+    onEdgeRejected,
+    getConnectionId: () => connectionIdRef.current,
+    onRoomSeq: (seq) => {
+      // Our own committed writes advance the room seq; both the reconnect
+      // cursor and the gap detector must learn it here, because the author is
+      // excluded from their own broadcast — otherwise the next remote frame
+      // reads as dropped frames and forces a needless resync.
+      if (seq > seqRef.current) seqRef.current = seq;
+      noteSeqRef.current?.(seq);
+    },
   });
 
-  const seqRef = React.useRef(0);
   const { replaceAll } = api;
 
   // Refetch the board. The stream asks for this whenever it cannot guarantee we
   // are up to date — see the note on replay in the stream route.
-  const reloadCanvas = React.useCallback(async () => {
-    if (!viewer) return;
-    try {
-      const query = viewer.mode === "CLIENT" ? "?mode=client" : "";
-      const res = await fetch(`/api/playground/rooms/${roomId}/snapshot${query}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      replaceAll(
-        (data.nodes ?? []) as CanvasNodeData[],
-        (data.edges ?? []) as CanvasEdgeData[]
-      );
-      seqRef.current = data.seq ?? 0;
-    } catch {
-      // The stream will ask again on its next reconnect.
+  /**
+   * Park a reload until the outbox settles: onStatus runs it on the next
+   * quiet transition, and the 2s timer forces it if the queue never drains.
+   * Never re-enters the single-flight loop directly, so a dirty outbox can
+   * never turn into a tight fetch spin.
+   */
+  const deferReload = React.useCallback(() => {
+    pendingReloadRef.current = true;
+    if (!forceReloadTimerRef.current) {
+      forceReloadTimerRef.current = setTimeout(() => {
+        forceReloadTimerRef.current = null;
+        if (pendingReloadRef.current) {
+          pendingReloadRef.current = false;
+          requestReloadRef.current?.(true);
+        }
+      }, 2000);
     }
-  }, [replaceAll, roomId, viewer]);
+  }, []);
 
-  const { status: streamStatus, participants, connectionId } = useRoomStream({
+  const reloadCanvas = React.useCallback(
+    async (force = false) => {
+      if (!viewer) return;
+      const token = ++reloadTokenRef.current;
+      try {
+        const query = viewer.mode === "CLIENT" ? "?mode=client" : "";
+        const res = await fetch(
+          `/api/playground/rooms/${roomId}/snapshot${query}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        // A newer reload started while this response was in the air; its snapshot
+        // is at least as fresh as this one, so applying this one would go BACK.
+        if (token !== reloadTokenRef.current) return;
+        // The request-time defer is not enough: the outbox can go dirty while
+        // this snapshot is in the air, and applying it then rolls the user's
+        // drag or fresh sticky back in front of them. Re-request instead —
+        // unless this IS the forced liveness pass, which applies regardless.
+        if (
+          !force &&
+          (saveStatusRef.current === "pending" ||
+            saveStatusRef.current === "saving")
+        ) {
+          deferReload();
+          return;
+        }
+        replaceAll(
+          (data.nodes ?? []) as CanvasNodeData[],
+          (data.edges ?? []) as CanvasEdgeData[]
+        );
+        seqRef.current = Math.max(seqRef.current, data.seq ?? 0);
+      } catch {
+        // The stream will ask again on its next reconnect.
+      }
+    },
+    [deferReload, replaceAll, roomId, viewer]
+  );
+
+  /** Stream-triggered reload: deferred while dirty, single-flight, rerun-once. */
+  const requestReload = React.useCallback(
+    (force = false) => {
+      const status = saveStatusRef.current;
+      // `force` (the 2s liveness timer) skips the defer entirely — otherwise a
+      // queue that never drains would re-defer here forever and the board
+      // would stay stale for the whole session.
+      if (!force && (status === "pending" || status === "saving")) {
+        deferReload();
+        return;
+      }
+
+      if (reloadingRef.current) {
+        reloadAgainRef.current = true;
+        return;
+      }
+      reloadingRef.current = true;
+      void (async () => {
+        try {
+          // Only the first pass keeps `force`; a rerun queued during it was an
+          // ordinary request and gets ordinary (defer-respecting) semantics.
+          let forceThisPass = force;
+          do {
+            reloadAgainRef.current = false;
+            await reloadCanvas(forceThisPass);
+            forceThisPass = false;
+          } while (reloadAgainRef.current);
+        } finally {
+          reloadingRef.current = false;
+        }
+      })();
+    },
+    [deferReload, reloadCanvas]
+  );
+
+  React.useEffect(() => {
+    requestReloadRef.current = requestReload;
+  }, [requestReload]);
+
+  React.useEffect(
+    () => () => {
+      if (forceReloadTimerRef.current) clearTimeout(forceReloadTimerRef.current);
+    },
+    []
+  );
+
+  const {
+    status: streamStatus,
+    participants,
+    connectionId,
+    noteSeq,
+  } = useRoomStream({
     roomId,
     mode: viewer?.mode,
     enabled: state === "ready",
@@ -149,13 +314,77 @@ export function RoomShell({ roomId }: { roomId: string }) {
         setLiveRevision((n) => n + 1);
       }
       if ([...kinds].some((kind) => kind.startsWith("NODE_") || kind.startsWith("EDGE_"))) {
-        void reloadCanvas();
+        requestReload();
       }
     },
     onResync: () => {
-      void reloadCanvas();
+      requestReload();
     },
+    // The call hook needs `connectionId`, which this hook produces, so the
+    // handlers are bridged through a ref rather than ordered around a cycle.
+    onCall: (snapshot) => callHandlersRef.current?.onCall(snapshot),
+    onRtc: (from, _fromUserId, payload) =>
+      callHandlersRef.current?.onRtc(from, payload),
   });
+
+  // The outbox reads this at flush time so the server can exclude this tab
+  // from its own broadcast — otherwise every local op echoes back and forces
+  // a board reload that wipes optimistic state.
+  React.useEffect(() => {
+    connectionIdRef.current = connectionId;
+  }, [connectionId]);
+
+  React.useEffect(() => {
+    noteSeqRef.current = noteSeq;
+  }, [noteSeq]);
+
+  // A refused microphone or a full call has to say so — the alternative is a
+  // join button that appears to do nothing.
+  const onCallError = React.useCallback(
+    (kind: "permission" | "device" | "full" | "staffOnly" | "failed") => {
+      const messages = {
+        permission: "meeting.permissionDenied",
+        device: "meeting.deviceError",
+        full: "meeting.full",
+        staffOnly: "meeting.staffOnlyStart",
+        failed: "meeting.joinFailed",
+      } as const;
+      toast({ variant: "warning", title: t(messages[kind]) });
+    },
+    [t, toast]
+  );
+
+  const call = useRoomCall({
+    roomId,
+    connectionId,
+    onError: onCallError,
+  });
+
+  const { applyCallEvent, applyRtcSignal } = call;
+  React.useEffect(() => {
+    callHandlersRef.current = { onCall: applyCallEvent, onRtc: applyRtcSignal };
+  }, [applyCallEvent, applyRtcSignal]);
+
+  // Someone opening a room where a call is already running learns about it
+  // here; every later change arrives on the stream.
+  React.useEffect(() => {
+    if (state !== "ready" || !viewer) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const query = viewer.mode === "CLIENT" ? "?mode=client" : "";
+        const res = await fetch(`/api/playground/rooms/${roomId}/call${query}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.call) applyCallEvent(data.call as CallSnapshot);
+      } catch {
+        // Not fatal: the next roster broadcast fills this in.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyCallEvent, roomId, state, viewer]);
 
   const presence = usePresenceSender({
     roomId,
@@ -187,6 +416,9 @@ export function RoomShell({ roomId }: { roomId: string }) {
           mime: file.mime,
           name: file.name,
           alt: file.name,
+          // FileBody renders this directly; without it the chip's size line
+          // was permanently blank.
+          sizeLabel: typeof file.size === "number" ? formatBytes(file.size) : null,
           roomFileId: file.id,
         },
       });
@@ -236,10 +468,17 @@ export function RoomShell({ roomId }: { roomId: string }) {
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
-    input.accept = "image/*,video/*,application/pdf,.doc,.docx,.pptx,.txt";
+    // The server's exact allow-list. The old `image/*` accepted HEIC/SVG/BMP
+    // that came back as a 415 after fully uploading — iPhone photos, usually.
+    input.accept = ROOM_UPLOAD_ACCEPT;
     input.onchange = () => {
       const files = [...(input.files ?? [])];
-      if (files.length > 0) void upload(files, { x: 0, y: 0 });
+      // Dropped where the user is looking, not at world origin — a picker has
+      // no drop point, and origin is off screen the moment the board has been
+      // panned, which read as "upload is broken".
+      if (files.length > 0) {
+        void upload(files, viewCenterRef.current?.() ?? { x: 0, y: 0 });
+      }
     };
     input.click();
   }, [upload]);
@@ -298,10 +537,11 @@ export function RoomShell({ roomId }: { roomId: string }) {
         return;
       }
 
-      // Draw stays armed until the stroke completes; it needs the next pointer
-      // gesture. Everything else places immediately.
-      // Modal tools stay armed until the gesture completes: a stroke needs a
-      // drag, a connector needs two clicks.
+      // Modal tools arm and wait for pointer gestures. Draw stays armed ACROSS
+      // strokes (a pen that needs re-picking per stroke cannot sketch) and is
+      // disarmed by Escape, V or another tool. Connect still disarms after one
+      // link — a mis-armed connect mutates selection on every subsequent
+      // click, which costs more than re-picking it.
       if (next === "draw" || next === "connect") {
         setTool(next);
         return;
@@ -333,11 +573,15 @@ export function RoomShell({ roomId }: { roomId: string }) {
         return;
       }
 
+      // Centred in the current VIEW: an origin-placed node is invisible the
+      // moment the board has been panned, which reads as the tool doing
+      // nothing at all.
+      const center = viewCenterRef.current?.() ?? { x: 0, y: 0 };
+      const size = DEFAULT_SIZE[kind] ?? { w: 240, h: 160 };
       const node = api.createNode({
         kind,
-        // Placed at the world origin for now; the viewport centres on it.
-        x: 0,
-        y: 0,
+        x: center.x - size.w / 2,
+        y: center.y - size.h / 2,
         text: kind === "STICKY" || kind === "TEXT" ? "" : null,
         data:
           kind === "PALETTE"
@@ -357,12 +601,69 @@ export function RoomShell({ roomId }: { roomId: string }) {
   );
 
   /**
+   * Keyboard tool shortcuts — Ctrl+Alt+letter (Ctrl+Alt+T text, Ctrl+Alt+S
+   * sticky, …), matching the toolbar tooltips. Window-level rather than on
+   * the board container: the board only receives keys while focused, and
+   * after any toolbar or panel click every shortcut would dead-key.
+   *
+   * Escape (unmodified) disarms an armed tool (the pen stays armed across
+   * strokes); the board's own Escape clears selection — both firing on one
+   * press is fine.
+   */
+  React.useEffect(() => {
+    // viewer.mode, not the later isClientMode const — that is declared after
+    // the loading/denied early returns and does not exist up here.
+    if (state !== "ready" || viewer?.mode === "CLIENT") return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      // The inline editor stops propagation itself; the editingId guard covers
+      // inspector fields and anything else that renders while editing.
+      if (editingId) return;
+      if (event.repeat) return;
+      // A shortcut fired while a dialog is up would create nodes behind the
+      // modal (dialogs park focus on plain buttons, which the tag guard below
+      // does not catch).
+      if (inviteOpen) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[role="dialog"]')) return;
+      if (
+        target &&
+        (target.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      ) {
+        return;
+      }
+      if (event.key === "Escape") {
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (tool !== "select") setTool("select");
+        return;
+      }
+
+      // Tools fire ONLY on Ctrl+Alt+letter (matcher owns the modifier rule).
+      // Matched on event.code, not event.key: on the Arabic/Hebrew layouts
+      // this product ships, `key` is a non-Latin character and letter
+      // shortcuts would die.
+      const next = matchToolShortcut(event);
+      if (!next) return;
+      // Whatever the browser binds to this combo, the board owns it now.
+      event.preventDefault();
+      // Viewers may switch back to select but must never reach a creation
+      // tool — onSelectTool's !canEdit branch would happily arm one.
+      if (!canEdit && next !== "select") return;
+      onSelectTool(next);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [state, viewer, editingId, inviteOpen, canEdit, tool, onSelectTool]);
+
+  /**
    * Commit an inline edit.
    *
-   * Goes through updateNode, so it becomes a version-guarded NODE_TEXT op and
-   * picks up the server-enforced edit lock — the same path any other text change
-   * takes. An empty sticky that was never typed into is removed rather than left
-   * as an invisible blank card someone has to hunt for.
+   * Goes through updateNode, so it becomes a version-guarded NODE_TEXT (or
+   * NODE_DATA) op and picks up the server-enforced edit lock — the same path
+   * any other change takes. Only a TEXT block that never had words is deleted
+   * on an empty commit; an empty sticky is a visible card and survives.
    */
   const commitEdit = React.useCallback(
     (nodeId: string, text: string) => {
@@ -370,20 +671,22 @@ export function RoomShell({ roomId }: { roomId: string }) {
       const node = api.byId.get(nodeId);
       if (!node) return;
 
-      const trimmed = text.trim();
-      // Discard a card that was created and never typed into — but ONLY a plain
-      // sticky or text block. Anything else (a shape someone recoloured, a
-      // decision card) is meaningful without words, and deleting it because the
-      // text is empty would destroy work.
-      const isBlankNote =
-        !trimmed && !node.text && (node.kind === "STICKY" || node.kind === "TEXT");
-      if (isBlankNote) {
-        api.deleteNodes([nodeId]);
-        setSelection(new Set());
-        return;
-      }
-      if (trimmed !== (node.text ?? "")) {
-        api.updateNode(nodeId, { text: trimmed || null });
+      // Which kinds delete when blank, which write data.title instead of text
+      // — all of that lives in planEditCommit, where it is unit-tested.
+      const plan = planEditCommit(node, text);
+      switch (plan.action) {
+        case "delete":
+          api.deleteNodes([nodeId]);
+          setSelection(new Set());
+          return;
+        case "text":
+          api.updateNode(nodeId, { text: plan.text });
+          return;
+        case "data":
+          api.updateNode(nodeId, { data: plan.data });
+          return;
+        case "none":
+          return;
       }
     },
     [api]
@@ -434,6 +737,10 @@ export function RoomShell({ roomId }: { roomId: string }) {
         saveStatus={saveStatus}
         streamStatus={streamStatus}
         onlineCount={new Set(participants.map((p) => p.userId)).size}
+        // The header's session timer, dormant until now, counts the call.
+        liveSince={
+          call.call.startedAt ? new Date(call.call.startedAt) : null
+        }
         onTogglePreview={
           viewer.isStaff ? () => setPreviewAsClient((v) => !v) : undefined
         }
@@ -487,6 +794,9 @@ export function RoomShell({ roomId }: { roomId: string }) {
               onRegisterCreateCapture={(capture) => {
                 captureCreateRef.current = capture;
               }}
+              onRegisterViewCenter={(getCenter) => {
+                viewCenterRef.current = getCenter;
+              }}
               onEditStart={setEditingId}
               onEditCommit={commitEdit}
               onEditCancel={() => setEditingId(null)}
@@ -517,11 +827,38 @@ export function RoomShell({ roomId }: { roomId: string }) {
                 return (
                   <NodeInspector
                     node={node}
-                    onStyle={(patch) =>
+                    onStyle={(patch) => {
+                      // Changing a TEXT node's font size scales its box by the
+                      // same ratio: characters-per-line stays constant, so the
+                      // wrap is preserved and 96px text does not vanish inside
+                      // the 260x80 box the node was created with.
+                      if (
+                        node.kind === "TEXT" &&
+                        typeof patch.fontSize === "number"
+                      ) {
+                        const prev = resolveTextStyle(node).fontSize;
+                        const next = clampFontSize(patch.fontSize);
+                        if (next !== prev) {
+                          const ratio = next / prev;
+                          api.resizeNodes(
+                            new Map([
+                              [
+                                node.id,
+                                {
+                                  x: node.x,
+                                  y: node.y,
+                                  w: Math.round(node.w * ratio),
+                                  h: Math.round(node.h * ratio),
+                                },
+                              ],
+                            ])
+                          );
+                        }
+                      }
                       api.updateNode(node.id, {
                         style: { ...node.style, ...patch },
-                      })
-                    }
+                      });
+                    }}
                     onData={(patch) =>
                       api.updateNode(node.id, {
                         data: { ...node.data, ...patch },
@@ -539,14 +876,44 @@ export function RoomShell({ roomId }: { roomId: string }) {
                 roomId={roomId}
                 selection={selection}
                 nodes={api.nodes}
-                onChanged={() => void reloadCanvas()}
+                onChanged={() => requestReload()}
                 onRequestApproval={() => void requestApproval()}
               />
             </div>
           )}
 
+          {/* Tiles stack above the controls in the column that was already
+              here for them. Bottom-centre keeps the PaxAiDock corner free. */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 p-4">
-            <MeetingPill />
+            {call.call.active && (
+              <CallTiles
+                members={call.call.members}
+                selfConnectionId={connectionId}
+                localStream={call.localStream}
+                remoteStreams={call.remoteStreams}
+                cameraOn={call.cameraOn}
+              />
+            )}
+            <MeetingPill
+              enabled={!!viewer}
+              joined={call.joined}
+              joining={call.joining}
+              idle={!call.call.active}
+              // Only the agency side may ring a room; a client joins a call
+              // that is already happening.
+              canStart={viewer.isStaff}
+              muted={call.muted}
+              cameraOn={call.cameraOn}
+              sharing={call.sharing}
+              handRaised={call.handRaised}
+              canScreenShare={call.canScreenShare}
+              onJoin={() => void call.join()}
+              onLeave={call.leave}
+              onToggleMute={call.toggleMute}
+              onToggleCamera={() => void call.toggleCamera()}
+              onToggleShare={() => void call.toggleShare()}
+              onToggleHand={call.toggleHand}
+            />
           </div>
 
           {viewer.can.useAi && (
@@ -558,14 +925,16 @@ export function RoomShell({ roomId }: { roomId: string }) {
                   // Placed as an AI_CARD, which is TEAM_ONLY by schema default
                   // AND barred from publication by kind. A generation becomes
                   // client-facing only when a person copies it into a real card.
+                  const center = viewCenterRef.current?.() ?? { x: 0, y: 0 };
                   const node = api.createNode({
                     kind: "AI_CARD",
-                    x: 0,
-                    y: 0,
+                    x: center.x - 160,
+                    y: center.y - 110,
                     w: 320,
                     h: 220,
                     text,
                   });
+                  captureCreateRef.current?.([node.id]);
                   setSelection(new Set([node.id]));
                 }}
               />

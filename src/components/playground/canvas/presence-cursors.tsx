@@ -37,8 +37,11 @@ const COLOURS = [
   "#EC4899",
 ];
 
-/** Stable per-user colour: the same person keeps their colour across sessions. */
-function colourFor(userId: string): string {
+/**
+ * Stable per-user colour: the same person keeps their colour across sessions.
+ * Exported so a call tile and a cursor agree on who is who.
+ */
+export function colourFor(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = (hash * 31 + userId.charCodeAt(i)) | 0;

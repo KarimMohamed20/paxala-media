@@ -193,11 +193,52 @@ would corrupt any canvas chrome built with `flex-row`.
 
 ---
 
+## 9. Calls are peer-to-peer mesh, signalled over the existing SSE channel
+
+Rooms carry live calls (camera, screen share, mute, raise hand) for up to five
+participants. Two decisions carry the design.
+
+**Mesh, not an SFU.** Every participant sends their media directly to every
+other one. Above roughly five people that stops working — each extra person is
+another full copy of your outgoing video — but below it, a media server is
+infrastructure to host, pay for and secure in exchange for nothing. PMP's
+calls are an agency and a client looking at a board together, not a webinar.
+Passing five would mean adding an SFU (LiveKit self-hosted), and the roster is
+capped server-side so that limit is enforced rather than discovered.
+
+**Signalling reuses the room's transport.** Offers, answers and ICE candidates
+go out over `POST /api/playground/rooms/[roomId]/call` and come back on the
+room's SSE stream — the same client→server / server→client split the op
+pipeline already uses, and for the same reason: an App Router handler receives
+a `Request`, never the socket, so a WebSocket upgrade is impossible without
+abandoning `output: "standalone"` (decision 3). This needed one new primitive:
+the bus could only broadcast, and an SDP offer is addressed to exactly one
+peer, so `sendTo` was added alongside it.
+
+Call state is in-memory beside the bus and is **never persisted**. A call is
+something happening right now; after a restart there is none, which is the
+truth. Routing signalling through `PlaygroundEvent` would also serialise every
+message on the room row and inflate the op sequence that every client's gap
+detector watches (decision 5).
+
+The consequence to know about: participants are addressed by SSE
+`connectionId`, and that changes every time a stream reconnects — which it
+does on a 15-minute timer. A dropped participant therefore keeps their seat
+for a 25-second grace window and reclaims it when the same user reappears, so
+a routine recycle looks like nothing at all instead of everybody dropping out
+of the call together.
+
+TURN (`coturn`, opt-in behind a compose profile) is reliability only: the
+peers that cannot connect directly are relayed, and everyone else never
+touches it. Credentials are HMAC-derived per user and expire; the shared
+secret never leaves the server.
+
+---
+
 ## What is deliberately NOT built
 
-- **Live video.** Absent from the brief's own MVP list. A `VideoProvider` seam
-  exists with a null implementation; the meeting pill renders visibly disabled
-  rather than hidden.
+- ~~**Live video.**~~ Built later as mesh WebRTC (see below); this entry is
+  kept for the record.
 - **Private file serving.** Owner decision: room uploads go to `public/uploads`,
   consistent with every other asset on the platform. Accepted residual risk — a
   leaked URL is readable without a session.

@@ -208,6 +208,23 @@ describe("routeConnector", () => {
     expect(route.path).not.toContain("NaN");
     expect(Number.isFinite(route.endAngle)).toBe(true);
   });
+
+  it("puts mid on the curve, halfway between the anchors on a symmetric route", () => {
+    // Horizontally symmetric layout: the control points mirror each other, so
+    // t=0.5 lands exactly between the two anchors.
+    const route = routeConnector(a, b);
+    expect(route.mid.x).toBeCloseTo((route.start.x + route.end.x) / 2, 6);
+    expect(route.mid.y).toBeCloseTo(50, 6);
+  });
+
+  it("keeps mid between the anchors on an offset route", () => {
+    const c = { x: 300, y: 260, w: 100, h: 100 };
+    const route = routeConnector(a, c);
+    expect(route.mid.x).toBeGreaterThan(Math.min(route.start.x, route.end.x));
+    expect(route.mid.x).toBeLessThan(Math.max(route.start.x, route.end.x));
+    expect(route.mid.y).toBeGreaterThan(Math.min(route.start.y, route.end.y));
+    expect(route.mid.y).toBeLessThan(Math.max(route.start.y, route.end.y));
+  });
 });
 
 describe("arrowHeadPath", () => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
+import { resolveUploadPath } from "@/lib/uploads-path";
 
 const MIME: Record<string, string> = {
   ".png": "image/png",
@@ -9,8 +10,14 @@ const MIME: Record<string, string> = {
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
   ".gif": "image/gif",
+  ".avif": "image/avif",
   ".mp4": "video/mp4",
   ".webm": "video/webm",
+  ".mov": "video/quicktime",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".pdf": "application/pdf",
+  ".txt": "text/plain",
 };
 
 export async function GET(
@@ -18,9 +25,13 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path: segments } = await params;
-  const filePath = path.join(process.cwd(), "public", "uploads", ...segments);
+  // Containment guard: a traversal segment must 404, never escape the root.
+  const filePath = resolveUploadPath(
+    path.join(process.cwd(), "public", "uploads"),
+    segments
+  );
 
-  if (!existsSync(filePath)) {
+  if (!filePath || !existsSync(filePath)) {
     return new NextResponse("Not found", { status: 404 });
   }
 
@@ -31,6 +42,9 @@ export async function GET(
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": contentType,
+      // Uploads must never be content-sniffed into something executable on
+      // the app's own origin.
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   });

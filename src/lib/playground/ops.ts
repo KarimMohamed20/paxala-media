@@ -124,6 +124,23 @@ export function isGeometryOp(type: OpType): boolean {
   return GEOMETRY_OPS.has(type);
 }
 
+/**
+ * The lowest sequence number a batch of results was assigned.
+ *
+ * Broadcast alongside the batch's final seq so a subscriber can tell "one
+ * frame carrying seqs 5..7" apart from "frames for 5 and 6 were lost" — seqs
+ * within a batch are contiguous because the room row lock is held from the
+ * first allocation to commit.
+ */
+export function firstAppliedSeq(results: readonly OpResult[]): number | undefined {
+  let first: number | undefined;
+  for (const result of results) {
+    if (!result.ok || result.seq === undefined) continue;
+    if (first === undefined || result.seq < first) first = result.seq;
+  }
+  return first;
+}
+
 // ---------------------------------------------------------------------------
 // Parsing
 // ---------------------------------------------------------------------------

@@ -5,7 +5,11 @@ import path from "path";
 import { randomUUID } from "crypto";
 import { authOptions } from "@/lib/auth";
 import { rateLimit } from "@/lib/security";
-import { MAX_UPLOAD_BYTES, formatBytes } from "@/lib/assets";
+import { formatBytes } from "@/lib/assets";
+import {
+  MAX_ROOM_UPLOAD_BYTES,
+  ROOM_UPLOAD_ALLOWED_MIME,
+} from "@/lib/playground/room-files";
 import { getFileUrl } from "@/lib/utils";
 import { getCloudinaryThumbUrl, uploadFile } from "@/lib/storage";
 import { resolveRoomActor } from "@/lib/playground/actors";
@@ -37,31 +41,8 @@ import {
 
 export const maxDuration = 300;
 
-/**
- * Accepted types, deliberately narrower than the Asset Library's list: a canvas
- * renders images, video and documents, and there is no reason for a room to
- * accept a zip or an executable-adjacent archive.
- */
-const ALLOWED_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "audio/mpeg",
-  "audio/wav",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "text/plain",
-]);
-
-/** Cap below the Asset Library's 500MB: a canvas reference is not a master. */
-const MAX_ROOM_UPLOAD_BYTES = Math.min(MAX_UPLOAD_BYTES, 50 * 1024 * 1024);
+// The allow-list and cap live in @/lib/playground/room-files so the picker's
+// `accept`, the client pre-check and this route can never disagree.
 
 const EXTENSION: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -162,7 +143,7 @@ export async function POST(
         { status: 413 }
       );
     }
-    if (!ALLOWED_MIME.has(file.type)) {
+    if (!ROOM_UPLOAD_ALLOWED_MIME.has(file.type)) {
       return NextResponse.json(
         { error: `Cannot add "${file.type || "unknown"}" files to a room.` },
         { status: 415 }

@@ -68,6 +68,18 @@ const eslintConfig = defineConfig([
               message:
                 "The PAX AI provider runs server-side only and holds the API key. Call the /api/playground/rooms/[roomId]/ai route instead of importing it.",
             },
+            {
+              // call/types.ts is shared with the browser on purpose; the two
+              // modules below are not — one derives TURN credentials from the
+              // shared secret, the other holds live call state for the whole
+              // process.
+              group: [
+                "@/lib/playground/call/ice",
+                "@/lib/playground/call/registry",
+              ],
+              message:
+                "TURN credentials and call state are server-side only. The browser gets its iceServers from the /api/playground/rooms/[roomId]/call join response.",
+            },
           ],
         },
       ],

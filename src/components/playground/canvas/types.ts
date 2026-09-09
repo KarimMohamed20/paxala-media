@@ -71,6 +71,13 @@ export type DragState =
       startWorld: { x: number; y: number };
       /** Node id -> its position when the drag began. */
       origin: Map<string, { x: number; y: number }>;
+      /**
+       * Set when the press landed on a node that was ALREADY the sole
+       * selection and is editable: if the gesture ends as a tap (no movement),
+       * it opens the inline editor — the unhurried click-then-click-to-write
+       * pattern, with none of the double-click timing sensitivity.
+       */
+      editNodeId?: string | null;
     }
   | {
       kind: "resize";
@@ -95,3 +102,11 @@ export type ResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 /** Minimum node size in world units, so a node can never be resized to nothing. */
 export const MIN_NODE_SIZE = 40;
+
+/**
+ * The colour a sticky is born with. Shared by the body renderer, the
+ * zoomed-out LOD block AND the inline editor — the editor falling back to a
+ * different colour is exactly how "type into a fresh sticky" once became
+ * dark-on-dark invisible text.
+ */
+export const STICKY_FALLBACK_BACKGROUND = "#F5E6A8";

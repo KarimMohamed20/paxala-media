@@ -13,8 +13,10 @@ import {
 import { getStatusDotClass } from "@/components/content/content-meta";
 import { strokeToPath } from "@/lib/playground/geometry";
 import { kindLabel } from "@/lib/playground/a11y";
+import { drawingBaseSize } from "./drawing";
+import { resolveTextStyle } from "./text-style";
 import { cn } from "@/lib/utils";
-import type { CanvasNodeData } from "./types";
+import { STICKY_FALLBACK_BACKGROUND, type CanvasNodeData } from "./types";
 
 /**
  * Renderers for the canvas vocabulary.
@@ -33,7 +35,9 @@ import type { CanvasNodeData } from "./types";
 
 export function StickyBody({ node }: { node: CanvasNodeData }) {
   const background =
-    typeof node.style.background === "string" ? node.style.background : "#F5E6A8";
+    typeof node.style.background === "string"
+      ? node.style.background
+      : STICKY_FALLBACK_BACKGROUND;
 
   return (
     <div
@@ -51,10 +55,16 @@ export function StickyBody({ node }: { node: CanvasNodeData }) {
 }
 
 export function TextBody({ node }: { node: CanvasNodeData }) {
+  // Deliberately no background, border or padding: a TEXT node is words
+  // sitting directly on the board, not a card. The chrome-free look is why it
+  // exists alongside STICKY at all.
+  const { color, fontSize, fontWeight, textAlign } = resolveTextStyle(node);
+
   return (
     <p
       dir="auto"
-      className="h-full w-full overflow-hidden whitespace-pre-wrap break-words text-[15px] leading-snug text-white"
+      className="h-full w-full overflow-hidden whitespace-pre-wrap break-words leading-snug"
+      style={{ color, fontSize, fontWeight, textAlign }}
     >
       {node.text}
     </p>
@@ -152,20 +162,34 @@ export function ShapeBody({ node }: { node: CanvasNodeData }) {
   const stroke = typeof node.style.stroke === "string" ? node.style.stroke : "#E20C0C";
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="h-full w-full overflow-visible"
-      aria-hidden="true"
-    >
-      {shape === "ellipse" ? (
-        <ellipse cx="50" cy="50" rx="49" ry="49" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-      ) : shape === "triangle" ? (
-        <polygon points="50,2 98,98 2,98" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-      ) : (
-        <rect x="1" y="1" width="98" height="98" rx="4" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+    <div className="relative h-full w-full">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="h-full w-full overflow-visible"
+        aria-hidden="true"
+      >
+        {shape === "ellipse" ? (
+          <ellipse cx="50" cy="50" rx="49" ry="49" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        ) : shape === "triangle" ? (
+          <polygon points="50,2 98,98 2,98" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        ) : (
+          <rect x="1" y="1" width="98" height="98" rx="4" fill={fill} stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        )}
+      </svg>
+      {/* The label a double-click types. Centred over the shape; metrics are
+          mirrored by the SHAPE branch of NodeEditor, so keep them in sync. */}
+      {node.text && (
+        <span className="absolute inset-0 grid place-items-center overflow-hidden px-3">
+          <p
+            dir="auto"
+            className="max-h-full overflow-hidden whitespace-pre-wrap break-words text-center text-xs font-medium leading-snug text-white"
+          >
+            {node.text}
+          </p>
+        </span>
       )}
-    </svg>
+    </div>
   );
 }
 
@@ -193,9 +217,16 @@ export function DrawingBody({ node }: { node: CanvasNodeData }) {
 
   if (!path) return null;
 
+  // The viewBox is the box the points were STORED against, not the current
+  // w/h — that difference is what makes a resize stretch the artwork (see
+  // drawingBaseSize). preserveAspectRatio="none" mirrors ShapeBody, and
+  // non-scaling-stroke below keeps the line weight constant while it scales.
+  const base = drawingBaseSize(node);
+
   return (
     <svg
-      viewBox={`0 0 ${Math.max(1, node.w)} ${Math.max(1, node.h)}`}
+      viewBox={`0 0 ${base.w} ${base.h}`}
+      preserveAspectRatio="none"
       className="h-full w-full overflow-visible"
       aria-hidden="true"
     >

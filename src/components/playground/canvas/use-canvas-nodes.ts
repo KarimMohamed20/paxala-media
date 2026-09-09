@@ -55,7 +55,7 @@ export type CanvasNodesApi = {
   ) => void;
 };
 
-const DEFAULT_SIZE: Partial<Record<PlaygroundNodeKind, { w: number; h: number }>> = {
+export const DEFAULT_SIZE: Partial<Record<PlaygroundNodeKind, { w: number; h: number }>> = {
   STICKY: { w: 180, h: 180 },
   TEXT: { w: 260, h: 80 },
   IMAGE: { w: 320, h: 220 },
@@ -71,6 +71,16 @@ export function useCanvasNodes(
     onStatus?: (status: OutboxStatus, queued: number) => void;
     /** Surfaced so the UI can say "Sara is editing" instead of swallowing a 409. */
     onRejected?: (result: OpResult) => void;
+    /**
+     * A connector the server refused (endpoint gone, malformed id). The
+     * optimistic edge is already rolled back when this fires; the callback is
+     * only for telling the user why their arrow vanished.
+     */
+    onEdgeRejected?: (result: OpResult) => void;
+    /** Current SSE connection id, forwarded to the outbox for echo exclusion. */
+    getConnectionId?: () => string | null;
+    /** Room seq after each acknowledged batch — see OutboxCallbacks.onRoomSeq. */
+    onRoomSeq?: (seq: number) => void;
   } = {}
 ): CanvasNodesApi {
   const [nodes, setNodes] = React.useState<CanvasNodeData[]>([]);
@@ -82,12 +92,26 @@ export function useCanvasNodes(
   /** Per-node version, tracked so discrete ops can carry a baseVersion. */
   const versions = React.useRef(new Map<string, number>());
 
-  const { roomId, readOnly, onStatus, onRejected } = options;
+  const {
+    roomId,
+    readOnly,
+    onStatus,
+    onRejected,
+    onEdgeRejected,
+    getConnectionId,
+    onRoomSeq,
+  } = options;
   const onStatusRef = React.useRef(onStatus);
   const onRejectedRef = React.useRef(onRejected);
+  const onEdgeRejectedRef = React.useRef(onEdgeRejected);
+  const getConnectionIdRef = React.useRef(getConnectionId);
+  const onRoomSeqRef = React.useRef(onRoomSeq);
   React.useEffect(() => {
     onStatusRef.current = onStatus;
     onRejectedRef.current = onRejected;
+    onEdgeRejectedRef.current = onEdgeRejected;
+    getConnectionIdRef.current = getConnectionId;
+    onRoomSeqRef.current = onRoomSeq;
   });
 
   const outboxRef = React.useRef<Outbox | null>(null);
@@ -97,8 +121,24 @@ export function useCanvasNodes(
 
     const outbox = new Outbox(roomId, {
       onStatus: (status, queued) => onStatusRef.current?.(status, queued),
+      getConnectionId: () => getConnectionIdRef.current?.() ?? null,
+      onRoomSeq: (seq) => onRoomSeqRef.current?.(seq),
       onResults: (results) => {
         for (const result of results) {
+          const edgeId = pendingEdgeByOp.current.get(result.clientOpId);
+          if (edgeId !== undefined) {
+            pendingEdgeByOp.current.delete(result.clientOpId);
+            pendingNodeByOp.current.delete(result.clientOpId);
+            if (!result.ok) {
+              // The server refused the connector (endpoint gone, malformed id).
+              // Without this rollback the arrow lingers on screen until the
+              // next snapshot silently disappears it — the "my connection
+              // vanished when I moved the note" report.
+              setEdges((prev) => prev.filter((edge) => edge.id !== edgeId));
+              onEdgeRejectedRef.current?.(result);
+            }
+            continue;
+          }
           if (result.ok) {
             if (result.version !== undefined) {
               // Adopt the server's version so the NEXT discrete op on this node
@@ -129,14 +169,17 @@ export function useCanvasNodes(
 
   /** clientOpId -> nodeId, so a result can be attributed back to a node. */
   const pendingNodeByOp = React.useRef(new Map<string, string>());
+  /** clientOpId -> edgeId, so a refused EDGE_CREATE can roll its edge back. */
+  const pendingEdgeByOp = React.useRef(new Map<string, string>());
 
   const emit = React.useCallback(
     (type: string, nodeId: string, payload: Record<string, unknown>) => {
       const outbox = outboxRef.current;
-      if (!outbox) return;
+      if (!outbox) return undefined;
       const clientOpId = newOpId();
       pendingNodeByOp.current.set(clientOpId, nodeId);
       outbox.push({ clientOpId, type, nodeId, ...payload });
+      return clientOpId;
     },
     []
   );
@@ -280,12 +323,13 @@ export function useCanvasNodes(
       });
 
       if (!created) return null;
-      emit("EDGE_CREATE", fromNodeId, {
+      const clientOpId = emit("EDGE_CREATE", fromNodeId, {
         edgeId: edge.id,
         toNodeId,
         kind: edge.kind,
         style: {},
       });
+      if (clientOpId) pendingEdgeByOp.current.set(clientOpId, edge.id);
       return edge;
     },
     [emit]

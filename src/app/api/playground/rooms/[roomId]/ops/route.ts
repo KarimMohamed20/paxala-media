@@ -8,6 +8,7 @@ import { getMembership, getRoomForAccess } from "@/lib/playground/repo";
 import {
   MAX_OPS_PER_BATCH,
   applyOps,
+  firstAppliedSeq,
   parseOp,
   type OpResult,
   type ParsedOp,
@@ -131,6 +132,9 @@ export async function POST(
         {
           type: "ops",
           seq: roomSeq,
+          // Without firstSeq a 3-op batch stamps its frame 3 past the previous
+          // one and every subscriber misreads the jump as lost frames.
+          firstSeq: firstAppliedSeq(results),
           ops: parsed.filter((op) =>
             applied.some((r) => r.clientOpId === op.clientOpId)
           ),

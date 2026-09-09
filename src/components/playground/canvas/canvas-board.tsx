@@ -16,6 +16,7 @@ import {
 import { describeNode } from "@/lib/playground/a11y";
 import type { Participant } from "@/lib/playground/bus";
 import { CanvasViewport, type CanvasViewportHandle } from "./canvas-viewport";
+import { isEditable } from "./node-editor";
 import { PresenceCursors } from "./presence-cursors";
 import { Minimap } from "./minimap";
 import { nodeRect, readingOrder } from "./types";
@@ -46,6 +47,7 @@ export function CanvasBoard({
   onDropFiles,
   editingId = null,
   onRegisterCreateCapture,
+  onRegisterViewCenter,
   onEditStart,
   onEditCommit,
   onEditCancel,
@@ -65,6 +67,10 @@ export function CanvasBoard({
   editingId?: string | null;
   /** Hands the undo-capture callback up to whoever creates nodes. */
   onRegisterCreateCapture?: (capture: (ids: readonly string[]) => void) => void;
+  /** Hands up a getter for the world point at the middle of the view, so the
+   * shell can place created/uploaded nodes where the user is LOOKING rather
+   * than at world origin — which may be panned far off screen. */
+  onRegisterViewCenter?: (getCenter: () => { x: number; y: number }) => void;
   onEditStart?: (nodeId: string) => void;
   onEditCommit?: (nodeId: string, text: string) => void;
   onEditCancel?: () => void;
@@ -233,6 +239,19 @@ export function CanvasBoard({
             announce(t("canvas.selectionCleared"));
           }
           break;
+        case "Enter": {
+          // The keyboard twin of double-click (Figma/Miro convention): Enter
+          // on a single selected editable node opens its inline editor.
+          if (readOnly || !onEditStart || selectionRef.current.size !== 1) {
+            return;
+          }
+          const id = [...selectionRef.current][0];
+          const node = api.byId.get(id);
+          if (!node || !isEditable(node)) return;
+          event.preventDefault();
+          onEditStart(id);
+          break;
+        }
         case "Delete":
         case "Backspace": {
           if (readOnly || selectionRef.current.size === 0) return;
@@ -277,6 +296,7 @@ export function CanvasBoard({
     moveFocus,
     nodesRef,
     onSelectionChange,
+    onEditStart,
     editingIdRef,
     readOnly,
     resetZoom,
@@ -330,6 +350,20 @@ export function CanvasBoard({
     onRegisterCreateCapture?.(captureCreate);
   }, [captureCreate, onRegisterCreateCapture]);
 
+  // Reads the DOM at call time rather than closing over camera/size state, so
+  // the getter registered once stays correct across every pan and resize.
+  const viewCenter = React.useCallback((): { x: number; y: number } => {
+    const handle = viewportRef.current;
+    const container = containerRef.current;
+    if (!handle || !container) return { x: 0, y: 0 };
+    const rect = container.getBoundingClientRect();
+    return handle.toWorld({ x: rect.width / 2, y: rect.height / 2 });
+  }, []);
+
+  React.useEffect(() => {
+    onRegisterViewCenter?.(viewCenter);
+  }, [onRegisterViewCenter, viewCenter]);
+
   const zoomPercent = Math.round(camera.z * 100);
 
   return (
@@ -363,6 +397,7 @@ export function CanvasBoard({
         }
         onBeforeMove={captureMove}
         onBeforeResize={captureResize}
+        onCreated={captureCreate}
       />
 
       {/* Zoom controls, inline-start bottom, matching the reference. */}

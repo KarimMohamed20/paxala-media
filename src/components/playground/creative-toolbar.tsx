@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { TOOL_SHORTCUTS, shortcutLabel, type ToolId } from "./toolbar-shortcuts";
 
 /**
  * The left creative toolbar.
@@ -25,21 +26,30 @@ import { cn } from "@/lib/utils";
  * more disorienting than one that shows what is coming, and a disabled control
  * with an explanation is not a disconnected button.
  *
- * Icon + label stacked, matching the reference. Keyboard shortcuts are declared
- * here so the tooltip and the eventual key handler cannot drift apart.
+ * Icon + label stacked, matching the reference. The tool list and its letters
+ * live in toolbar-shortcuts.ts — the same table the key handler reads — so the
+ * tooltip and the handler cannot drift apart. Only the icons live here.
  */
 
-export type ToolId =
-  | "select"
-  | "sticky"
-  | "draw"
-  | "text"
-  | "shape"
-  | "connect"
-  | "upload"
-  | "frame"
-  | "palette"
-  | "ai";
+export type { ToolId } from "./toolbar-shortcuts";
+
+const TOOL_ICONS: Record<
+  ToolId,
+  React.ComponentType<{ size?: number; className?: string }>
+> = {
+  select: MousePointer2,
+  sticky: StickyNote,
+  draw: Pencil,
+  text: Type,
+  shape: Square,
+  // Without connect the whole connector subsystem — edge ops, the SVG layer,
+  // the bezier routing — is unreachable from the UI.
+  connect: Spline,
+  upload: ImageIcon,
+  frame: Frame,
+  palette: Palette,
+  ai: Sparkles,
+};
 
 export const TOOLS: ReadonlyArray<{
   id: ToolId;
@@ -47,20 +57,11 @@ export const TOOLS: ReadonlyArray<{
   shortcut: string;
   /** Draws the red dot the reference puts on AI Spark. */
   accent?: boolean;
-}> = [
-  { id: "select", icon: MousePointer2, shortcut: "V" },
-  { id: "sticky", icon: StickyNote, shortcut: "S" },
-  { id: "draw", icon: Pencil, shortcut: "D" },
-  { id: "text", icon: Type, shortcut: "T" },
-  { id: "shape", icon: Square, shortcut: "R" },
-  // Without this the whole connector subsystem — edge ops, the SVG layer, the
-  // bezier routing — is unreachable from the UI.
-  { id: "connect", icon: Spline, shortcut: "C" },
-  { id: "upload", icon: ImageIcon, shortcut: "U" },
-  { id: "frame", icon: Frame, shortcut: "F" },
-  { id: "palette", icon: Palette, shortcut: "P" },
-  { id: "ai", icon: Sparkles, shortcut: "K", accent: true },
-];
+}> = TOOL_SHORTCUTS.map((tool) => ({
+  ...tool,
+  icon: TOOL_ICONS[tool.id],
+  accent: tool.id === "ai" || undefined,
+}));
 
 export function CreativeToolbar({
   active = "select",
@@ -88,7 +89,7 @@ export function CreativeToolbar({
           <Tooltip
             key={tool.id}
             label={disabled ? (disabledReason ?? label) : label}
-            shortcut={disabled ? undefined : tool.shortcut}
+            shortcut={disabled ? undefined : shortcutLabel(tool.shortcut)}
             side="end"
           >
             <button
