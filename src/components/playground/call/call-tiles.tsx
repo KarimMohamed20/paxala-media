@@ -45,9 +45,12 @@ export function CallTiles({
       {members.map((member) => {
         const isSelf = member.connectionId === selfConnectionId;
         const stream = isSelf ? localStream : remoteStreams.get(member.connectionId) ?? null;
-        // The local preview shows video only while the camera is actually on;
-        // the stream object persists across toggles.
-        const showVideo = isSelf ? cameraOn || member.sharing : true;
+        // Driven by the roster, not by whether a stream exists: a camera that
+        // is off leaves its track in place but muted, so the element would
+        // otherwise show a frozen black rectangle instead of an avatar.
+        const showVideo = isSelf
+          ? cameraOn || member.sharing
+          : member.cameraOn || member.sharing;
 
         return (
           <Tile
@@ -107,23 +110,27 @@ function Tile({
       )}
       style={{ outline: `2px solid ${colour}`, outlineOffset: -2 }}
     >
-      {live ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          // Never play your own microphone back into the room.
-          muted={isSelf}
-          className={cn(
-            "h-full w-full",
-            member.sharing ? "object-contain" : "object-cover",
-            // A self-view that is not mirrored feels wrong to everyone; a
-            // shared screen must never be mirrored, or text reads backwards.
-            isSelf && !member.sharing && "-scale-x-100"
-          )}
-        />
-      ) : (
-        <span className="grid h-full w-full place-items-center">
+      {/* ALWAYS mounted, even with the camera off — this element plays the
+          remote AUDIO too. Rendering the avatar instead of it (rather than
+          over it) meant a camera-off participant, which is how everyone
+          joins, could not be heard at all. */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        // Never play your own microphone back into the room.
+        muted={isSelf}
+        className={cn(
+          "absolute inset-0 h-full w-full",
+          member.sharing ? "object-contain" : "object-cover",
+          // A self-view that is not mirrored feels wrong to everyone; a
+          // shared screen must never be mirrored, or text reads backwards.
+          isSelf && !member.sharing && "-scale-x-100"
+        )}
+      />
+
+      {!live && (
+        <span className="absolute inset-0 grid place-items-center bg-neutral-950">
           {member.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

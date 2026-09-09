@@ -205,12 +205,21 @@ export function useRoomCall({
       };
 
       pc.ontrack = (event) => {
-        const [stream] = event.streams;
-        if (!stream) return;
+        // The stream is assembled HERE from the individual tracks rather than
+        // taken from `event.streams`. Transceivers are created up front with
+        // no track attached (so later camera toggles are a replaceTrack), and
+        // a transceiver with no associated stream produces no `a=msid` line —
+        // which means `event.streams` arrives EMPTY. Reading it and bailing
+        // out silently discarded every remote track: the call connected and
+        // nobody could see or hear anyone.
         setRemoteStreams((previous) => {
-          if (previous.get(peerId) === stream) return previous;
+          const existing = previous.get(peerId);
+          const tracks = existing ? existing.getTracks() : [];
+          if (tracks.includes(event.track)) return previous;
           const next = new Map(previous);
-          next.set(peerId, stream);
+          // A fresh MediaStream per track arrival: mutating one in place does
+          // not change its identity, so React would never re-render the tile.
+          next.set(peerId, new MediaStream([...tracks, event.track]));
           return next;
         });
       };
@@ -229,29 +238,11 @@ export function useRoomCall({
     [attachLocalTracks, signal]
   );
 
-  /**
-   * Open the negotiation with a peer.
-   *
-   * Only the impolite side calls this on join: if both offered, every new
-   * participant would start with a collision that perfect negotiation then has
-   * to unwind.
-   */
-  const kickOff = React.useCallback(
-    async (entry: PeerEntry, peerId: string) => {
-      try {
-        entry.makingOffer = true;
-        await entry.pc.setLocalDescription();
-        if (entry.pc.localDescription) {
-          signal(peerId, { description: entry.pc.localDescription });
-        }
-      } catch {
-        // Handled by the ICE restart on failure.
-      } finally {
-        entry.makingOffer = false;
-      }
-    },
-    [signal]
-  );
+  // NOTE: nothing offers explicitly. Adding the transceivers in createPeer
+  // already marks the connection negotiation-needed, so `onnegotiationneeded`
+  // fires on its own. An explicit kick-off on top of it sent a SECOND offer
+  // that raced the first — perfect negotiation then had to unwind a collision
+  // that need never have happened.
 
   const closePeer = React.useCallback((peerId: string) => {
     const entry = peersRef.current.get(peerId);
@@ -289,13 +280,10 @@ export function useRoomCall({
       for (const peerId of removed) closePeer(peerId);
       for (const member of added) {
         if (peersRef.current.has(member.connectionId)) continue;
-        const entry = createPeer(member.connectionId);
-        // Only one side opens, or both offer into a collision on every join.
-        // The impolite peer offers; the polite one waits and answers.
-        if (!entry.polite) void kickOff(entry, member.connectionId);
+        createPeer(member.connectionId);
       }
     },
-    [closePeer, createPeer, kickOff]
+    [closePeer, createPeer]
   );
 
   /** An offer, answer or candidate from one peer. */
@@ -412,13 +400,12 @@ export function useRoomCall({
     const selfId = connectionIdRef.current;
     if (selfId) {
       for (const member of peersOf(data.call, selfId)) {
-        const entry = createPeer(member.connectionId);
-        if (!entry.polite) void kickOff(entry, member.connectionId);
+        createPeer(member.connectionId);
       }
     }
     setCall(data.call);
     callRef.current = data.call;
-  }, [createPeer, joining, kickOff, post]);
+  }, [createPeer, joining, post]);
 
   const leave = React.useCallback(() => {
     if (!joinedRef.current) return;
@@ -552,11 +539,10 @@ export function useRoomCall({
       iceServersRef.current = data.iceServers ?? iceServersRef.current;
       setCall(data.call);
       for (const member of peersOf(data.call, connectionId)) {
-        const entry = createPeer(member.connectionId);
-        if (!entry.polite) void kickOff(entry, member.connectionId);
+        createPeer(member.connectionId);
       }
     });
-  }, [closePeer, connectionId, createPeer, kickOff, post, teardown]);
+  }, [closePeer, connectionId, createPeer, post, teardown]);
 
   React.useEffect(() => {
     const onPageHide = () => {
