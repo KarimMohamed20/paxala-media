@@ -61,6 +61,13 @@ services:
       # and must never become a NEXT_PUBLIC_ var.
       - TURN_URL=${TURN_URL}
       - TURN_SECRET=${TURN_SECRET}
+      # PAX AI. Without GEMINI_API_KEY the provider falls back to a
+      # deterministic mock — the dock still works, it just returns canned text
+      # instead of spending money. Server-side only.
+      - PLAYGROUND_AI_PROVIDER=${PLAYGROUND_AI_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - AI_MONTHLY_CALL_CAP=${AI_MONTHLY_CALL_CAP:-5000}
     depends_on:
       postgres:
         condition: service_healthy
