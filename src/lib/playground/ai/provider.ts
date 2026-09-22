@@ -19,6 +19,12 @@ export type AiRequest = {
   systemPrompt: string;
   userPrompt: string;
   maxOutputTokens?: number;
+  /**
+   * JSON Schema for structured output. When present the provider must return
+   * JSON conforming to it (as text) — used by "build on the board", whose
+   * answer is a plan of canvas items rather than prose.
+   */
+  responseSchema?: Readonly<Record<string, unknown>>;
 };
 
 export type AiResponse = {
@@ -37,6 +43,13 @@ export interface AiProvider {
 
 /** Hard ceiling on a single generation. A campaign route is not a novel. */
 export const MAX_OUTPUT_TOKENS = 2048;
+
+/**
+ * Ceiling for a structured board plan. Higher than prose because JSON spends
+ * tokens on keys and punctuation: thirty items with their structure runs past
+ * 2048, and a plan cut off mid-object is unparseable, not merely short.
+ */
+export const COMPOSE_MAX_OUTPUT_TOKENS = 4096;
 
 /**
  * Wall-clock limit for one provider call.

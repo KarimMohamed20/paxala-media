@@ -10,11 +10,28 @@ import {
   getRoomDetail,
   getRoomForAccess,
   readAiContextNodes,
+  readComposeContextNodes,
   recordAiRun,
 } from "@/lib/playground/repo";
 import { buildBrief, buildContext } from "@/lib/playground/ai/context";
-import { getAiProvider, isAiBillable, MAX_OUTPUT_TOKENS } from "@/lib/playground/ai/provider";
+import {
+  COMPOSE_SCHEMA,
+  COMPOSE_SYSTEM,
+  MAX_COMPOSE_CONTEXT_NODES,
+  buildBoardContext,
+  buildComposePrompt,
+  extractJson,
+  parseComposePlan,
+} from "@/lib/playground/ai/compose";
+import {
+  COMPOSE_MAX_OUTPUT_TOKENS,
+  getAiProvider,
+  isAiBillable,
+  MAX_OUTPUT_TOKENS,
+  type AiProvider,
+} from "@/lib/playground/ai/provider";
 import { AI_TASK_IDS, getTask } from "@/lib/playground/ai/tasks";
+import { MAX_COMPOSE_INSTRUCTION } from "@/lib/playground/compose-plan";
 
 /**
  * POST /api/playground/rooms/[roomId]/ai
@@ -23,10 +40,16 @@ import { AI_TASK_IDS, getTask } from "@/lib/playground/ai/tasks";
  * a client asking for a generation never reaches the parsing code, let alone the
  * provider.
  *
- * THE BROWSER SENDS `{ intent, nodeIds }`. It cannot send a prompt. The system
- * and instruction text live in the server-side registry, and the canvas content
- * is re-read from the database scoped to this room. Without that, this endpoint
- * would be an authenticated, free Gemini proxy attached to PMP's billing.
+ * THE BROWSER SENDS `{ intent, nodeIds }`. For every registry task it cannot
+ * send a prompt: the system and instruction text live server-side, and the
+ * canvas content is re-read from the database scoped to this room. Without
+ * that, this endpoint would be an authenticated, free Gemini proxy attached to
+ * PMP's billing.
+ *
+ * The single exception is `intent: "compose"` ("build on the board"), which
+ * carries a person's own request (≤1000 chars). It passes every gate below
+ * first, its answer is schema-locked board items rather than prose, and the
+ * request is recorded verbatim — see handleCompose and ai/compose.ts.
  *
  * SPEND IS BOUNDED THREE WAYS, deliberately layered:
  *   per user   in-memory, stops one person hammering it
@@ -108,6 +131,20 @@ export async function POST(
     }
 
     const body = await request.json();
+
+    // "Build on the board" — the one free-form request. It runs AFTER every
+    // gate above (studio-only, both rate limits, the monthly cap), so it is
+    // bounded exactly like the registry tasks; see ai/compose.ts for why a
+    // person's own words are acceptable here and nowhere else.
+    if (body?.intent === "compose") {
+      return await handleCompose({
+        roomId,
+        body,
+        userId: access.actor.userId,
+        provider,
+      });
+    }
+
     const task = getTask(body.intent);
     if (!task) {
       return NextResponse.json(
@@ -205,4 +242,142 @@ export async function POST(
     console.error("Playground AI error:", error);
     return NextResponse.json({ error: "PAX AI request failed" }, { status: 500 });
   }
+}
+
+/**
+ * Handle a compose request: a free-form instruction, answered with a
+ * validated PLAN of board items.
+ *
+ * Like every other PAX run this writes nothing to the canvas. The plan goes
+ * back to the person who asked, they see a preview, and adding it is an
+ * ordinary NODE_CREATE they trigger — the guarantee that no model output
+ * lands beside human work unconfirmed is unchanged.
+ */
+async function handleCompose({
+  roomId,
+  body,
+  userId,
+  provider,
+}: {
+  roomId: string;
+  body: Record<string, unknown>;
+  userId: string;
+  provider: AiProvider;
+}) {
+  const instruction =
+    typeof body.instruction === "string" ? body.instruction.trim() : "";
+  if (!instruction) {
+    return NextResponse.json(
+      { error: "Tell PAX what to build.", code: "EMPTY_REQUEST" },
+      { status: 400 }
+    );
+  }
+  // Refused, not truncated: silently cutting someone's brief would answer a
+  // different question from the one they asked.
+  if (instruction.length > MAX_COMPOSE_INSTRUCTION) {
+    return NextResponse.json(
+      { error: "That request is too long.", code: "REQUEST_TOO_LONG" },
+      { status: 400 }
+    );
+  }
+
+  const selectedIds: string[] = Array.isArray(body.nodeIds)
+    ? (body.nodeIds as unknown[])
+        .filter((id): id is string => typeof id === "string")
+        .slice(0, MAX_COMPOSE_CONTEXT_NODES)
+    : [];
+
+  // Re-read from the database, scoped to this room: whatever the browser
+  // believes the board says is irrelevant.
+  const { selected, others, frames } = await readComposeContextNodes(
+    roomId,
+    selectedIds,
+    MAX_COMPOSE_CONTEXT_NODES
+  );
+  const board = buildBoardContext(selected, others, frames);
+
+  const detail = await getRoomDetail(roomId);
+  const brief = detail ? buildBrief(detail) : "";
+  const userPrompt = buildComposePrompt({ brief, board: board.text, instruction });
+
+  const base = {
+    roomId,
+    intent: "compose",
+    nodeIds: board.nodeIds,
+    createdById: userId,
+  };
+
+  let result: Awaited<ReturnType<AiProvider["generate"]>>;
+  try {
+    result = await provider.generate({
+      systemPrompt: COMPOSE_SYSTEM,
+      userPrompt,
+      maxOutputTokens: COMPOSE_MAX_OUTPUT_TOKENS,
+      responseSchema: COMPOSE_SCHEMA,
+    });
+  } catch (error) {
+    await recordAiRun({
+      ...base,
+      // The request is kept even on failure: a free-form prompt is exactly
+      // the thing an audit of PAX usage needs to be able to read back.
+      output: JSON.stringify({ request: instruction }),
+      status: AiRunStatus.FAILED,
+      error: error instanceof Error ? error.message.slice(0, 500) : "unknown",
+      provider: provider.name,
+      model: provider.model,
+      tokensIn: null,
+      tokensOut: null,
+    });
+    return NextResponse.json(
+      { error: "PAX AI could not answer that. Try again in a moment." },
+      { status: 502 }
+    );
+  }
+
+  const plan = parseComposePlan(extractJson(result.text), board.refs);
+  const usage = {
+    provider: result.provider,
+    model: result.model,
+    tokensIn: result.tokensIn,
+    tokensOut: result.tokensOut,
+  };
+
+  if (!plan) {
+    // Recorded FAILED (so it is visible in reporting and does not consume
+    // the monthly budget), with the raw reply for whoever debugs it.
+    await recordAiRun({
+      ...base,
+      output: JSON.stringify({ request: instruction, raw: result.text.slice(0, 4000) }),
+      status: AiRunStatus.FAILED,
+      error: "Plan had no usable items",
+      ...usage,
+    });
+    return NextResponse.json(
+      {
+        error: "PAX came back with nothing usable. Try rephrasing the request.",
+        code: "UNUSABLE_PLAN",
+      },
+      { status: 502 }
+    );
+  }
+
+  // The run log holds the request verbatim beside the plan it produced.
+  // `intent` stays a registry id ("compose"); the person's words live in the
+  // output document, so reporting that counts intents is unaffected.
+  const run = await recordAiRun({
+    ...base,
+    output: JSON.stringify({ request: instruction, plan }),
+    status: AiRunStatus.OK,
+    error: null,
+    ...usage,
+  });
+
+  return NextResponse.json({
+    id: run.id,
+    intent: "compose",
+    plan,
+    provider: usage.provider,
+    model: usage.model,
+    configured: isAiBillable(),
+  });
 }

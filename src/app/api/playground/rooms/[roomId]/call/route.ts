@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { rateLimit } from "@/lib/security";
-import { resolveRoomActor } from "@/lib/playground/actors";
+import { requireStudioActor, resolveRoomActor } from "@/lib/playground/actors";
 import { roomBus } from "@/lib/playground/bus";
 import { getMembership, getRoomForAccess } from "@/lib/playground/repo";
 import { iceServersFor } from "@/lib/playground/call/ice";
+import { checkModeration } from "@/lib/playground/call/moderation";
 import {
+  applyModeration,
   callIsIdle,
   callSnapshot,
   isOnCall,
   joinCall,
   leaveCall,
+  seatStatus,
   updateCallMember,
 } from "@/lib/playground/call/registry";
 import { parseCallAction, parseConnectionId } from "@/lib/playground/call/schema";
@@ -146,13 +149,21 @@ export async function POST(
           userId: access.actor.userId,
           name: access.actor.name,
           image: access.image,
+          state: command.state,
         });
 
         if (!result.ok) {
-          return NextResponse.json(
-            { error: "full", code: "CALL_FULL" },
-            { status: 409 }
-          );
+          // 403 for a removal, 409 for capacity: the client tells the user
+          // two very different things ("you were removed" vs "try later").
+          return result.reason === "removed"
+            ? NextResponse.json(
+                { error: "removed", code: "REMOVED_FROM_CALL" },
+                { status: 403 }
+              )
+            : NextResponse.json(
+                { error: "full", code: "CALL_FULL" },
+                { status: 409 }
+              );
         }
 
         return NextResponse.json({
@@ -190,6 +201,44 @@ export async function POST(
         // A missed signal is reported rather than swallowed: the caller drops
         // that peer instead of waiting on an answer that can never arrive.
         return NextResponse.json({ delivered });
+      }
+
+      case "moderate": {
+        // Every rule — staff only, from inside the call, never on yourself,
+        // only on someone reachable — lives in moderation.ts, where it is
+        // tested. The route only gathers the facts.
+        const verdict = checkModeration({
+          command: command.command,
+          moderatorIsStaff: requireStudioActor(access.actor),
+          moderatorOnCall: isOnCall(roomId, connectionId),
+          moderatorConnectionId: connectionId,
+          targetConnectionId: command.target,
+          targetStatus: seatStatus(roomId, command.target),
+        });
+
+        if (!verdict.ok) {
+          const status =
+            verdict.reason === "notStaff" || verdict.reason === "notOnCall"
+              ? 403
+              : verdict.reason === "self"
+                ? 400
+                : 404;
+          return NextResponse.json({ error: verdict.reason }, { status });
+        }
+
+        const call = applyModeration(roomId, command.target, command.command);
+
+        // Tell the target. For mute / camera / share this IS the action —
+        // their browser carries it out. For removal it is a courtesy: the
+        // roster has already dropped them and their signals are refused.
+        // A dead target just means there is nobody left to tell.
+        roomBus.sendTo(roomId, command.target, {
+          type: "call-control",
+          command: command.command,
+          byName: access.actor.name,
+        });
+
+        return NextResponse.json({ call });
       }
     }
   } catch (error) {

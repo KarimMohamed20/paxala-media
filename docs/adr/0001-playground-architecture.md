@@ -233,6 +233,73 @@ peers that cannot connect directly are relayed, and everyone else never
 touches it. Credentials are HMAC-derived per user and expire; the shared
 secret never leaves the server.
 
+**Host controls are two different strengths, on purpose.** Staff on a call
+can mute a participant, turn off their camera, stop their share, lower their
+hand, or remove them. In a mesh the media flows browser-to-browser and never
+through the server, so the server *cannot* silence anyone: mute, camera-off
+and stop-share are requests the target's browser carries out, and a modified
+client could ignore them. The roster is deliberately not updated on the
+host's say-so — it changes only when the target reports back — so it never
+claims a microphone is off while audio is still flowing. **Removal is
+different and is enforced**: the seat is dropped from the roster, every other
+peer closes its connection to the removed one, signals from that connection
+are refused, and the user is blocked from rejoining until the call ends.
+Hard mute for everyone would need an SFU in the media path — the same
+threshold as passing five participants.
+
+Every host command only turns something *off*. There is no command to unmute
+or enable a camera; only the participant can, which is the privacy rule every
+mainstream meeting tool follows. Layout choices (pin, grid, collapse,
+fullscreen) are per viewer and never leave the browser.
+
+---
+
+## 10. PAX builds on the board by proposing a plan, never by writing
+
+"Build on the board" lets a staff member type a request in their own words;
+PAX reads the board and proposes new items — stickies, headings, campaign
+routes, scripts, palettes and arrows — which appear only when that person
+clicks **Add to board**.
+
+**It relaxes one rule, deliberately.** Every other PAX task is a server-side
+registry entry the browser can only pick by id, so the endpoint can never be
+a free Gemini relay. Compose accepts a free-form request (≤1000 characters),
+and that is acceptable only in combination: the route is staff-only and
+refuses anyone else before reading the body; the same three spend ceilings
+apply, including the Postgres-counted monthly cap; the answer is
+schema-locked board items, which makes a poor general chatbot; and the
+request is stored verbatim in the run log (`PlaygroundAiRun.output`, beside
+the plan it produced — `intent` stays the registry id `compose`, so reports
+that count intents are unaffected and no migration was needed).
+
+**The model proposes; a person commits.** The server returns a validated
+PLAN and writes nothing. The preview is the human review, and adding it is an
+ordinary `NODE_CREATE` through the op pipeline — team-only by default,
+persisted and broadcast like any creation, and a single undo takes all of it
+back. This keeps the guarantee the original dock was built on: no model
+output lands beside human work unless someone decided it should. It also
+bounds prompt injection: board text is fenced as untrusted, but the real
+limit is that a hostile sticky can at worst make a *proposal* look strange.
+Owner decision (2026-09-22): items PAX creates are publishable like any
+other, since publishing is itself an explicit act; each records the run that
+made it in `data.pax.runId`.
+
+**The model decides what; a layout engine decides where.** Plans carry no
+coordinates. Asked for positions, a language model overlaps existing work
+and drifts off-screen; `canvas/compose-layout.ts` instead places one frame
+of left-to-right columns in the nearest empty space to the viewport,
+deterministically and under test. Arrows can reach items already on the
+board, but only through short refs (`n3`) the server resolves — the model
+never sees or writes a node id, cannot point at a node it was not shown, and
+cannot rewire two existing items to each other.
+
+Structured output uses `generationConfig.responseFormat.text` as Google
+documents it for `generateContent` (checked 2026-09-22; the older
+`responseMimeType`/`responseSchema` pair predates it). The schema guarantees
+valid JSON, not sensible values, so every field is validated and clamped in
+`ai/compose.ts` — the schema avoids `maxLength` and friends, which Gemini
+does not list as supported.
+
 ---
 
 ## What is deliberately NOT built

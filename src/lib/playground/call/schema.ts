@@ -1,4 +1,5 @@
-import type { CallMemberState } from "./types";
+import { parseControlCommand } from "./moderation";
+import type { CallControlCommand, CallMemberState } from "./types";
 
 /**
  * Validation for call signaling payloads.
@@ -20,10 +21,11 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type CallAction =
-  | { action: "join" }
+  | { action: "join"; state?: Partial<CallMemberState> }
   | { action: "leave" }
   | { action: "state"; state: Partial<CallMemberState> }
-  | { action: "signal"; to: string; signal: unknown };
+  | { action: "signal"; to: string; signal: unknown }
+  | { action: "moderate"; target: string; command: CallControlCommand };
 
 /** A connection id, which is a server-minted UUID (stream/route.ts). */
 export function parseConnectionId(value: unknown): string | undefined {
@@ -58,10 +60,27 @@ export function parseCallAction(body: unknown): CallAction | undefined {
   const source = body as Record<string, unknown>;
 
   switch (source.action) {
-    case "join":
-      return { action: "join" };
+    case "join": {
+      // The pre-join choice is optional. Absent means "use the defaults";
+      // present but malformed is a broken client and gets a 400.
+      if (source.state === undefined) return { action: "join" };
+      const state = parseState(source.state);
+      if (!state) return undefined;
+      // Only mic and camera can be chosen before joining — sharing and a
+      // raised hand need a live call to mean anything.
+      const initial: Partial<CallMemberState> = {};
+      if (state.muted !== undefined) initial.muted = state.muted;
+      if (state.cameraOn !== undefined) initial.cameraOn = state.cameraOn;
+      return { action: "join", state: initial };
+    }
     case "leave":
       return { action: "leave" };
+    case "moderate": {
+      const target = parseConnectionId(source.target);
+      const command = parseControlCommand(source.command);
+      if (!target || !command) return undefined;
+      return { action: "moderate", target, command };
+    }
     case "state": {
       const state = parseState(source.state);
       return state ? { action: "state", state } : undefined;

@@ -85,3 +85,37 @@ describe("withinSignalBudget", () => {
     expect(withinSignalBudget(circular)).toBe(false);
   });
 });
+
+describe("join with pre-join state", () => {
+  it("keeps only mic and camera from the choice", () => {
+    expect(
+      parseCallAction({
+        action: "join",
+        state: { muted: true, cameraOn: true, handRaised: true, sharing: true },
+      })
+    ).toEqual({ action: "join", state: { muted: true, cameraOn: true } });
+  });
+
+  it("treats a missing state as defaults, and a malformed one as a broken client", () => {
+    expect(parseCallAction({ action: "join" })).toEqual({ action: "join" });
+    expect(parseCallAction({ action: "join", state: { muted: "yes" } })).toBeUndefined();
+  });
+});
+
+describe("moderate", () => {
+  it("parses a target and a command", () => {
+    expect(
+      parseCallAction({ action: "moderate", target: CONNECTION, command: "remove" })
+    ).toEqual({ action: "moderate", target: CONNECTION, command: "remove" });
+  });
+
+  it("rejects an unknown command or a malformed target", () => {
+    expect(
+      parseCallAction({ action: "moderate", target: CONNECTION, command: "unmute" })
+    ).toBeUndefined();
+    expect(
+      parseCallAction({ action: "moderate", target: "nope", command: "mute" })
+    ).toBeUndefined();
+    expect(parseCallAction({ action: "moderate", command: "mute" })).toBeUndefined();
+  });
+});

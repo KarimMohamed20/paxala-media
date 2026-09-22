@@ -21,8 +21,9 @@ import { ROOM_UPLOAD_ACCEPT } from "@/lib/playground/room-files";
 import { formatBytes } from "@/lib/assets";
 import { MeetingPill } from "./meeting-pill";
 import { CallTiles } from "./call/call-tiles";
-import { useRoomCall } from "./call/use-room-call";
-import type { CallSnapshot } from "@/lib/playground/call/types";
+import { PreJoin } from "./call/pre-join";
+import { useRoomCall, type CallErrorKind } from "./call/use-room-call";
+import type { CallControlCommand, CallSnapshot } from "@/lib/playground/call/types";
 import { ModeIndicator } from "./mode-indicator";
 import { PaxAiDock } from "./pax-ai-dock";
 import { RoomHeader } from "./room-header";
@@ -30,6 +31,10 @@ import { InviteDialog } from "./invite-dialog";
 import { NodeInspector } from "./node-inspector";
 import { clampFontSize, resolveTextStyle } from "./canvas/text-style";
 import { planEditCommit } from "./canvas/edit-commit";
+import { layoutPlan, type NodeSpec } from "./canvas/compose-layout";
+import { nodeRect } from "./canvas/types";
+import type { Rect } from "@/lib/playground/camera";
+import type { ComposePlan } from "@/lib/playground/compose-plan";
 import { RoomPanel } from "./room-panel";
 import { VisibilityBar } from "./visibility-bar";
 import type { RoomDetailData, RoomViewer } from "./types";
@@ -80,6 +85,8 @@ export function RoomShell({ roomId }: { roomId: string }) {
   const viewCenterRef = React.useRef<(() => { x: number; y: number }) | null>(
     null
   );
+  /** Set by CanvasBoard: bring a world rect into view (zooming out only). */
+  const revealRef = React.useRef<((rect: Rect) => void) | null>(null);
   const [canvasReady, setCanvasReady] = React.useState(false);
 
   const { toast } = useToast();
@@ -153,6 +160,7 @@ export function RoomShell({ roomId }: { roomId: string }) {
   const callHandlersRef = React.useRef<{
     onCall: (call: CallSnapshot) => void;
     onRtc: (from: string, signal: unknown) => void;
+    onControl: (command: CallControlCommand, byName: string | null) => void;
   } | null>(null);
 
   // The optimistic edge is already rolled back by the hook; this only explains
@@ -325,6 +333,8 @@ export function RoomShell({ roomId }: { roomId: string }) {
     onCall: (snapshot) => callHandlersRef.current?.onCall(snapshot),
     onRtc: (from, _fromUserId, payload) =>
       callHandlersRef.current?.onRtc(from, payload),
+    onCallControl: (command, byName) =>
+      callHandlersRef.current?.onControl(command, byName),
   });
 
   // The outbox reads this at flush time so the server can exclude this tab
@@ -340,13 +350,16 @@ export function RoomShell({ roomId }: { roomId: string }) {
 
   // A refused microphone or a full call has to say so — the alternative is a
   // join button that appears to do nothing.
+  // A refused microphone or a full call has to say so — the alternative is a
+  // join button that appears to do nothing.
   const onCallError = React.useCallback(
-    (kind: "permission" | "device" | "full" | "staffOnly" | "failed") => {
+    (kind: CallErrorKind) => {
       const messages = {
         permission: "meeting.permissionDenied",
         device: "meeting.deviceError",
         full: "meeting.full",
         staffOnly: "meeting.staffOnlyStart",
+        removed: "meeting.removed",
         failed: "meeting.joinFailed",
       } as const;
       toast({ variant: "warning", title: t(messages[kind]) });
@@ -360,10 +373,99 @@ export function RoomShell({ roomId }: { roomId: string }) {
     onError: onCallError,
   });
 
-  const { applyCallEvent, applyRtcSignal } = call;
+  const { applyCallEvent, applyRtcSignal, applyControl, moderate } = call;
+  const onControl = React.useCallback(
+    (command: CallControlCommand, byName: string | null) => {
+      applyControl(command);
+      // Always named: being muted by "someone" is unsettling, and the name
+      // is what tells a client this was the agency, not a glitch.
+      const messages = {
+        mute: "meeting.controlMuted",
+        cameraOff: "meeting.controlCameraOff",
+        stopShare: "meeting.controlStopShare",
+        lowerHand: "meeting.controlLowerHand",
+        remove: "meeting.controlRemoved",
+      } as const;
+      toast({
+        variant: command === "remove" ? "warning" : "info",
+        title: t(messages[command], { name: byName ?? t("meeting.theHost") }),
+      });
+    },
+    [applyControl, t, toast]
+  );
+
   React.useEffect(() => {
-    callHandlersRef.current = { onCall: applyCallEvent, onRtc: applyRtcSignal };
-  }, [applyCallEvent, applyRtcSignal]);
+    callHandlersRef.current = {
+      onCall: applyCallEvent,
+      onRtc: applyRtcSignal,
+      onControl,
+    };
+  }, [applyCallEvent, applyRtcSignal, onControl]);
+
+  // The pre-join card sits between "Join" and being in the call.
+  const [preJoinOpen, setPreJoinOpen] = React.useState(false);
+
+  /**
+   * Put a confirmed PAX plan on the board.
+   *
+   * Layout is decided HERE, against the board as it is at the moment of
+   * adding — not when the plan was generated, since people may have moved
+   * things while they read the preview. Everything goes through the ordinary
+   * op pipeline, so it is team-only by default, persisted like any other
+   * creation, and visible to everyone in the room.
+   */
+  const addPlan = React.useCallback(
+    (plan: ComposePlan, runId: string): number => {
+      const layout = layoutPlan(plan, {
+        anchor: viewCenterRef.current?.() ?? { x: 0, y: 0 },
+        obstacles: api.nodes.map(nodeRect),
+        existingIds: new Set(api.byId.keys()),
+        runId,
+      });
+
+      // Frame first. Children reference it by frameId, which is a foreign key
+      // server-side — the outbox's strict FIFO order is what guarantees the
+      // frame exists before any child that points at it.
+      const toInput = (spec: NodeSpec) => ({
+        kind: spec.kind,
+        x: spec.x,
+        y: spec.y,
+        w: spec.w,
+        h: spec.h,
+        text: spec.text,
+        data: spec.data,
+        style: spec.style,
+      });
+      const frame = api.createNode(toInput(layout.frame));
+      const idByKey = new Map<string, string>([[layout.frame.key, frame.id]]);
+      for (const spec of layout.children) {
+        idByKey.set(spec.key, api.createNode({ ...toInput(spec), frameId: frame.id }).id);
+      }
+
+      for (const edge of layout.edges) {
+        const from = "key" in edge.from ? idByKey.get(edge.from.key) : edge.from.nodeId;
+        const to = "key" in edge.to ? idByKey.get(edge.to.key) : edge.to.nodeId;
+        if (from && to) api.createEdge(from, to);
+      }
+
+      // ONE undo entry for the whole plan: Ctrl+Z takes back everything PAX
+      // added, and its arrows go with it (edges cascade on their nodes).
+      captureCreateRef.current?.([...idByKey.values()]);
+      setSelection(new Set([frame.id]));
+      revealRef.current?.({ x: frame.x, y: frame.y, w: frame.w, h: frame.h });
+      return layout.children.length;
+    },
+    [api]
+  );
+
+  const onModerate = React.useCallback(
+    (target: string, command: CallControlCommand) => {
+      void moderate(target, command).then((ok) => {
+        if (!ok) toast({ variant: "warning", title: t("meeting.moderateFailed") });
+      });
+    },
+    [moderate, t, toast]
+  );
 
   // Someone opening a room where a call is already running learns about it
   // here; every later change arrives on the stream.
@@ -797,6 +899,9 @@ export function RoomShell({ roomId }: { roomId: string }) {
               onRegisterViewCenter={(getCenter) => {
                 viewCenterRef.current = getCenter;
               }}
+              onRegisterReveal={(reveal) => {
+                revealRef.current = reveal;
+              }}
               onEditStart={setEditingId}
               onEditCommit={commitEdit}
               onEditCancel={() => setEditingId(null)}
@@ -892,6 +997,20 @@ export function RoomShell({ roomId }: { roomId: string }) {
                 localStream={call.localStream}
                 remoteStreams={call.remoteStreams}
                 cameraOn={call.cameraOn}
+                // Host controls: staff, in studio mode, on the call. The
+                // server re-checks all three; this only decides what is drawn.
+                isHost={viewer.isStaff && !isClientMode && call.joined}
+                onModerate={onModerate}
+              />
+            )}
+            {preJoinOpen && !call.joined && (
+              <PreJoin
+                idle={!call.call.active}
+                joining={call.joining}
+                onCancel={() => setPreJoinOpen(false)}
+                onJoin={(options) => {
+                  void call.join(options).finally(() => setPreJoinOpen(false));
+                }}
               />
             )}
             <MeetingPill
@@ -907,7 +1026,11 @@ export function RoomShell({ roomId }: { roomId: string }) {
               sharing={call.sharing}
               handRaised={call.handRaised}
               canScreenShare={call.canScreenShare}
-              onJoin={() => void call.join()}
+              audioDeviceId={call.audioDeviceId}
+              videoDeviceId={call.videoDeviceId}
+              onSelectDevice={(kind, id) => void call.switchDevice(kind, id)}
+              // Join opens the pre-join card; the card does the joining.
+              onJoin={() => setPreJoinOpen(true)}
               onLeave={call.leave}
               onToggleMute={call.toggleMute}
               onToggleCamera={() => void call.toggleCamera()}
@@ -921,6 +1044,8 @@ export function RoomShell({ roomId }: { roomId: string }) {
               <PaxAiDock
                 roomId={roomId}
                 selection={selection}
+                boardCount={api.nodes.length}
+                onAddPlan={addPlan}
                 onInsert={(text) => {
                   // Placed as an AI_CARD, which is TEAM_ONLY by schema default
                   // AND barred from publication by kind. A generation becomes

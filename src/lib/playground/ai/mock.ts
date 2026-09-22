@@ -25,6 +25,46 @@ export const mockProvider: AiProvider = {
       .trim()
       .slice(0, 160);
 
+    // "Build on the board" asks for a plan, not prose. The plan is as
+    // obviously fake as the text answer: every item says it is a placeholder,
+    // so nothing added from the mock could be mistaken for a real idea.
+    if (request.responseSchema) {
+      const request_ = request.userPrompt.match(
+        /--- REQUEST[^\n]*\n([\s\S]*?)\n--- END REQUEST ---/
+      )?.[1];
+      const asked = (request_ ?? subject).replace(/\s+/g, " ").trim().slice(0, 120);
+      return {
+        text: JSON.stringify({
+          title: "PAX preview (not connected)",
+          summary: "A placeholder plan — PAX AI is not connected yet.",
+          groups: [
+            {
+              heading: "Placeholder",
+              items: [
+                {
+                  ref: "i1",
+                  kind: "sticky",
+                  color: "yellow",
+                  text: "PAX AI is not connected yet — this is a placeholder item.",
+                },
+                {
+                  ref: "i2",
+                  kind: "sticky",
+                  color: "blue",
+                  text: `It was asked: “${asked || "nothing"}”.`,
+                },
+              ],
+            },
+          ],
+          connections: [{ from: "i1", to: "i2" }],
+        }),
+        provider: "mock",
+        model: "mock-1",
+        tokensIn: null,
+        tokensOut: null,
+      };
+    }
+
     return {
       text: [
         "PAX AI is not connected yet — this is a placeholder response.",

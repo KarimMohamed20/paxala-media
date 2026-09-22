@@ -811,6 +811,64 @@ export async function readAiContextNodes(roomId: string, nodeIds: string[]) {
   });
 }
 
+/**
+ * Board material for PAX "build on the board".
+ *
+ * Studio-side only (the route refuses anyone else), so every visibility is
+ * readable. The requester's selection comes first, scoped to this room so a
+ * forged id cannot reach another; the rest of the board fills the remaining
+ * budget, most recently touched first — on a big board, what people are
+ * working on now matters more than what was pinned up last month. Drawings
+ * are skipped (they have no text), and frames are read separately so items
+ * can be grouped under their frame's title.
+ */
+export async function readComposeContextNodes(
+  roomId: string,
+  selectedIds: string[],
+  limit: number
+) {
+  const select = {
+    id: true,
+    kind: true,
+    text: true,
+    data: true,
+    style: true,
+    frameId: true,
+  } as const;
+
+  const selected =
+    selectedIds.length > 0
+      ? await db.playgroundNode.findMany({
+          where: { roomId, id: { in: selectedIds } },
+          select,
+          take: limit,
+        })
+      : [];
+
+  const remaining = Math.max(0, limit - selected.length);
+  const others =
+    remaining > 0
+      ? await db.playgroundNode.findMany({
+          where: {
+            roomId,
+            id: { notIn: selected.map((node) => node.id) },
+            kind: { notIn: ["DRAWING", "FRAME"] },
+          },
+          select,
+          orderBy: { updatedAt: "desc" },
+          take: remaining,
+        })
+      : [];
+
+  const frames = await db.playgroundNode.findMany({
+    where: { roomId, kind: "FRAME" },
+    select,
+    take: 200,
+  });
+
+  return { selected, others, frames };
+}
+
 export async function recordAiRun(input: {
   roomId: string;
   intent: string;

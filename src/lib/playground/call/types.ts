@@ -50,6 +50,28 @@ export const EMPTY_CALL: CallSnapshot = {
  */
 export const MAX_CALL_PARTICIPANTS = 5;
 
+/**
+ * What a host can do to another participant.
+ *
+ * The first four only ever turn something OFF. A host can silence a mic,
+ * but only its owner can turn it back on — the same rule every mainstream
+ * meeting tool follows, and the only one that is not a privacy problem.
+ */
+export type CallControlCommand =
+  | "mute"
+  | "cameraOff"
+  | "stopShare"
+  | "lowerHand"
+  | "remove";
+
+export const CALL_CONTROL_COMMANDS: readonly CallControlCommand[] = [
+  "mute",
+  "cameraOff",
+  "stopShare",
+  "lowerHand",
+  "remove",
+];
+
 /** ICE servers are minted server-side per join; TURN creds are short-lived. */
 export type IceServerConfig = {
   urls: string | string[];

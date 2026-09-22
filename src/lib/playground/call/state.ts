@@ -43,6 +43,12 @@ export type CallRoom = {
   members: Map<string, CallMember>;
   /** Members whose stream died and may yet come back, keyed by connectionId. */
   pending: Map<string, PendingMember>;
+  /**
+   * Users a host removed from THIS call. Keyed by user, not connection, so a
+   * second tab or a reconnect cannot walk straight back in. Cleared when the
+   * call ends — a removal is about this meeting, not a ban from the room.
+   */
+  removedUserIds: Set<string>;
 };
 
 export function emptyRoom(): CallRoom {
@@ -51,6 +57,7 @@ export function emptyRoom(): CallRoom {
     startedByUserId: null,
     members: new Map(),
     pending: new Map(),
+    removedUserIds: new Set(),
   };
 }
 
@@ -59,11 +66,17 @@ export type JoinInput = {
   userId: string;
   name: string | null;
   image: string | null;
+  /**
+   * What the participant chose in the pre-join screen. Applied at seat time
+   * so the roster is right from its first broadcast — setting it with a
+   * follow-up request would flash "unmuted" to everyone for a round trip.
+   */
+  state?: Partial<CallMemberState>;
 };
 
 export type JoinResult =
   | { ok: true; snapshot: CallSnapshot; started: boolean }
-  | { ok: false; reason: "full" };
+  | { ok: false; reason: "full" | "removed" };
 
 /**
  * Add a participant.
@@ -74,6 +87,10 @@ export type JoinResult =
  */
 export function join(room: CallRoom, input: JoinInput, now: number): JoinResult {
   dropExpired(room, now);
+
+  if (room.removedUserIds.has(input.userId)) {
+    return { ok: false, reason: "removed" };
+  }
 
   // Read BEFORE reclaiming: a lone participant whose stream recycled would
   // otherwise look like an empty room and restart the call's clock, resetting
@@ -103,16 +120,40 @@ export function join(room: CallRoom, input: JoinInput, now: number): JoinResult 
     userId: input.userId,
     name: input.name,
     image: input.image,
-    // Joins with the mic live and the camera dark: the normal way a work call
-    // starts, and it keeps four inbound video streams off a phone by default.
-    muted: false,
-    cameraOn: false,
+    // Defaults to mic live and camera dark — the normal way a work call
+    // starts, and it keeps four inbound video streams off a phone. The
+    // pre-join choice overrides both. Sharing and a raised hand always start
+    // false: neither can be meaningfully "chosen" before you are in.
+    muted: input.state?.muted ?? false,
+    cameraOn: input.state?.cameraOn ?? false,
     sharing: false,
     handRaised: false,
     joinedAt: now,
   });
 
   return { ok: true, snapshot: snapshotOf(room), started };
+}
+
+/**
+ * A host removed this participant.
+ *
+ * Their seat goes immediately — live or pending — and their USER is recorded
+ * so they cannot rejoin this call from any tab. Returns null when the target
+ * is not on the call, so the caller can answer 404 instead of pretending.
+ */
+export function removeMember(
+  room: CallRoom,
+  connectionId: string,
+  now: number
+): CallSnapshot | null {
+  const member = room.members.get(connectionId) ?? room.pending.get(connectionId);
+  if (!member) return null;
+
+  releaseUser(room, member.userId);
+  room.removedUserIds.add(member.userId);
+  dropExpired(room, now);
+  if (occupancy(room) === 0) endCall(room);
+  return snapshotOf(room);
 }
 
 /** Deliberate departure — no grace, the seat is free immediately. */
@@ -226,6 +267,10 @@ export function occupancy(room: CallRoom): number {
 function endCall(room: CallRoom): void {
   room.startedAt = null;
   room.startedByUserId = null;
+  // A removal lasts for the meeting it happened in. The next call is a new
+  // meeting, and a permanent ban would be a room-membership decision that
+  // belongs in the members panel, not in a call control.
+  room.removedUserIds.clear();
 }
 
 /** Remove every seat held by a user, live or pending. */

@@ -73,10 +73,28 @@ export function createGeminiProvider(): AiProvider {
           generationConfig: {
             maxOutputTokens: request.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
             // Creative work wants range, but not so much that two runs of the
-            // same brief are unrecognisable to each other.
-            temperature: 0.9,
+            // same brief are unrecognisable to each other. A structured plan
+            // runs a little cooler: the ideas can still vary, but the shape
+            // has to hold.
+            temperature: request.responseSchema ? 0.7 : 0.9,
             topP: 0.95,
             candidateCount: 1,
+            // Structured output, in the form Google currently documents for
+            // generateContent (checked 2026-09-22):
+            //   generationConfig.responseFormat.text.{mimeType, schema}
+            // The older responseMimeType/responseSchema pair predates it;
+            // this is the documented one. Output is guaranteed to be valid
+            // JSON, not sensible JSON — the caller still validates it.
+            ...(request.responseSchema
+              ? {
+                  responseFormat: {
+                    text: {
+                      mimeType: "application/json",
+                      schema: request.responseSchema,
+                    },
+                  },
+                }
+              : {}),
           },
         }),
         // Bounded so a hung upstream cannot occupy a Node request slot
@@ -98,6 +116,12 @@ export function createGeminiProvider(): AiProvider {
         ?.map((part) => part.text ?? "")
         .join("")
         .trim();
+
+      // Truncated JSON is not a shorter answer, it is a broken one. Say so
+      // precisely instead of letting it surface later as a parse failure.
+      if (request.responseSchema && data.candidates?.[0]?.finishReason === "MAX_TOKENS") {
+        throw new Error("Gemini output was cut off before it finished (MAX_TOKENS)");
+      }
 
       if (!text) {
         // An empty candidate is usually a safety block. Say so, rather than

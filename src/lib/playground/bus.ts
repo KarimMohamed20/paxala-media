@@ -21,7 +21,7 @@
  * connection.
  */
 
-import type { CallSnapshot } from "./call/types";
+import type { CallControlCommand, CallSnapshot } from "./call/types";
 
 export type PresenceState = {
   cursor: { x: number; y: number } | null;
@@ -65,6 +65,13 @@ export type BusEvent =
    * `from` is stamped server-side so a participant cannot impersonate a peer.
    */
   | { type: "rtc"; from: string; fromUserId: string; signal: unknown }
+  /**
+   * A host acted on this participant — unicast to the target only. The
+   * browser carries out mute / camera / share itself (the server cannot
+   * reach into a peer-to-peer media path); removal is already enforced
+   * server-side by the time this arrives.
+   */
+  | { type: "call-control"; command: CallControlCommand; byName: string | null }
   | { type: "resync" };
 
 type Subscriber = {

@@ -6,13 +6,20 @@ import {
   isIdle,
   join,
   leave,
+  removeMember,
   setMemberState,
   snapshotOf,
   type CallRoom,
   type JoinInput,
   type JoinResult,
 } from "./state";
-import { EMPTY_CALL, type CallMemberState, type CallSnapshot } from "./types";
+import type { TargetStatus } from "./moderation";
+import {
+  EMPTY_CALL,
+  type CallControlCommand,
+  type CallMemberState,
+  type CallSnapshot,
+} from "./types";
 
 /**
  * Live calls, per room, in this process.
@@ -113,6 +120,58 @@ export function updateCallMember(
 export function isOnCall(roomId: string, connectionId: string): boolean {
   const room = registry.rooms.get(roomId);
   return room?.members.has(connectionId) ?? false;
+}
+
+/**
+ * Where a connection stands: connected, holding a seat through a reconnect,
+ * or not on the call. Moderation needs the distinction — a pending member can
+ * be removed but cannot receive a mute request.
+ */
+export function seatStatus(roomId: string, connectionId: string): TargetStatus {
+  const room = registry.rooms.get(roomId);
+  if (!room) return "absent";
+  if (room.members.has(connectionId)) return "live";
+  if (room.pending.has(connectionId)) return "pending";
+  return "absent";
+}
+
+/**
+ * Apply a host command to the roster.
+ *
+ * Only what the SERVER can truthfully know is applied here: a removal and a
+ * lowered hand (a hand is just a flag). Mute, camera and share are left to
+ * the target's own browser, which reports back through an ordinary state
+ * update once it has complied. Setting `muted` here instead would make the
+ * roster claim a microphone is off while a modified client is still sending
+ * audio — the roster has to describe the call, not the host's wishes.
+ */
+export function applyModeration(
+  roomId: string,
+  targetConnectionId: string,
+  command: CallControlCommand,
+  now = Date.now()
+): CallSnapshot | null {
+  const room = registry.rooms.get(roomId);
+  if (!room) return null;
+
+  if (command === "remove") {
+    const snapshot = removeMember(room, targetConnectionId, now);
+    if (snapshot) publish(roomId, snapshot);
+    return snapshot;
+  }
+
+  if (command === "lowerHand") {
+    const snapshot = setMemberState(
+      room,
+      targetConnectionId,
+      { handRaised: false },
+      now
+    );
+    publish(roomId, snapshot);
+    return snapshot;
+  }
+
+  return snapshotOf(room);
 }
 
 /**

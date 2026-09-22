@@ -3,7 +3,11 @@
 import * as React from "react";
 import { shouldResync } from "@/lib/playground/stream-protocol";
 import type { Participant } from "@/lib/playground/bus";
-import type { CallSnapshot } from "@/lib/playground/call/types";
+import {
+  CALL_CONTROL_COMMANDS,
+  type CallControlCommand,
+  type CallSnapshot,
+} from "@/lib/playground/call/types";
 
 /**
  * The live channel: subscribe to a room's SSE stream and keep presence current.
@@ -43,6 +47,8 @@ export type RoomStreamOptions = {
   onCall?: (call: CallSnapshot) => void;
   /** A WebRTC signal addressed to this connection specifically. */
   onRtc?: (from: string, fromUserId: string, signal: unknown) => void;
+  /** A host muted, unshared or removed THIS participant. */
+  onCallControl?: (command: CallControlCommand, byName: string | null) => void;
 };
 
 export function useRoomStream({
@@ -54,15 +60,23 @@ export function useRoomStream({
   onResync,
   onCall,
   onRtc,
+  onCallControl,
 }: RoomStreamOptions) {
   const [status, setStatus] = React.useState<StreamStatus>("connecting");
   const [participants, setParticipants] = React.useState<Participant[]>([]);
   const [connectionId, setConnectionId] = React.useState<string | null>(null);
 
   const lastSeqRef = React.useRef(0);
-  const handlersRef = React.useRef({ onOps, onResync, getSeq, onCall, onRtc });
+  const handlersRef = React.useRef({
+    onOps,
+    onResync,
+    getSeq,
+    onCall,
+    onRtc,
+    onCallControl,
+  });
   React.useEffect(() => {
-    handlersRef.current = { onOps, onResync, getSeq, onCall, onRtc };
+    handlersRef.current = { onOps, onResync, getSeq, onCall, onRtc, onCallControl };
   });
 
   React.useEffect(() => {
@@ -169,6 +183,24 @@ export function useRoomStream({
           }
         } catch {
           // Dropping one malformed signal costs at most one renegotiation.
+        }
+      });
+
+      source.addEventListener("call-control", (event) => {
+        try {
+          const data = JSON.parse((event as MessageEvent).data);
+          // Checked against the known list: this frame makes the browser
+          // turn off its own mic or camera, so an unrecognised command is
+          // dropped rather than guessed at.
+          if (CALL_CONTROL_COMMANDS.includes(data.command)) {
+            handlersRef.current.onCallControl?.(
+              data.command as CallControlCommand,
+              typeof data.byName === "string" ? data.byName : null
+            );
+          }
+        } catch {
+          // A malformed control frame is ignored; the roster still reflects
+          // any server-side part of it (a removal, a lowered hand).
         }
       });
 

@@ -38,6 +38,8 @@ export type CanvasNodesApi = {
     text?: string | null;
     data?: Record<string, unknown>;
     style?: Record<string, unknown>;
+    /** Parent frame, so a generated group moves with its frame from birth. */
+    frameId?: string | null;
   }) => CanvasNodeData;
   moveNodes: (
     deltas: Map<string, { x: number; y: number; frameId?: string | null }>
@@ -85,6 +87,21 @@ export function useCanvasNodes(
 ): CanvasNodesApi {
   const [nodes, setNodes] = React.useState<CanvasNodeData[]>([]);
   const [edges, setEdges] = React.useState<CanvasEdgeData[]>([]);
+  /**
+   * A synchronous mirror of `edges`, for createEdge's duplicate check.
+   *
+   * The check used to run INSIDE the setEdges updater and set a flag that
+   * decided whether to persist. React only runs an updater synchronously
+   * when the component has no other update pending — so an edge created in
+   * the same tick as a node (a PAX plan does exactly that) found the flag
+   * still false: the arrow appeared on screen, was never sent to the server,
+   * and vanished on the next reload. Reading a ref makes the decision
+   * independent of React's scheduling.
+   */
+  const edgesRef = React.useRef<CanvasEdgeData[]>([]);
+  React.useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
 
   // Highest z seen, so a new node always lands on top without scanning the
   // whole array on every create.
@@ -205,7 +222,7 @@ export function useCanvasNodes(
       h: input.h ?? size.h,
       z: topZ.current,
       rotation: 0,
-      frameId: null,
+      frameId: input.frameId ?? null,
       text: input.text ?? null,
       data: input.data ?? {},
       style: input.style ?? {},
@@ -225,6 +242,9 @@ export function useCanvasNodes(
       text: node.text,
       data: node.data,
       style: node.style,
+      // Accepted by the server's NODE_CREATE parser already; omitted when
+      // null so ordinary creations send exactly what they always have.
+      ...(node.frameId ? { frameId: node.frameId } : {}),
     });
     versions.current.set(node.id, 0);
     return node;
@@ -306,23 +326,18 @@ export function useCanvasNodes(
         style: {},
       };
 
-      let created = false;
-      setEdges((prev) => {
-        // One connector per ordered pair. Drawing the same link twice is a
-        // misclick, and two identical arrows are indistinguishable on the board
-        // but both persist.
-        if (
-          prev.some(
-            (e) => e.fromNodeId === fromNodeId && e.toNodeId === toNodeId
-          )
-        ) {
-          return prev;
-        }
-        created = true;
-        return [...prev, edge];
-      });
+      // One connector per ordered pair. Drawing the same link twice is a
+      // misclick, and two identical arrows are indistinguishable on the board
+      // but both persist.
+      const isDuplicate = (list: readonly CanvasEdgeData[]) =>
+        list.some((e) => e.fromNodeId === fromNodeId && e.toNodeId === toNodeId);
+      if (isDuplicate(edgesRef.current)) return null;
 
-      if (!created) return null;
+      // Mirror first, synchronously, so a second createEdge in the SAME tick
+      // for the same pair sees this one before React has rendered.
+      edgesRef.current = [...edgesRef.current, edge];
+      setEdges((prev) => (isDuplicate(prev) ? prev : [...prev, edge]));
+
       const clientOpId = emit("EDGE_CREATE", fromNodeId, {
         edgeId: edge.id,
         toNodeId,

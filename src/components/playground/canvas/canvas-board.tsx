@@ -9,8 +9,10 @@ import {
   IDENTITY,
   MAX_ZOOM,
   MIN_ZOOM,
+  type Rect,
   boundsOf,
   fitToBounds,
+  visibleWorldRect,
   zoomTo,
 } from "@/lib/playground/camera";
 import { describeNode } from "@/lib/playground/a11y";
@@ -48,6 +50,7 @@ export function CanvasBoard({
   editingId = null,
   onRegisterCreateCapture,
   onRegisterViewCenter,
+  onRegisterReveal,
   onEditStart,
   onEditCommit,
   onEditCancel,
@@ -71,6 +74,8 @@ export function CanvasBoard({
    * shell can place created/uploaded nodes where the user is LOOKING rather
    * than at world origin — which may be panned far off screen. */
   onRegisterViewCenter?: (getCenter: () => { x: number; y: number }) => void;
+  /** Hands up a "bring this area into view" function, for placed PAX plans. */
+  onRegisterReveal?: (reveal: (rect: Rect) => void) => void;
   onEditStart?: (nodeId: string) => void;
   onEditCommit?: (nodeId: string, text: string) => void;
   onEditCancel?: () => void;
@@ -363,6 +368,38 @@ export function CanvasBoard({
   React.useEffect(() => {
     onRegisterViewCenter?.(viewCenter);
   }, [onRegisterViewCenter, viewCenter]);
+
+  /**
+   * Bring a world rect into view — only if it is not already fully visible,
+   * and only ever by zooming OUT. Something the person just asked for should
+   * appear in front of them, but a board that suddenly zooms in on a small
+   * result is disorienting.
+   */
+  const reveal = React.useCallback(
+    (rect: Rect) => {
+      const handle = viewportRef.current;
+      if (!handle || size.width === 0 || size.height === 0) return;
+      const camera = handle.getCamera();
+      const visible = visibleWorldRect(camera, size);
+      const inside =
+        rect.x >= visible.x &&
+        rect.y >= visible.y &&
+        rect.x + rect.w <= visible.x + visible.w &&
+        rect.y + rect.h <= visible.y + visible.h;
+      if (inside) return;
+      const z = Math.min(camera.z, fitToBounds(rect, size).z);
+      handle.setCamera({
+        z,
+        x: size.width / 2 - (rect.x + rect.w / 2) * z,
+        y: size.height / 2 - (rect.y + rect.h / 2) * z,
+      });
+    },
+    [size]
+  );
+
+  React.useEffect(() => {
+    onRegisterReveal?.(reveal);
+  }, [onRegisterReveal, reveal]);
 
   const zoomPercent = Math.round(camera.z * 100);
 

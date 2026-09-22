@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import {
+  Check,
   Hand,
   Loader2,
   Mic,
@@ -10,12 +11,23 @@ import {
   PhoneOff,
   ScreenShare,
   ScreenShareOff,
+  Settings2,
   SmilePlus,
   Video,
   VideoOff,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { deviceLabel, pickDevice } from "./call/devices";
+import { useMediaDevices } from "./call/use-media-devices";
 
 /**
  * The floating meeting control pill.
@@ -44,6 +56,9 @@ export type MeetingPillProps = {
   sharing: boolean;
   handRaised: boolean;
   canScreenShare: boolean;
+  audioDeviceId: string | null;
+  videoDeviceId: string | null;
+  onSelectDevice: (kind: "audio" | "video", deviceId: string) => void;
   onJoin: () => void;
   onLeave: () => void;
   onToggleMute: () => void;
@@ -63,6 +78,9 @@ export function MeetingPill({
   sharing,
   handRaised,
   canScreenShare,
+  audioDeviceId,
+  videoDeviceId,
+  onSelectDevice,
   onJoin,
   onLeave,
   onToggleMute,
@@ -183,6 +201,12 @@ export function MeetingPill({
           </Tooltip>
         ))}
 
+      <DeviceMenu
+        audioDeviceId={audioDeviceId}
+        videoDeviceId={videoDeviceId}
+        onSelect={onSelectDevice}
+      />
+
       {/* Reactions are their own feature; the seat is kept, visibly inert.
           Its own reason string — "live video is not enabled" would now be a
           lie told next to a working camera button. */}
@@ -210,5 +234,87 @@ export function MeetingPill({
         </button>
       </Tooltip>
     </div>
+  );
+}
+
+/**
+ * Switch microphone or camera without leaving the call.
+ *
+ * Rows are plain items with an inline check laid out by flexbox rather than
+ * the shared RadioItem, whose indicator is absolutely positioned with a
+ * physical `left-2` — in Arabic and Hebrew the check would sit on the wrong
+ * side of the label.
+ */
+function DeviceMenu({
+  audioDeviceId,
+  videoDeviceId,
+  onSelect,
+}: {
+  audioDeviceId: string | null;
+  videoDeviceId: string | null;
+  onSelect: (kind: "audio" | "video", deviceId: string) => void;
+}) {
+  const t = useTranslations("playground");
+  // Mounted only while joined, so permission is already granted and the
+  // device labels are real names rather than blanks.
+  const devices = useMediaDevices();
+  const selectedAudio = pickDevice(devices.audio, audioDeviceId);
+  const selectedVideo = pickDevice(devices.video, videoDeviceId);
+
+  const rows = (
+    kind: "audio" | "video",
+    list: MediaDeviceInfo[],
+    selected: string | null,
+    fallback: string
+  ) =>
+    list.length === 0 ? (
+      <DropdownMenuItem disabled>{t("meeting.noDevices")}</DropdownMenuItem>
+    ) : (
+      list.map((device, index) => (
+        <DropdownMenuItem
+          key={device.deviceId}
+          onSelect={() => onSelect(kind, device.deviceId)}
+          className="gap-2"
+        >
+          <Check
+            size={14}
+            aria-hidden="true"
+            className={cn("shrink-0", device.deviceId !== selected && "invisible")}
+          />
+          <span dir="auto" className="min-w-0 truncate">
+            {deviceLabel(device, index, fallback)}
+          </span>
+        </DropdownMenuItem>
+      ))
+    );
+
+  return (
+    <DropdownMenu>
+      <Tooltip label={t("meeting.settings")} side="top">
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={t("meeting.settings")}
+            className={cn(
+              "grid h-10 w-10 place-items-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+            )}
+          >
+            <Settings2 size={17} aria-hidden="true" />
+          </button>
+        </DropdownMenuTrigger>
+      </Tooltip>
+      <DropdownMenuContent side="top" align="center" className="w-72">
+        <DropdownMenuLabel className="text-xs text-white/50">
+          {t("meeting.microphone")}
+        </DropdownMenuLabel>
+        {rows("audio", devices.audio, selectedAudio, t("meeting.microphone"))}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-white/50">
+          {t("meeting.cameraDevice")}
+        </DropdownMenuLabel>
+        {rows("video", devices.video, selectedVideo, t("meeting.cameraDevice"))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

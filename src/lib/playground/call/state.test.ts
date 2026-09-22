@@ -7,6 +7,7 @@ import {
   isIdle,
   join,
   leave,
+  removeMember,
   setMemberState,
   snapshotOf,
 } from "./state";
@@ -281,5 +282,75 @@ describe("snapshotOf", () => {
 
     const [only] = snapshotOf(room).members;
     expect(only).not.toHaveProperty("pendingUntil");
+  });
+});
+
+describe("initial state from the pre-join screen", () => {
+  it("seats someone muted and on camera when they chose that", () => {
+    const room = emptyRoom();
+    const result = join(room, { ...member(1), state: { muted: true, cameraOn: true } }, T0);
+    if (!result.ok) return;
+    const [only] = result.snapshot.members;
+    expect(only.muted).toBe(true);
+    expect(only.cameraOn).toBe(true);
+  });
+
+  it("keeps the defaults for anything not chosen", () => {
+    const room = emptyRoom();
+    const result = join(room, { ...member(1), state: { muted: true } }, T0);
+    if (!result.ok) return;
+    expect(result.snapshot.members[0].cameraOn).toBe(false);
+  });
+});
+
+describe("removeMember", () => {
+  it("drops the member and blocks them from rejoining this call", () => {
+    const room = emptyRoom();
+    join(room, member(1), T0);
+    join(room, member(2), T0);
+
+    const snapshot = removeMember(room, "conn-2", T0 + 1);
+    expect(snapshot?.members.map((m) => m.userId)).toEqual(["user-1"]);
+
+    // Same user, new tab: still out.
+    expect(join(room, { ...member(2), connectionId: "conn-2b" }, T0 + 2)).toEqual({
+      ok: false,
+      reason: "removed",
+    });
+  });
+
+  it("removes a member who is mid-reconnect, not just a live one", () => {
+    const room = emptyRoom();
+    join(room, member(1), T0);
+    join(room, member(2), T0);
+    connectionLost(room, "conn-2", T0 + 1);
+
+    const snapshot = removeMember(room, "conn-2", T0 + 2);
+    expect(snapshot?.members).toHaveLength(1);
+    expect(room.pending.size).toBe(0);
+  });
+
+  it("answers null for someone not on the call instead of pretending", () => {
+    const room = emptyRoom();
+    join(room, member(1), T0);
+    expect(removeMember(room, "ghost", T0 + 1)).toBeNull();
+  });
+
+  it("lifts the block when the call ends — a removal is per meeting", () => {
+    const room = emptyRoom();
+    join(room, member(1), T0);
+    join(room, member(2), T0);
+    removeMember(room, "conn-2", T0 + 1);
+    leave(room, "conn-1", T0 + 2);
+
+    // A fresh call: the previously removed user may join.
+    expect(join(room, member(2), T0 + 3).ok).toBe(true);
+  });
+
+  it("frees the removed member's seat for capacity", () => {
+    const room = emptyRoom();
+    for (let i = 1; i <= MAX_CALL_PARTICIPANTS; i++) join(room, member(i), T0);
+    removeMember(room, "conn-5", T0 + 1);
+    expect(join(room, member(98), T0 + 2).ok).toBe(true);
   });
 });

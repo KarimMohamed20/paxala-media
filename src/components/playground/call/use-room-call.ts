@@ -1,9 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { EMPTY_CALL, type CallSnapshot, type IceServerConfig } from "@/lib/playground/call/types";
 import {
-  CAMERA_CONSTRAINTS,
+  EMPTY_CALL,
+  type CallControlCommand,
+  type CallSnapshot,
+  type IceServerConfig,
+} from "@/lib/playground/call/types";
+import {
+  audioConstraints,
+  mediaErrorKind,
+  readDevicePrefs,
+  videoConstraints,
+  writeDevicePrefs,
+} from "./devices";
+import {
   diffPeers,
   isPolite,
   peersOf,
@@ -37,6 +48,26 @@ import {
  * arriving, which this handles as an ordinary roster change.
  */
 
+/** What the pre-join screen hands over. */
+export type JoinOptions = {
+  /**
+   * Media the pre-join screen already acquired. ADOPTED rather than
+   * re-requested: releasing and re-opening a camera costs a visible flicker,
+   * and on some phones a second permission prompt.
+   */
+  stream?: MediaStream;
+  muted?: boolean;
+  cameraOn?: boolean;
+};
+
+export type CallErrorKind =
+  | "permission"
+  | "device"
+  | "full"
+  | "staffOnly"
+  | "removed"
+  | "failed";
+
 export type CallControls = {
   call: CallSnapshot;
   /** Local preview, null until the user joins. */
@@ -50,8 +81,16 @@ export type CallControls = {
   sharing: boolean;
   handRaised: boolean;
   canScreenShare: boolean;
-  join: () => Promise<void>;
+  /** Currently selected devices, for the in-call picker. */
+  audioDeviceId: string | null;
+  videoDeviceId: string | null;
+  join: (options?: JoinOptions) => Promise<void>;
   leave: () => void;
+  switchDevice: (kind: "audio" | "video", deviceId: string) => Promise<void>;
+  /** Host action on another participant. Resolves false if refused. */
+  moderate: (target: string, command: CallControlCommand) => Promise<boolean>;
+  /** Carry out a host's command on THIS participant. */
+  applyControl: (command: CallControlCommand) => void;
   toggleMute: () => void;
   toggleCamera: () => Promise<void>;
   toggleShare: () => Promise<void>;
@@ -72,7 +111,7 @@ export type UseRoomCallOptions = {
   roomId: string;
   connectionId: string | null;
   /** Errors worth showing a human: denied permissions, a full call. */
-  onError?: (kind: "permission" | "device" | "full" | "staffOnly" | "failed") => void;
+  onError?: (kind: CallErrorKind) => void;
 };
 
 export function useRoomCall({
@@ -94,6 +133,8 @@ export function useRoomCall({
   const [cameraOn, setCameraOn] = React.useState(false);
   const [sharing, setSharing] = React.useState(false);
   const [handRaised, setHandRaised] = React.useState(false);
+  const [audioDeviceId, setAudioDeviceId] = React.useState<string | null>(null);
+  const [videoDeviceId, setVideoDeviceId] = React.useState<string | null>(null);
 
   const peersRef = React.useRef(new Map<string, PeerEntry>());
   const localStreamRef = React.useRef<MediaStream | null>(null);
@@ -104,12 +145,35 @@ export function useRoomCall({
   const connectionIdRef = React.useRef(connectionId);
   const callRef = React.useRef(call);
   const onErrorRef = React.useRef(onError);
+  // Read by handlers invoked from the SSE stream (a host muting you), which
+  // must act on the CURRENT state rather than whatever a closure captured.
+  const mutedRef = React.useRef(false);
+  const cameraOnRef = React.useRef(false);
+  const handRaisedRef = React.useRef(false);
+  const devicePrefsRef = React.useRef<{ audio: string | null; video: string | null }>({
+    audio: null,
+    video: null,
+  });
 
   React.useEffect(() => {
     connectionIdRef.current = connectionId;
     callRef.current = call;
     onErrorRef.current = onError;
+    mutedRef.current = muted;
+    cameraOnRef.current = cameraOn;
+    handRaisedRef.current =
+      selfMember(call, connectionId)?.handRaised ?? handRaised;
   });
+
+  // Preferences load after mount: localStorage does not exist during server
+  // rendering, and reading it in a state initialiser would also make the
+  // first client render disagree with the server's.
+  React.useEffect(() => {
+    const prefs = readDevicePrefs();
+    devicePrefsRef.current = prefs;
+    setAudioDeviceId(prefs.audio);
+    setVideoDeviceId(prefs.video);
+  }, []);
 
   const canScreenShare =
     typeof navigator !== "undefined" &&
@@ -352,35 +416,73 @@ export function useRoomCall({
     setSharing(false);
     setMuted(false);
     setHandRaised(false);
+    cameraOnRef.current = false;
+    mutedRef.current = false;
     joinedRef.current = false;
     setJoined(false);
   }, [closePeer]);
 
-  const join = React.useCallback(async () => {
-    if (joinedRef.current || joining || !connectionIdRef.current) return;
-    setJoining(true);
-
-    // Microphone first: if it is refused there is no call to join, and asking
-    // the server to seat someone who cannot speak would leave a silent tile.
-    let stream: MediaStream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    } catch (error) {
-      setJoining(false);
-      const denied =
-        error instanceof DOMException &&
-        (error.name === "NotAllowedError" || error.name === "SecurityError");
-      onErrorRef.current?.(denied ? "permission" : "device");
+  const join = React.useCallback(async (options: JoinOptions = {}) => {
+    if (joinedRef.current || joining || !connectionIdRef.current) {
+      // Nothing is joined, so media handed over must not be leaked.
+      options.stream?.getTracks().forEach((track) => track.stop());
       return;
     }
+    setJoining(true);
 
-    const response = await post({ action: "join" });
+    // Re-read device choices at join time. The pre-join screen writes them
+    // to storage; a copy read only when this hook mounted would be stale, and
+    // turning the camera on mid-call would open the previous device.
+    const prefs = readDevicePrefs();
+    devicePrefsRef.current = prefs;
+    setAudioDeviceId(prefs.audio);
+    setVideoDeviceId(prefs.video);
+
+    // Microphone first: if it is refused there is no call to join, and
+    // seating someone who cannot speak would leave a silent tile. The
+    // pre-join screen normally supplies it already.
+    let audio = options.stream?.getAudioTracks()[0] ?? null;
+    if (!audio) {
+      try {
+        const media = await navigator.mediaDevices.getUserMedia({
+          audio: audioConstraints(devicePrefsRef.current.audio),
+          video: false,
+        });
+        audio = media.getAudioTracks()[0] ?? null;
+      } catch (error) {
+        options.stream?.getTracks().forEach((track) => track.stop());
+        setJoining(false);
+        onErrorRef.current?.(mediaErrorKind(error));
+        return;
+      }
+    }
+
+    const wantsCamera = options.cameraOn === true;
+    const video = wantsCamera ? (options.stream?.getVideoTracks()[0] ?? null) : null;
+    // A preview camera the user turned off before joining is released now,
+    // not carried silently into the call.
+    options.stream?.getVideoTracks().forEach((track) => {
+      if (track !== video) track.stop();
+    });
+
+    const startMuted = options.muted === true;
+    if (audio) audio.enabled = !startMuted;
+
+    const release = () => {
+      audio?.stop();
+      video?.stop();
+    };
+
+    const response = await post({
+      action: "join",
+      // Seated with the chosen state, so nobody sees a one-round-trip flash
+      // of "unmuted" or "camera off" before a follow-up update lands.
+      state: { muted: startMuted, cameraOn: video !== null },
+    });
     if (!response?.ok) {
-      stream.getTracks().forEach((track) => track.stop());
+      release();
       setJoining(false);
-      if (response?.status === 409) onErrorRef.current?.("full");
-      else if (response?.status === 403) onErrorRef.current?.("staffOnly");
-      else onErrorRef.current?.("failed");
+      onErrorRef.current?.(await joinFailureKind(response));
       return;
     }
 
@@ -389,8 +491,15 @@ export function useRoomCall({
       iceServers: IceServerConfig[];
     };
     iceServersRef.current = data.iceServers ?? [];
+
+    const stream = new MediaStream([audio, video].filter(isTrack));
     localStreamRef.current = stream;
+    cameraTrackRef.current = video;
     setLocalStream(stream);
+    setMuted(startMuted);
+    mutedRef.current = startMuted;
+    setCameraOn(video !== null);
+    cameraOnRef.current = video !== null;
     joinedRef.current = true;
     setJoined(true);
     setJoining(false);
@@ -415,16 +524,23 @@ export function useRoomCall({
 
   // ---- controls ------------------------------------------------------------
 
+  const setMutedEverywhere = React.useCallback(
+    (next: boolean) => {
+      const stream = localStreamRef.current;
+      if (!stream) return;
+      // Disabling the track keeps the connection and its timing intact while
+      // sending silence; removing it would renegotiate every peer.
+      stream.getAudioTracks().forEach((track) => (track.enabled = !next));
+      setMuted(next);
+      mutedRef.current = next;
+      pushState({ muted: next });
+    },
+    [pushState]
+  );
+
   const toggleMute = React.useCallback(() => {
-    const stream = localStreamRef.current;
-    if (!stream) return;
-    const next = !muted;
-    // Disabling the track keeps the connection and its timing intact while
-    // sending silence; removing it would renegotiate every peer.
-    stream.getAudioTracks().forEach((track) => (track.enabled = !next));
-    setMuted(next);
-    pushState({ muted: next });
-  }, [muted, pushState]);
+    setMutedEverywhere(!mutedRef.current);
+  }, [setMutedEverywhere]);
 
   const replaceVideoEverywhere = React.useCallback(
     (track: MediaStreamTrack | null, kind: "camera" | "screen") => {
@@ -447,45 +563,58 @@ export function useRoomCall({
     []
   );
 
+  /** Camera off — shared by the toggle and by a host's "turn off camera". */
+  const stopCamera = React.useCallback(() => {
+    if (!cameraOnRef.current) return;
+    cameraTrackRef.current?.stop();
+    cameraTrackRef.current = null;
+    // A live screen share owns the video sender and is left alone.
+    if (!screenTrackRef.current) replaceVideoEverywhere(null, "camera");
+    setCameraOn(false);
+    cameraOnRef.current = false;
+    pushState({ cameraOn: false });
+  }, [pushState, replaceVideoEverywhere]);
+
+  /** Share off — shared by the toggle, the browser's own bar, and a host. */
+  const stopSharing = React.useCallback(() => {
+    const track = screenTrackRef.current;
+    if (!track) return;
+    screenTrackRef.current = null;
+    track.stop();
+    setSharing(false);
+    pushState({ sharing: false });
+    // Hand the sender back to the camera if one is still running.
+    replaceVideoEverywhere(cameraTrackRef.current, "camera");
+  }, [pushState, replaceVideoEverywhere]);
+
   const toggleCamera = React.useCallback(async () => {
     if (!joinedRef.current) return;
-
-    if (cameraOn) {
-      cameraTrackRef.current?.stop();
-      cameraTrackRef.current = null;
-      if (!sharing) replaceVideoEverywhere(null, "camera");
-      setCameraOn(false);
-      pushState({ cameraOn: false });
+    if (cameraOnRef.current) {
+      stopCamera();
       return;
     }
 
     try {
       const media = await navigator.mediaDevices.getUserMedia({
-        video: CAMERA_CONSTRAINTS,
+        video: videoConstraints(devicePrefsRef.current.video),
       });
       const track = media.getVideoTracks()[0] ?? null;
+      if (!track) return;
       cameraTrackRef.current = track;
       // A live screen share owns the video sender; the camera waits its turn.
-      if (!sharing && track) replaceVideoEverywhere(track, "camera");
+      if (!screenTrackRef.current) replaceVideoEverywhere(track, "camera");
       setCameraOn(true);
+      cameraOnRef.current = true;
       pushState({ cameraOn: true });
     } catch (error) {
-      const denied =
-        error instanceof DOMException && error.name === "NotAllowedError";
-      onErrorRef.current?.(denied ? "permission" : "device");
+      onErrorRef.current?.(mediaErrorKind(error));
     }
-  }, [cameraOn, pushState, replaceVideoEverywhere, sharing]);
+  }, [pushState, replaceVideoEverywhere, stopCamera]);
 
   const toggleShare = React.useCallback(async () => {
     if (!joinedRef.current || !canScreenShare) return;
-
-    if (sharing) {
-      screenTrackRef.current?.stop();
-      screenTrackRef.current = null;
-      setSharing(false);
-      pushState({ sharing: false });
-      // Hand the sender back to the camera if one was already running.
-      replaceVideoEverywhere(cameraOn ? cameraTrackRef.current : null, "camera");
+    if (screenTrackRef.current) {
+      stopSharing();
       return;
     }
 
@@ -496,10 +625,7 @@ export function useRoomCall({
       screenTrackRef.current = track;
       // The browser's own "stop sharing" bar bypasses this UI entirely.
       track.addEventListener("ended", () => {
-        screenTrackRef.current = null;
-        setSharing(false);
-        pushState({ sharing: false });
-        replaceVideoEverywhere(cameraTrackRef.current, "camera");
+        if (screenTrackRef.current === track) stopSharing();
       });
       replaceVideoEverywhere(track, "screen");
       setSharing(true);
@@ -507,13 +633,119 @@ export function useRoomCall({
     } catch {
       // Cancelling the picker throws; that is not an error worth reporting.
     }
-  }, [cameraOn, canScreenShare, pushState, replaceVideoEverywhere, sharing]);
+  }, [canScreenShare, pushState, replaceVideoEverywhere, stopSharing]);
 
   const toggleHand = React.useCallback(() => {
-    const next = !handRaised;
+    // Read from the ROSTER when it has us: a host can lower a hand
+    // server-side, and a toggle computed from stale local state would then
+    // need two clicks to raise it again.
+    const current =
+      selfMember(callRef.current, connectionIdRef.current)?.handRaised ?? handRaised;
+    const next = !current;
     setHandRaised(next);
     pushState({ handRaised: next });
   }, [handRaised, pushState]);
+
+  /**
+   * Change microphone or camera mid-call.
+   *
+   * replaceTrack on every peer's sender — no renegotiation, so the switch is
+   * seamless for everyone else. `exact` because this is an explicit choice:
+   * if that device fails, saying so beats silently picking another.
+   */
+  const switchDevice = React.useCallback(
+    async (kind: "audio" | "video", deviceId: string) => {
+      const prefs = { ...devicePrefsRef.current, [kind]: deviceId };
+      devicePrefsRef.current = prefs;
+      writeDevicePrefs(prefs);
+      if (kind === "audio") setAudioDeviceId(deviceId);
+      else setVideoDeviceId(deviceId);
+
+      if (!joinedRef.current) return;
+
+      try {
+        if (kind === "audio") {
+          const media = await navigator.mediaDevices.getUserMedia({
+            audio: audioConstraints(deviceId, true),
+          });
+          const track = media.getAudioTracks()[0];
+          if (!track) return;
+          // A new mic inherits the mute state; switching must never unmute.
+          track.enabled = !mutedRef.current;
+          for (const entry of peersRef.current.values()) {
+            void entry.audioSender.replaceTrack(track);
+          }
+          const stream = localStreamRef.current;
+          const previous = stream?.getAudioTracks() ?? [];
+          const next = new MediaStream([
+            track,
+            ...(stream?.getVideoTracks() ?? []),
+          ]);
+          previous.forEach((old) => old.stop());
+          localStreamRef.current = next;
+          setLocalStream(next);
+          return;
+        }
+
+        // Camera. Nothing to swap while it is off — the choice is simply
+        // remembered for the next time it is turned on.
+        if (!cameraOnRef.current) return;
+        const media = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraints(deviceId, true),
+        });
+        const track = media.getVideoTracks()[0];
+        if (!track) return;
+        cameraTrackRef.current?.stop();
+        cameraTrackRef.current = track;
+        // While sharing, the new camera waits behind the share.
+        if (!screenTrackRef.current) replaceVideoEverywhere(track, "camera");
+      } catch (error) {
+        onErrorRef.current?.(mediaErrorKind(error));
+      }
+    },
+    [replaceVideoEverywhere]
+  );
+
+  const moderate = React.useCallback(
+    async (target: string, command: CallControlCommand) => {
+      const response = await post({ action: "moderate", target, command });
+      return response?.ok ?? false;
+    },
+    [post]
+  );
+
+  /**
+   * A host's command, arriving on the stream. Only ever turns things OFF —
+   * there is deliberately no command that turns a mic or camera on.
+   *
+   * Removal needs no request back: the server has already dropped the seat
+   * and refuses signals from this connection. What remains is releasing the
+   * camera and mic, which only this browser can do.
+   */
+  const applyControl = React.useCallback(
+    (command: CallControlCommand) => {
+      if (!joinedRef.current) return;
+      switch (command) {
+        case "mute":
+          if (!mutedRef.current) setMutedEverywhere(true);
+          return;
+        case "cameraOff":
+          stopCamera();
+          return;
+        case "stopShare":
+          stopSharing();
+          return;
+        case "lowerHand":
+          // Already lowered on the roster; this keeps local state in step.
+          setHandRaised(false);
+          return;
+        case "remove":
+          teardown();
+          return;
+      }
+    },
+    [setMutedEverywhere, stopCamera, stopSharing, teardown]
+  );
 
   // ---- reconnect + unload --------------------------------------------------
 
@@ -527,9 +759,20 @@ export function useRoomCall({
     if (!joinedRef.current || !connectionId || previous === connectionId) return;
 
     for (const peerId of [...peersRef.current.keys()]) closePeer(peerId);
-    void post({ action: "join" }).then(async (response) => {
+    void post({
+      action: "join",
+      // Re-seat with the state this browser actually has. A bare join made
+      // the server seat us with defaults, so after every 15-minute stream
+      // recycle everyone else saw us as unmuted and camera-off while our
+      // real media had not changed at all.
+      state: { muted: mutedRef.current, cameraOn: cameraOnRef.current },
+    }).then(async (response) => {
       if (!response?.ok) {
+        const kind = await joinFailureKind(response);
         teardown();
+        // Removed while reconnecting is worth saying; a transient failure
+        // during a network blip is not.
+        if (kind === "removed") onErrorRef.current?.("removed");
         return;
       }
       const data = (await response.json()) as {
@@ -541,8 +784,14 @@ export function useRoomCall({
       for (const member of peersOf(data.call, connectionId)) {
         createPeer(member.connectionId);
       }
+      // Sharing and a raised hand cannot ride the join (they need a live
+      // seat), so they are restored right after it.
+      const restore: Record<string, boolean> = {};
+      if (screenTrackRef.current) restore.sharing = true;
+      if (handRaisedRef.current) restore.handRaised = true;
+      if (Object.keys(restore).length > 0) pushState(restore);
     });
-  }, [closePeer, connectionId, createPeer, post, teardown]);
+  }, [closePeer, connectionId, createPeer, post, pushState, teardown]);
 
   React.useEffect(() => {
     const onPageHide = () => {
@@ -569,8 +818,13 @@ export function useRoomCall({
     sharing,
     handRaised: self?.handRaised ?? handRaised,
     canScreenShare,
+    audioDeviceId,
+    videoDeviceId,
     join,
     leave,
+    switchDevice,
+    moderate,
+    applyControl,
     toggleMute,
     toggleCamera,
     toggleShare,
@@ -600,4 +854,25 @@ function applyBitrate(
   } catch {
     // Unsupported on some browsers; the call still works, just less politely.
   }
+}
+
+function isTrack(track: MediaStreamTrack | null): track is MediaStreamTrack {
+  return track !== null;
+}
+
+/**
+ * Turn a refused join into something a person can act on. A 403 means two
+ * different things — "only staff can start a call" and "you were removed from
+ * this one" — and they need different words, so the code in the body decides.
+ */
+async function joinFailureKind(
+  response: Response | null
+): Promise<"full" | "staffOnly" | "removed" | "failed"> {
+  if (!response) return "failed";
+  if (response.status === 409) return "full";
+  if (response.status === 403) {
+    const body = (await response.json().catch(() => null)) as { code?: string } | null;
+    return body?.code === "REMOVED_FROM_CALL" ? "removed" : "staffOnly";
+  }
+  return "failed";
 }
