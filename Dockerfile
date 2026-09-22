@@ -69,6 +69,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
+# Invoice PDFs. Created here, owned by the app user, because docker-compose
+# mounts a NAMED volume at /app/storage — and Docker initialises an empty
+# named volume from the image's directory, ownership included. That is what
+# makes the volume writable with no manual chown on the server. (A bind mount
+# would instead inherit the host directory's owner, usually root.)
+RUN mkdir -p /app/storage/invoices && chown -R nextjs:nodejs /app/storage
+
 # Copy standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

@@ -76,6 +76,12 @@ services:
     volumes:
       # Mount uploads directory so files persist and are accessible by nginx
       - ./public/uploads:/app/public/uploads
+      # Invoice PDFs. Before this, they were written inside the container and
+      # every deploy (which recreates it) deleted them. A named volume, like
+      # postgres_data, survives `docker compose down`; only `down -v` (the
+      # deploy script's `cleanup`) removes it. Invoices lost before this
+      # existed are re-rendered from their database rows on first download.
+      - storage_data:/app/storage
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
@@ -181,3 +187,5 @@ networks:
 volumes:
   postgres_data:
     name: pmp_postgres_data
+  storage_data:
+    name: pmp_storage_data

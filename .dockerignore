@@ -63,3 +63,21 @@ logs
 .eslintcache
 .turbo
 *.tsbuildinfo
+
+# Runtime data. Both are mounted into the running container by
+# docker-compose (uploads from the host, storage as a named volume), so a
+# copy baked into the image is invisible at runtime. Including them only made
+# every image carry every client's files and invoices, and every deploy
+# slower as they accumulated — the build context had reached 2.75GB.
+# The image creates an empty, correctly-owned /app/storage itself.
+public/uploads
+storage
+
+# Logs anywhere in the tree. The top-level `*.log` above only matches the
+# context root, so nginx's docker/nginx/logs/*.log slipped through.
+**/*.log
+
+# Database dumps and local tool state must never enter an image.
+*.dump
+*.sql.gz
+.auto-claude

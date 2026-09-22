@@ -67,3 +67,10 @@ docker/nginx/logs/
 
 # Runtime playground uploads (local-fallback storage)
 public/uploads/playground/
+
+# Generated invoice PDFs — client names and amounts; never commit them.
+# (Two older ones, INV-2026-0001/0003, are still tracked. Untracking them
+# needs care: deploy.sh runs `git reset --hard`, which deletes a file from
+# the server's checkout once it leaves the index.)
+storage/invoices/*
+!storage/invoices/.gitkeep
