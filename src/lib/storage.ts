@@ -183,6 +183,11 @@ export async function deleteUpload(ref: {
 /**
  * Derived thumbnail URL for a Cloudinary asset. One transformation per unique
  * URL (then CDN-cached), so this costs credits once, not per view.
+ *
+ * The transformation must be an OBJECT. Given a string, the SDK treats it as
+ * the name of a saved ("named") transformation and emits `t_<string>` —
+ * `t_c_limit,w_480,…` — which Cloudinary rejects with a 400 because no such
+ * named transformation exists. Every stored thumbnail was broken that way.
  */
 export function getCloudinaryThumbUrl(
   publicId: string,
@@ -190,17 +195,17 @@ export function getCloudinaryThumbUrl(
 ): string {
   configureCloudinary();
   if (resourceType === "video") {
-    // so_0 = poster frame at t=0, delivered as jpg.
+    // start_offset 0 = poster frame at t=0, delivered as jpg.
     return cloudinary.url(publicId, {
       resource_type: "video",
       format: "jpg",
-      transformation: "so_0,c_limit,w_480,q_auto",
+      transformation: [{ start_offset: 0, crop: "limit", width: 480, quality: "auto" }],
       secure: true,
     });
   }
   return cloudinary.url(publicId, {
     resource_type: "image",
-    transformation: "c_limit,w_480,f_auto,q_auto",
+    transformation: [{ crop: "limit", width: 480, fetch_format: "auto", quality: "auto" }],
     secure: true,
   });
 }

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { classifyResource, pickStorageTarget } from "./storage";
+import { describe, expect, it, vi } from "vitest";
+import { classifyResource, getCloudinaryThumbUrl, pickStorageTarget } from "./storage";
 
 /**
  * The free-plan gate: which uploads go to Cloudinary and which stay on local
@@ -59,5 +59,26 @@ describe("pickStorageTarget", () => {
       resourceType: "raw",
     });
     expect(pickStorageTarget("application/zip", 400 * MB).provider).toBe("local");
+  });
+});
+
+describe("getCloudinaryThumbUrl", () => {
+  // A string transformation makes the SDK emit a NAMED transformation
+  // (`t_c_limit,...`), which Cloudinary answers with a 400. Every playground
+  // thumbnail shipped broken that way; the path segment is the contract.
+  vi.stubEnv("CLOUDINARY_CLOUD_NAME", "demo");
+
+  it("builds an inline image transformation, never a named one", () => {
+    const url = getCloudinaryThumbUrl("paxala/playground/room/abc", "image");
+    expect(url).toContain("/image/upload/c_limit,f_auto,q_auto,w_480/");
+    expect(url).not.toContain("/t_");
+    expect(url.startsWith("https://res.cloudinary.com/demo/")).toBe(true);
+  });
+
+  it("builds a jpg poster frame for video", () => {
+    const url = getCloudinaryThumbUrl("paxala/playground/room/clip", "video");
+    expect(url).toContain("/video/upload/c_limit,q_auto,so_0,w_480/");
+    expect(url).toMatch(/clip\.jpg(\?|$)/);
+    expect(url).not.toContain("/t_");
   });
 });
