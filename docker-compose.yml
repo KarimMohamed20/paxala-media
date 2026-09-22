@@ -44,6 +44,13 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-paxala}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-paxala_media}?schema=public
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      # The app is served on two domains (paxaland.com, paxalamedia.com).
+      # Without this NextAuth builds every sign-in redirect from NEXTAUTH_URL,
+      # so signing in on the second domain lands you on the first. With it,
+      # NextAuth uses the request's own host. The host only shapes redirects
+      # sent back to whoever made that request; links sent to OTHER people
+      # (password-reset emails) are built from NEXTAUTH_URL, never the host.
+      - AUTH_TRUST_HOST=true
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -108,6 +115,12 @@ services:
       - ./docker/nginx/logs:/var/log/nginx
       # Mount uploads to match the path in nginx config
       - ./public/uploads:/var/www/paxala-media/public/uploads:ro
+      # Let's Encrypt HTTP-01 challenges. certbot renews in webroot mode,
+      # writing tokens here for nginx to serve on port 80. The original setup
+      # used standalone mode, which needs port 80 free — it never is while
+      # nginx runs, so every renewal failed and the certificate expired.
+      # See scripts/cert-deploy-hook.sh for the other half.
+      - ./docker/certbot/www:/var/www/certbot:ro
     depends_on:
       - app
     healthcheck:

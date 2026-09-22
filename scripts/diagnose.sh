@@ -139,6 +139,28 @@ check_stack() {
     fail "app /api/health did not answer healthy: ${health:-no response}"
   fi
 
+  # The certificate nginx is actually serving, per domain. An expired one
+  # takes down the domain AND every image stored with an absolute URL on it.
+  local domain end_date days
+  for domain in paxaland.com paxalamedia.com; do
+    end_date="$(echo | timeout 10 openssl s_client -servername "$domain" -connect 127.0.0.1:443 2>/dev/null \
+      | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)"
+    if [[ -z "$end_date" ]]; then
+      fail "$domain: could not read the certificate nginx serves"
+      continue
+    fi
+    days=$(( ($(date -d "$end_date" +%s) - $(date +%s)) / 86400 ))
+    if (( days < 0 )); then
+      fail "$domain certificate EXPIRED ($end_date)"
+      hint "grep -i error /var/log/letsencrypt/letsencrypt.log | tail"
+    elif (( days < 20 )); then
+      warn "$domain certificate expires in $days days — certbot renews at 30, so renewal is failing"
+      hint "sudo certbot renew --dry-run"
+    else
+      pass "$domain certificate valid for $days more days"
+    fi
+  done
+
   local use
   use="$(df -P . | awk 'NR==2 {print $5}' | tr -d '%')"
   if [[ -n "$use" && "$use" -ge 90 ]]; then

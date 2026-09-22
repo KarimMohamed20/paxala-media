@@ -91,26 +91,38 @@ setup_letsencrypt() {
     docker compose start nginx
 
     log_success "Let's Encrypt certificate installed successfully!"
-    log_info "Certificate will expire in 90 days. Set up auto-renewal with: sudo certbot renew --dry-run"
+    log_info "Now make renewal work behind nginx: $0 renew-setup"
 }
 
-# Setup auto-renewal cron job
+# Setup automatic renewal
+#
+# Renewal itself is certbot's own systemd timer, installed with the package.
+# Two things make it work behind the nginx container:
+#   - webroot mode: the running nginx serves the challenge files from
+#     docker/certbot/www (mounted at /var/www/certbot). setup_letsencrypt
+#     issues in standalone mode, which needs port 80 free — fine the first
+#     time, with nginx stopped, but every later renewal fails while nginx
+#     holds the port. That is how the paxaland.com certificate expired.
+#   - the deploy hook: nginx reads copies in docker/nginx/ssl, so each
+#     renewed certificate is copied there and nginx reloaded.
 setup_renewal() {
-    log_info "Setting up automatic certificate renewal..."
+    log_info "Configuring certificate renewal (webroot + nginx deploy hook)..."
 
-    # Create renewal script
-    cat > "$CERTBOT_DIR/renew.sh" << 'RENEWAL_SCRIPT'
-#!/bin/bash
-certbot renew --quiet --post-hook "docker compose -f /path/to/docker-compose.yml exec nginx nginx -s reload"
-RENEWAL_SCRIPT
+    local webroot hook name
+    webroot="$(pwd)/$CERTBOT_DIR/www"
+    hook="/etc/letsencrypt/renewal-hooks/deploy/paxala-nginx.sh"
+    mkdir -p "$webroot"
 
-    chmod +x "$CERTBOT_DIR/renew.sh"
+    sudo ln -sf "$(pwd)/scripts/cert-deploy-hook.sh" "$hook"
+    log_success "Deploy hook installed: $hook"
 
-    # Add to crontab (runs twice daily as recommended by Let's Encrypt)
-    (crontab -l 2>/dev/null | grep -v "certbot renew"; echo "0 0,12 * * * $(pwd)/$CERTBOT_DIR/renew.sh >> /var/log/certbot-renew.log 2>&1") | crontab -
+    # `certbot reconfigure` (certbot >= 2.3) switches how a certificate
+    # renews and proves it with a dry run, without issuing anything.
+    for name in $(sudo ls /etc/letsencrypt/renewal | sed -n 's/\.conf$//p'); do
+        sudo certbot reconfigure --cert-name "$name" --webroot -w "$webroot"
+    done
 
-    log_success "Auto-renewal cron job set up successfully."
-    log_info "Certificates will be renewed automatically when they expire."
+    log_success "Renewal configured. Check any time with: sudo certbot renew --dry-run"
 }
 
 # Show usage
@@ -122,7 +134,7 @@ usage() {
     echo "Commands:"
     echo "  self-signed      Generate self-signed certificate (for development)"
     echo "  letsencrypt      Obtain Let's Encrypt certificate (for production)"
-    echo "  renew-setup      Setup automatic renewal cron job"
+    echo "  renew-setup      Configure renewal (webroot + nginx deploy hook)"
     echo ""
     echo "Examples:"
     echo "  $0 self-signed paxalamedia.com"
